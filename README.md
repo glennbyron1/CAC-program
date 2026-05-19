@@ -1,8 +1,7 @@
-
- Enterprise ICAM: "CAC-Style" Identity & Access Deployment Blueprint
+🛡️ Enterprise ICAM: "CAC-Style" Identity & Access Deployment Blueprint
 An end-to-end, script-driven implementation plan for deploying hardware-backed, certificate-based multi-factor authentication (MFA). This project adapts the rigorous operating model used by the U.S. DoD Common Access Card (CAC) and Federal PIV programs into a production-ready template for enterprise infrastructure running Active Directory, Active Directory Certificate Services (AD CS), WatchGuard IKEv2 VPN, and Microsoft 365 (Entra ID).
 ________________________________________
- Architecture Overview
+🏗️ Architecture Overview
 The blueprint enforces a zero-password interactive logon topology by mapping cryptographic hardware tokens to verified organizational identities. Trust is anchored by an internally managed, two-tier Public Key Infrastructure (PKI).
                  +-----------------------------------+
 
@@ -42,7 +41,7 @@ ________________________________________
 •	/Group-Policy: Backed-up GPO templates for smart-card behavior enforcement and lock-on-removal behavior.
 •	/Templates: Core .INF configuration baselines for standalone root and subordinate enterprise certificate authorities.
 ________________________________________
- Commercial Enterprise Baseline vs. Federal PIV Target State
+🚀 Commercial Enterprise Baseline vs. Federal PIV Target State
 This project outlines two distinct infrastructure baselines. The Commercial Baseline provides robust protection for a standard organization, while the Federal Upgrade Path highlights the specific changes required to meet strict federal compliance standards.
 1. Token Procurement & Selection
 •	Commercial Baseline (As Implemented): Utilizes cost-effective, dual-tier commercial endpoints consisting of CardLogix GIDS smart cards for standard staff and HIRSCH uTrust FIDO2 NFC+ keys for management layers (pp. 9, 21).
@@ -57,7 +56,7 @@ This project outlines two distinct infrastructure baselines. The Commercial Base
 •	Commercial Baseline (As Implemented): Secondary tokens (YubiKeys) are cryptographically built at an administrator issuance desk following an in-person, Registration Authority photo-ID verification event (pp. 11, 35).
 •	Federal Upgrade Path: Aligned with NIST SP 800-157, mobile or secondary tokens must be issued via an automated self-service kiosk where the user's primary, physical federal PIV card serves as the automated cryptographic voucher for the derived token.
 ________________________________________
- NIST SP 800-53 Control Mapping
+📊 NIST SP 800-53 Control Mapping
 This architecture directly addresses and satisfies the following security controls within the NIST SP 800-53 Rev. 5 framework:
 Control ID	Control Name	Deployment Implementation
 IA-2	Identification and Authentication (Organizational Users)	Enforces hardware-backed cryptographic MFA via smart card / FIDO2 across all endpoints, VPN tunnels, and cloud ecosystems (pp. 6, 13).
@@ -70,9 +69,4 @@ This repository is maintained completely out-of-band from any live corporate env
 •	No production keys, active certificates, or authentic secrets are stored in Git history.
 •	All deployment components utilize generic placeholders (lab.local, agency.gov) (p. 29).
 •	All code scripts are thoroughly sanitized of real organizational metrics, names, and proprietary routing infrastructure.
-________________________________________
-Pro Git Tips Before You Push:
-1.	Add a .gitignore file: Ensure your project includes a .gitignore that screens out any local test certs (.pfx, .cer, .pem) or editor cache files so you never commit an artifact by mistake (p. 35).
-2.	Pin it on your Profile: Once this repository is live, go to your main GitHub profile settings and Pin it right to the top so it is the first thing recruiters see.
-
 
