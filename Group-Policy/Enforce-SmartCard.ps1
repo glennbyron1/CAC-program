@@ -1,5 +1,5 @@
 # ==============================================================================
-# GPO BLUEPRINT: SMART CARD INTERACTIVE LOGON & HARDENING POLICIES
+# GPO BLUEPRINT: SMART CARD INTERACTIVE LOGON & HARDENING POLICIES 
 # Target Framework: NIST SP 800-53 Rev. 5 (AC-11, IA-2)
 # ==============================================================================
 
