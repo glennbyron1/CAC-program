@@ -1,0 +1,9 @@
+🚀 How to Execute Your Complete Workflow
+With this utility added to your root directory, your complete step-by-step local workflow looks like this:
+1.	Scan 1 (Clean VM): Run your initial SCC baseline scan.
+2.	Stage 1: Run .\Stage-Reports.ps1, choose option 1 to lock it into the Before-MFA path.
+3.	Remediate: Run your Build-CAC-Lab.ps1 and GPO files, then restart the VM.
+4.	Scan 2 (Secured VM): Run your post-hardening verification scan.
+5.	Stage 2: Run .\Stage-Reports.ps1, choose option 2 to lock it into the After-MFA path.
+6.	Push to Web: Check your files in GitHub Desktop or execute your standard git add . and git commit commands to update your cloud portfolio.
+

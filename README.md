@@ -1,10 +1,12 @@
 🛡️ Enterprise ICAM: "CAC-Style" Identity & Access Deployment Blueprint
 An end-to-end, script-driven implementation plan for deploying hardware-backed, certificate-based multi-factor authentication (MFA). This project adapts the rigorous operating model used by the U.S. DoD Common Access Card (CAC) and Federal PIV programs into a production-ready template for enterprise infrastructure running Active Directory, Active Directory Certificate Services (AD CS), WatchGuard IKEv2 VPN, and Microsoft 365 (Entra ID).
+
 ________________________________________
 🏗️ Architecture Overview
 The blueprint enforces a zero-password interactive logon topology by mapping cryptographic hardware tokens to verified organizational identities. Trust is anchored by an internally managed, two-tier Public Key Infrastructure (PKI).
-                 +-----------------------------------+
+                 
 
+                 +-----------------------------------+
                  |      Microsoft 365 / Entra ID     |
                  |    (Conditional Access + FIDO2)   |
                  +-----------------+-----------------+
@@ -32,14 +34,21 @@ The blueprint enforces a zero-password interactive logon topology by mapping cry
              |                     |
              +-----------+---------+
                          |
-               Local Active Directory
-               (DCs + HTTP CRL Validation)
+              | Local Active Directory      |
+              | (DCs + HTTP CRL Validation) |
+              +-----------+-----------------+
 ________________________________________
 🛠️ Repository Structure
 •	/Architecture: Full architectural specifications, multi-site WAN failure mode matrices, and disaster recovery runbooks.
 •	/Automation-Scripts: Production-ready PowerShell deployment tools (Build-CAC-Lab.ps1, Build-CA-GPO.ps1) for environment staging.
 •	/Group-Policy: Backed-up GPO templates for smart-card behavior enforcement and lock-on-removal behavior.
 •	/Templates: Core .INF configuration baselines for standalone root and subordinate enterprise certificate authorities.
+________________________________________
+🧰 Repository Automation Utilities
+This repository includes a suite of custom-engineered PowerShell automation utilities designed to streamline environment staging, handle real-time compliance audits, and prevent data leakage before publishing to public networks.
+⚙️ Environment Staging & Auditing Architecture
+System Staging Baseline: The orchestration engine Build-CAC-Lab.ps1 provisions laboratory parameters on target host machines, verifies elevated administrative privileges, generates isolated file paths for high-availability HTTP Certificate Revocation List (CRL) caching, and stubs endpoints to receive smart card authentication configuration loops (NIST SP 800-53 IA-2).
+Automated Audit Harvester: The harvesting engine Stage-Reports.ps1 interrogates the default system directory used by the SCAP Compliance Checker (SCC), isolates the most recent scanning execution folder, and automatically copies and standardizes the machine-readable .xml data models and user-readable .html summary files into your
 ________________________________________
 🚀 Commercial Enterprise Baseline vs. Federal PIV Target State
 This project outlines two distinct infrastructure baselines. The Commercial Baseline provides robust protection for a standard organization, while the Federal Upgrade Path highlights the specific changes required to meet strict federal compliance standards.
@@ -58,21 +67,23 @@ This project outlines two distinct infrastructure baselines. The Commercial Base
 ________________________________________
 📊 NIST SP 800-53 Control Mapping
 This architecture directly addresses and satisfies the following security controls within the NIST SP 800-53 Rev. 5 framework:
-Control ID	Control Name	Deployment Implementation
-IA-2	Identification and Authentication (Organizational Users)	Enforces hardware-backed cryptographic MFA via smart card / FIDO2 across all endpoints, VPN tunnels, and cloud ecosystems (pp. 6, 13).
-IA-2(11)	Workstation Access Using Hardware Tokens	Leverages Windows native endpoint smart-card configuration to block standard password logins globally (pp. 6, 42).
-AC-11	Session Lock	Deploys a Group Policy Object forcing an immediate interactive session lock within 2 seconds of physical token removal (pp. 33, 36, 42).
-AC-5	Separation of Duties	Implements strict gatekeeping separating the Registration Authority (Identity Verification) from the Card Issuer (Technical Provisioning) (p. 8).
+
+| Control ID  | Control Name                       | Deployment Implementation                                                                                              |
+|---|------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| IA-2  | Identification and Authentication (Organizational Users)  | Enforces hardware-backed cryptographic MFA via smart card / FIDO2 across all endpoints, VPN tunnels, and cloud ecosystems (pp. 6, 13). |
+| IA-2(11)  | Workstation Access Using Hardware Tokens | Leverages Windows native endpoint smart-card configuration to block standard password logins globally (pp. 6, 42).     |
+|  AC-11 |       Session Lock                             | Deploys a Group Policy Object forcing an immediate interactive session lock within 2 seconds of physical token removal. |
+|  AC-5 |      Separation of Duties                              | Implements strict gatekeeping separating the Registration Authority (Identity Verification) from the Card Issuer (Technical Provisioning) (p. 8). |
 ________________________________________
 🔒 Security Statement & Sanitization
 This repository is maintained completely out-of-band from any live corporate environment.
-•	No production keys, active certificates, or authentic secrets are stored in Git history.
-•	All committed code uses generic placeholders following the format lab.local / agency.gov; the .gitignore excludes private keys, certificates, virtual-machine artifacts, and IDE workspace state.
-•	A repository sanitization tool, Scrub-Repo.ps1, performs a find-and-replace pass against an external (gitignored) patterns file before every push. Run with -WhatIf to preview replacements.
-•	Run order: (1) Copy .scrub-patterns.example.json to .scrub-patterns.local.json and add your real identifiers; (2) Run .\Scrub-Repo.ps1 -WhatIf to preview; (3) Run .\Scrub-Repo.ps1 to apply; (4) git diff, git add ., git commit, git push.
+•	Secret Isolation: No production keys, active certificates, or authentic secrets are stored in Git history.
+•   Placeholder Standardization: All committed code uses generic placeholders following the format lab.local / agency.gov; the .gitignore excludes private keys, certificates, virtual-machine artifacts, and IDE workspace state.
+•   Sanitization Automation: A repository sanitization tool, Scrub-Repo.ps1, performs a find-and-replace pass against an external (gitignored) patterns file before every push. Run with -WhatIf to preview replacements.
+•   Run Order Pipeline: Run order: (1) Copy .scrub-patterns.example.json to .scrub-patterns.local.json and add proprietary identifiers, (2) Run .\Scrub-Repo.ps1 to sanitize files, (3) Perform standard Git staging and tracking commands.
 ________________________________________
-🏷️ Topics / Tags
-For GitHub topic tagging on this repository: identity-management, pki, smart-card, fido2, active-directory, certificate-authority, nist-800-53, fips-201, zero-trust, icam, ad-cs, watchguard, entra-id, powershell.
+
+🏷️ Topics / Tags For GitHub topic tagging on this repository: identity-management, pki, smart-card, fido2, active-directory, certificate-authority, nist-800-53, fips-201, zero-trust, icam, ad-cs, watchguard, entra-id, powershell.
 ________________________________________
 📜 License
 Released under the MIT License. See LICENSE for full terms.
