@@ -87,3 +87,6 @@ ________________________________________
 ________________________________________
 📜 License
 Released under the MIT License. See LICENSE for full terms.
+________________________________________
+👤 Maintainer
+Initial Author and Maintainer: Glenn Byron — GitHub: [@glennbyron1](https://github.com/glennbyron1). See `AUTHORS.md` for attribution and contribution guidance. To report a security issue in this repository, see `SECURITY.md`. One-time setup steps for new maintainer machines (noreply email, SSH commit signing, scrub patterns file) are in `MAINTAINER-SETUP.md`.

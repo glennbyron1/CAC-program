@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Glenn Byron
+# Licensed under the MIT License. See LICENSE in the repository root.
+
 <#
 .SYNOPSIS
     Automated ICAM Laboratory Baseline & Smart Card Environment Stage Tool.

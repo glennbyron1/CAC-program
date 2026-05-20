@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Glenn Byron
+# Licensed under the MIT License. See LICENSE in the repository root.
+
 <#
 .SYNOPSIS
     Builds the lab Certificate Authority and the Smart Card Group Policy

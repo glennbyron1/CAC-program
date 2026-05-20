@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Glenn Byron
+# Licensed under the MIT License. See LICENSE in the repository root.
+
 # ==============================================================================
 # GPO BLUEPRINT: SMART CARD INTERACTIVE LOGON & HARDENING POLICIES
 # Target Framework: NIST SP 800-53 Rev. 5 (AC-11, IA-2)
