@@ -67,6 +67,12 @@ ________________________________________
 🔒 Security Statement & Sanitization
 This repository is maintained completely out-of-band from any live corporate environment.
 •	No production keys, active certificates, or authentic secrets are stored in Git history.
-•	All deployment components utilize generic placeholders (lab.local, agency.gov) (p. 29).
-•	All code scripts are thoroughly sanitized of real organizational metrics, names, and proprietary routing infrastructure.
-
+•	All committed code uses generic placeholders following the format lab.local / agency.gov; the .gitignore excludes private keys, certificates, virtual-machine artifacts, and IDE workspace state.
+•	A repository sanitization tool, Scrub-Repo.ps1, performs a find-and-replace pass against an external (gitignored) patterns file before every push. Run with -WhatIf to preview replacements.
+•	Run order: (1) Copy .scrub-patterns.example.json to .scrub-patterns.local.json and add your real identifiers; (2) Run .\Scrub-Repo.ps1 -WhatIf to preview; (3) Run .\Scrub-Repo.ps1 to apply; (4) git diff, git add ., git commit, git push.
+________________________________________
+🏷️ Topics / Tags
+For GitHub topic tagging on this repository: identity-management, pki, smart-card, fido2, active-directory, certificate-authority, nist-800-53, fips-201, zero-trust, icam, ad-cs, watchguard, entra-id, powershell.
+________________________________________
+📜 License
+Released under the MIT License. See LICENSE for full terms.
