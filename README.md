@@ -1,5 +1,8 @@
 🛡️ Enterprise ICAM: "CAC-Style" Identity & Access Deployment Blueprint
-An end-to-end, script-driven implementation plan for deploying hardware-backed, certificate-based multi-factor authentication (MFA). This project adapts the rigorous operating model used by the U.S. DoD Common Access Card (CAC) and Federal PIV programs into a production-ready template for enterprise infrastructure running Active Directory, Active Directory Certificate Services (AD CS), WatchGuard IKEv2 VPN, and Microsoft 365 (Entra ID).
+
+**Author:** Glenn Byron | **GitHub:** [@glennbyron1](https://github.com/glennbyron1)
+
+An end-to-end, script-driven blueprint for deploying hardware-backed, certificate-based MFA across an enterprise environment. This project takes the model used by the U.S. DoD Common Access Card (CAC) and Federal PIV programs and adapts it for organizations running Active Directory, AD CS, WatchGuard IKEv2 VPN, and Microsoft 365 (Entra ID).
 
 ________________________________________
 🏗️ Architecture Overview
@@ -39,31 +42,44 @@ The blueprint enforces a zero-password interactive logon topology by mapping cry
               +-----------+-----------------+
 ________________________________________
 🛠️ Repository Structure
-•	/Architecture: Full architectural specifications, multi-site WAN failure mode matrices, and disaster recovery runbooks.
-•	/Automation-Scripts: Production-ready PowerShell deployment tools (Build-CAC-Lab.ps1, Build-CA-GPO.ps1) for environment staging.
-•	/Group-Policy: Backed-up GPO templates for smart-card behavior enforcement and lock-on-removal behavior.
-•	/Templates: Core .INF configuration baselines for standalone root and subordinate enterprise certificate authorities.
+- `/Architecture` — System architecture documents, regulatory alignment mapping (CISA ZTMM, NIST CSF 2.0, CISA CPGs, MD SB 871), STIG hardening runbook, federal tools setup guide, and WatchGuard IKEv2 EAP-TLS VPN configuration guide.
+- `/Automation-Scripts` — PowerShell scripts for lab staging, GPO deployment, VPN client setup, Offline Root CA kit, Issuing CA kit, and federal compliance tool staging.
+- `/Group-Policy` — GPO templates for smart card enforcement and lock-on-removal behavior.
+- `/Templates` — .INF configuration baselines for the Offline Root CA and Issuing CA.
 ________________________________________
 🧰 Repository Automation Utilities
-This repository includes a suite of custom-engineered PowerShell automation utilities designed to streamline environment staging, handle real-time compliance audits, and prevent data leakage before publishing to public networks.
-⚙️ Environment Staging & Auditing Architecture
-System Staging Baseline: The orchestration engine Build-CAC-Lab.ps1 provisions laboratory parameters on target host machines, verifies elevated administrative privileges, generates isolated file paths for high-availability HTTP Certificate Revocation List (CRL) caching, and stubs endpoints to receive smart card authentication configuration loops (NIST SP 800-53 IA-2).
-Automated Audit Harvester: The harvesting engine Stage-Reports.ps1 interrogates the default system directory used by the SCAP Compliance Checker (SCC), isolates the most recent scanning execution folder, and automatically copies and standardizes the machine-readable .xml data models and user-readable .html summary files into your
+All scripts are production-quality PowerShell. Each one handles its own error checking, writes to a log, and is safe to re-run.
+
+**Build-CAC-Lab.ps1** — Lab domain controller builder (Phase B). Installs the AD Domain Services role and promotes a clean Windows Server VM to a domain controller for a fresh lab forest (default `lab.local`) with integrated DNS, then triggers the required reboot. Includes guardrails that refuse to run on an existing domain controller, supports `-WhatIf`, and writes a transcript log. Pairs with `Build-CA-GPO.ps1`, which runs after the reboot. Addresses NIST SP 800-53 IA-2.
+
+**Stage-Reports.ps1** — SCAP report harvester. Finds the most recent SCAP Compliance Checker output folder, copies the .xml and .html results into the Before-MFA or After-MFA tracking directories, and keeps the folder structure consistent for portfolio review.
+
+**Download-OfflineCA-Kit.ps1** — Builds a self-contained USB transfer kit for the Offline Root CA. Downloads SysInternals, OpenSSL, and PSPKI to a staging folder, generates CAPolicy.inf and the CRL publication scripts, and creates a SHA-256 manifest so you can verify the kit on the air-gapped host.
+
+**Download-IssuingCA-Kit.ps1** — Stages all prerequisites for the domain-joined Enterprise Issuing CA. Installs the AD CS Windows features, downloads PSPKI, and generates an Initialize-IssuingCA.ps1 with the full sub-CA provisioning workflow. Optionally configures IIS for HTTP CRL/AIA publishing.
+
+**Download-FedCompliance-Kit.ps1** — Downloads and organizes all federal compliance tools in one run: DISA STIG Viewer, DISA STIG content packs, SCAP 1.3 benchmarks, Microsoft Security Compliance Toolkit, Nessus Essentials, SysInternals, and OpenSSL. Generates a TOOL-INDEX.md with RMF phase mapping.
+
+**Deploy-VPNClient.ps1** — Deploys the IKEv2 VPN client profile to Windows endpoints. Creates the connection, applies FIPS-compliant IPsec crypto (AES-256-GCM / SHA-256 / ECP384), builds the EAP-TLS XML to force smart card authentication, and validates the config. Optionally runs a live test. Paired with Architecture/WatchGuard-IKEv2-VPN-Guide.md.
 ________________________________________
 🚀 Commercial Enterprise Baseline vs. Federal PIV Target State
-This project outlines two distinct infrastructure baselines. The Commercial Baseline provides robust protection for a standard organization, while the Federal Upgrade Path highlights the specific changes required to meet strict federal compliance standards.
-1. Token Procurement & Selection
-•	Commercial Baseline (As Implemented): Utilizes cost-effective, dual-tier commercial endpoints consisting of CardLogix GIDS smart cards for standard staff and HIRSCH uTrust FIDO2 NFC+ keys for management layers (pp. 9, 21).
-•	Federal Upgrade Path: All authentication tokens, security keys, and workstation readers must be explicitly procured from the official GSA FIPS 201 Approved Product List (APL) to fulfill FIPS 201-3 hardware requirements.
-2. Public Key Infrastructure (PKI) Storage
-•	Commercial Baseline (As Implemented): Private keys for the Root and Subordinate Certificate Authorities are isolated via a software-based Key Storage Provider (KSP) (p. 19).
-•	Federal Upgrade Path: Software-based key storage is prohibited. CA private keys must be generated inside and bound to a physical, FIPS 140-2/3 Level 3 validated Hardware Security Module (HSM).
-3. Trust Anchor & Cross-Certification
-•	Commercial Baseline (As Implemented): Relies on a self-contained, corporate-owned two-tier PKI tree where trust is established locally via Active Directory's NTAuth store (pp. 19, 26).
-•	Federal Upgrade Path: The infrastructure must cross-certify or chain back to the Federal Common Policy Certificate Authority (FBCA) to enable cross-agency federation and trust inter-operability under NIST SP 800-217 guidelines.
-4. Derived Credential Issuance
-•	Commercial Baseline (As Implemented): Secondary tokens (YubiKeys) are cryptographically built at an administrator issuance desk following an in-person, Registration Authority photo-ID verification event (pp. 11, 35).
-•	Federal Upgrade Path: Aligned with NIST SP 800-157, mobile or secondary tokens must be issued via an automated self-service kiosk where the user's primary, physical federal PIV card serves as the automated cryptographic voucher for the derived token.
+This blueprint covers two tiers. The commercial baseline is what's implemented here — solid protection for most organizations. The federal upgrade path documents the specific changes needed to meet full FISMA/FedRAMP requirements.
+
+**1. Token Procurement**
+- Commercial (As Implemented): CardLogix GIDS smart cards for staff, HIRSCH uTrust FIDO2 NFC+ keys for management. Standard commercial procurement.
+- Federal Upgrade: All tokens, readers, and middleware must come from the GSA FIPS 201 Approved Product List (APL).
+
+**2. CA Key Storage**
+- Commercial (As Implemented): Root CA and Issuing CA private keys stored in a software Key Storage Provider (KSP) on the host OS.
+- Federal Upgrade: Software key storage is not allowed. Keys must be generated inside and permanently bound to a FIPS 140-3 Level 3 Hardware Security Module (HSM).
+
+**3. Trust Anchor**
+- Commercial (As Implemented): Two-tier internal PKI rooted in the organization's Active Directory NTAuth store.
+- Federal Upgrade: The Issuing CA must cross-certify to the Federal Common Policy Certificate Authority (FBCA) for cross-agency trust under NIST SP 800-217.
+
+**4. Derived Credential Issuance**
+- Commercial (As Implemented): Secondary tokens (YubiKeys) provisioned at an admin issuance desk after in-person Registration Authority photo-ID verification.
+- Federal Upgrade: Per NIST SP 800-157, derived credentials must be issued via automated kiosk using the primary PIV card as the cryptographic voucher.
 ________________________________________
 📊 NIST SP 800-53 Control Mapping
 This architecture directly addresses and satisfies the following security controls within the NIST SP 800-53 Rev. 5 framework:
@@ -74,19 +90,21 @@ This architecture directly addresses and satisfies the following security contro
 | IA-2(11)  | Workstation Access Using Hardware Tokens | Leverages Windows native endpoint smart-card configuration to block standard password logins globally (pp. 6, 42).     |
 |  AC-11 |       Session Lock                             | Deploys a Group Policy Object forcing an immediate interactive session lock within 2 seconds of physical token removal. |
 |  AC-5 |      Separation of Duties                              | Implements strict gatekeeping separating the Registration Authority (Identity Verification) from the Card Issuer (Technical Provisioning) (p. 8). |
+| AC-17 | Remote Access | WatchGuard IKEv2 Mobile VPN enforces certificate-based EAP-TLS authentication for all remote access sessions; no password-based tunnels permitted. |
+| SC-8 | Transmission Confidentiality and Integrity | IKEv2 tunnel encrypts all VPN traffic with AES-256-GCM; Phase 1 and Phase 2 crypto policies configured to FIPS-approved algorithms only. |
 ________________________________________
 🔒 Security Statement & Sanitization
-This repository is maintained completely out-of-band from any live corporate environment.
-•	Secret Isolation: No production keys, active certificates, or authentic secrets are stored in Git history.
-•   Placeholder Standardization: All committed code uses generic placeholders following the format lab.local / agency.gov; the .gitignore excludes private keys, certificates, virtual-machine artifacts, and IDE workspace state.
-•   Sanitization Automation: A repository sanitization tool, Scrub-Repo.ps1, performs a find-and-replace pass against an external (gitignored) patterns file before every push. Run with -WhatIf to preview replacements.
-•   Run Order Pipeline: Run order: (1) Copy .scrub-patterns.example.json to .scrub-patterns.local.json and add proprietary identifiers, (2) Run .\Scrub-Repo.ps1 to sanitize files, (3) Perform standard Git staging and tracking commands.
+This repository is maintained completely separate from any live production environment.
+- No production keys, active certificates, or real credentials are in Git history.
+- All committed code uses generic placeholders — lab.local and agency.gov — in place of real organizational identifiers. The .gitignore blocks private keys, certificates, VM artifacts, and IDE state.
+- **Scrub-Repo.ps1** performs a find-and-replace pass using a local (gitignored) patterns file before every push. Run it with `-WhatIf` first to preview what would be replaced.
+- Pre-push order: (1) copy `.scrub-patterns.example.json` to `.scrub-patterns.local.json` and fill in real identifiers, (2) run `.\Scrub-Repo.ps1` to sanitize, (3) review with `git diff`, then commit and push.
 ________________________________________
 
-🏷️ Topics / Tags For GitHub topic tagging on this repository: identity-management, pki, smart-card, fido2, active-directory, certificate-authority, nist-800-53, fips-201, zero-trust, icam, ad-cs, watchguard, entra-id, powershell.
+🏷️ Topics / Tags For GitHub topic tagging on this repository: identity-management, pki, smart-card, fido2, active-directory, certificate-authority, nist-800-53, fips-201, zero-trust, icam, ad-cs, watchguard, entra-id, powershell, nist-csf, cisa-cpg, regulatory-compliance.
 ________________________________________
 📜 License
 Released under the MIT License. See LICENSE for full terms.
 ________________________________________
 👤 Maintainer
-Initial Author and Maintainer: Glenn Byron — GitHub: [@glennbyron1](https://github.com/glennbyron1). See `AUTHORS.md` for attribution and contribution guidance. To report a security issue in this repository, see `SECURITY.md`. One-time setup steps for new maintainer machines (noreply email, SSH commit signing, scrub patterns file) are in `MAINTAINER-SETUP.md`.
+**Glenn Byron** — [@glennbyron1](https://github.com/glennbyron1). See `AUTHORS.md` for contribution guidance, `SECURITY.md` to report a vulnerability, and `MAINTAINER-SETUP.md` for first-time machine setup (noreply email, SSH signing, scrub patterns).

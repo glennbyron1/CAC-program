@@ -68,3 +68,14 @@ desktop.ini
 .scrub-patterns.local.json
 ConsoleHost_history.txt
 .idea/CAC-Program-ToDo.md
+
+# =========================
+#  LOCAL BACKUP SNAPSHOTS
+# =========================
+# Timestamped full-repo snapshots created by local backup/scrub tooling.
+# These should never be committed: they double the repo and can re-introduce
+# IDE/workspace files that were intentionally excluded.
+archive/
+*-TransferKit/
+OfflineCA-TransferKit/
+CAC-Staging/

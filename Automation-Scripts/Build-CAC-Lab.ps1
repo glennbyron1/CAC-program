@@ -3,97 +3,162 @@
 
 <#
 .SYNOPSIS
-    Automated ICAM Laboratory Baseline & Smart Card Environment Stage Tool.
+    Builds the lab domain controller: installs AD DS and promotes the server
+    to a domain controller for a fresh lab forest. This is the FIRST script
+    in the lab build; run Build-CA-GPO.ps1 after the reboot it triggers.
+
 .DESCRIPTION
-    This script initializes the local laboratory system environment variables,
-    safely stubs target Active Directory registry keys for smart card testing,
-    and configures high-availability HTTP CRL paths using safe local placeholders.
+    Phase B of the lab build (see Architecture/STIG-Hardening-Guide.md and the
+    Lab Build Guide). On a clean Windows Server VM this script:
+      1. Verifies administrative elevation.
+      2. Installs the AD Domain Services role.
+      3. Promotes the server to a domain controller, creating a new forest
+         (default lab.local) with integrated DNS.
+      4. Triggers the required reboot.
+
+    After the server reboots, run Build-CA-GPO.ps1 to install the Certificate
+    Authority, create the SmartCard-Pilot OU, build the smart-card GPO, and
+    publish the initial CRL.
+
+    LAB ONLY. This creates a brand-new forest and reboots the machine. Never
+    run it on a production server or an existing domain controller. Use a
+    throwaway VM or dedicated lab hardware, and use the lab.local naming (NOT
+    a name derived from your production domain - see the Lab Build Guide).
+
+.PARAMETER DomainName
+    FQDN of the new lab forest root domain. Default: lab.local
+
+.PARAMETER NetBIOSName
+    NetBIOS name for the new domain. Default: LAB
+
+.PARAMETER SafeModePassword
+    Directory Services Restore Mode (DSRM) password as a SecureString. If
+    omitted, the script prompts securely. Store the real value in your vault.
+
+.EXAMPLE
+    .\Build-CAC-Lab.ps1 -WhatIf
+
+.EXAMPLE
+    .\Build-CAC-Lab.ps1 -DomainName "lab.local" -NetBIOSName "LAB"
+
 .NOTES
     File Name      : Build-CAC-Lab.ps1
-    Framework Path : NIST SP 800-53 Rev. 5 (IA-2, AC-11), FIPS 201-3 Blueprint Alignment
-    Security Tier  : Sanitized Enterprise Code Model - Lab-Safe Only.
+    Framework      : NIST SP 800-53 Rev. 5 (IA-2, AC-11), FIPS 201-3 alignment
+    Security Tier  : Sanitized lab deployment - LAB-SAFE ONLY, NOT production.
+    Prerequisite   : Clean Windows Server VM with a static IP and its DNS set
+                     to itself (see the Lab Build Guide, Phase B).
+    Follow-up      : Build-CA-GPO.ps1 (run after the reboot this triggers).
 #>
 
-# 1. Enforcement Variable Definitions (Sanitized Placeholders)
-$DomainName      = "lab.local"
-$LogonRegPath    = "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System"
-$CertEnrollPath  = "HKLM:\Software\Microsoft\Cryptography\MSPKI\Enrollment"
-$LocalCrlRoot    = "C:\inetpub\wwwroot\pki"
-$LogPath         = "C:\Windows\Logs\ICAM_Lab_Deployment.log"
+[CmdletBinding(SupportsShouldProcess=$true)]
+param(
+    [string]$DomainName  = "lab.local",
+    [string]$NetBIOSName = "LAB",
+    [System.Security.SecureString]$SafeModePassword,
+    [string]$LogPath     = "C:\Windows\Logs\ICAM_Lab_DC_Build.log"
+)
 
 Start-Transcript -Path $LogPath -Append
 
 Write-Host "=======================================================================" -ForegroundColor Cyan
-Write-Host "🛡️  INITIALIZING IDENTITY & ACCESS MANAGEMENT (ICAM) LAB SYSTEM DESIGN" -ForegroundColor Cyan
+Write-Host " BUILDING LAB DOMAIN CONTROLLER (Phase B)"                              -ForegroundColor Cyan
 Write-Host "=======================================================================" -ForegroundColor Cyan
-Write-Host "[*] Target Execution Domain Baseline: $DomainName" -ForegroundColor White
-Write-Host "[*] Script Compliance Path: NIST SP 800-53 Rev. 5 Identity Protections" -ForegroundColor White
+Write-Host " New forest domain : $DomainName"   -ForegroundColor White
+Write-Host " NetBIOS name      : $NetBIOSName"  -ForegroundColor White
+Write-Host " NIST controls     : IA-2, AC-11"   -ForegroundColor White
+Write-Host ""
 
-# 2. Administrative Privilege Verification Loop
-$Identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-$Principal = New-Object Security.Principal.WindowsPrincipal($Identity)
-if (-not $Principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Warning "🛑 CRITICAL ERROR: Administrative elevated privileges are required to modify registry loops."
-    Write-Warning "Please relaunch your shell as an Administrator."
+# ------------------------------------------------------------------
+# Safety guardrails
+# ------------------------------------------------------------------
+Write-Host "[!] LAB ONLY: this creates a NEW forest and reboots the machine." -ForegroundColor Yellow
+Write-Host "    Do not run on production or an existing domain controller."   -ForegroundColor Yellow
+Write-Host ""
+
+# Admin elevation check
+$identity  = [Security.Principal.WindowsIdentity]::GetCurrent()
+$principal = New-Object Security.Principal.WindowsPrincipal($identity)
+if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Warning "Administrative elevation is required. Relaunch the shell as Administrator."
     Stop-Transcript
-    Exit
+    exit 1
 }
 
-# 3. HTTP Certificate Revocation List (CRL) Distribution Directory Staging
-Write-Host "`n[1/3] Organizing High-Availability HTTP CRL Storage File Paths..." -ForegroundColor Cyan
-if (-not (Test-Path $LocalCrlRoot)) {
+# Refuse to run if the machine is already a domain controller
+try {
+    $role = (Get-CimInstance -ClassName Win32_ComputerSystem).DomainRole
+    # DomainRole 4 or 5 = backup/primary domain controller
+    if ($role -eq 4 -or $role -eq 5) {
+        Write-Error "This machine is already a domain controller. Aborting to protect an existing domain."
+        Stop-Transcript
+        exit 1
+    }
+} catch {
+    Write-Warning "Could not determine domain role; proceeding with caution."
+}
+
+# Obtain the DSRM password if not supplied
+if (-not $SafeModePassword) {
+    Write-Host "Enter a Directory Services Restore Mode (DSRM) password (store it in your vault):" -ForegroundColor White
+    $SafeModePassword = Read-Host -AsSecureString
+}
+
+# ------------------------------------------------------------------
+# 1. Install AD DS role
+# ------------------------------------------------------------------
+Write-Host ""
+Write-Host "[1/3] Installing AD Domain Services role..." -ForegroundColor Cyan
+if ($PSCmdlet.ShouldProcess("This server", "Install AD-Domain-Services role")) {
     try {
-        New-Item -Path $LocalCrlRoot -ItemType Directory -Force | Out-Null
-        Write-Host "✅ Directory successfully provisioned: $LocalCrlRoot" -ForegroundColor Green
-        Write-Host "👉 INFO: Map an HTTP TCP/80 web virtual directory directly to this root path for network caching." -ForegroundColor Gray
+        Install-WindowsFeature AD-Domain-Services -IncludeManagementTools | Out-Null
+        Write-Host "    -> AD DS role installed." -ForegroundColor Green
+    } catch {
+        Write-Error "AD DS role install failed: $($_.Exception.Message)"
+        Stop-Transcript
+        exit 1
     }
-    catch {
-        Write-Error "❌ Deployment Fault: Failed to initialize file path $LocalCrlRoot. Exception: $_"
-    }
-} else {
-    Write-Host "ℹ️  HTTP CRL destination path already verified active." -ForegroundColor Yellow
 }
 
-# 4. Local System Smart Card Cryptographic Provider Hardening
-Write-Host "`n[2/3] Configuring Endpoint Registry Parameters for Smart Card Requirement Testing..." -ForegroundColor Cyan
+# ------------------------------------------------------------------
+# 2. Promote to domain controller (new forest)
+# ------------------------------------------------------------------
+Write-Host ""
+Write-Host "[2/3] Promoting to domain controller and creating forest '$DomainName'..." -ForegroundColor Cyan
+Write-Host "      The server will reboot automatically when promotion completes." -ForegroundColor Gray
 
-if (Test-Path $LogonRegPath) {
+if ($PSCmdlet.ShouldProcess($DomainName, "Create new AD forest and promote to DC")) {
     try {
-        # Test Mode Parameter: Prepare the local system parameters for enforcement testing
-        # NOTE: Keeping these at '0' in the baseline wrapper so running this tool doesn't accidentally
-        # lock the admin out of the host machine before GPOs are linked and certificates are issued.
-        Set-ItemProperty -Path $LogonRegPath -Name "scforceoption" -Value 0 -Type DWord -Force
-        Set-ItemProperty -Path $LogonRegPath -Name "ScRemoveOption" -Value 0 -Type DWord -Force
-
-        Write-Host "✅ Target registry keys mapped safely to $LogonRegPath" -ForegroundColor Green
-        Write-Host "   -> Option 'scforceoption' set to 0 [Ready for Test Mode GPO link]" -ForegroundColor Gray
-        Write-Host "   -> Option 'ScRemoveOption' set to 0 [Ready for Lock behavior link]" -ForegroundColor Gray
+        Import-Module ADDSDeployment -ErrorAction Stop
+        Install-ADDSForest `
+            -DomainName $DomainName `
+            -DomainNetbiosName $NetBIOSName `
+            -SafeModeAdministratorPassword $SafeModePassword `
+            -InstallDns:$true `
+            -DomainMode "WinThreshold" `
+            -ForestMode "WinThreshold" `
+            -NoRebootOnCompletion:$false `
+            -Force:$true
+        # Install-ADDSForest reboots the machine on completion.
+    } catch {
+        Write-Error "Forest creation failed: $($_.Exception.Message)"
+        Stop-Transcript
+        exit 1
     }
-    catch {
-        Write-Error "❌ Deployment Fault: Registry adjustment failed. Exception: $_"
-    }
-} else {
-    Write-Warning "⚠️  Target Logon path not found ($LogonRegPath). Confirming host machine operating system layout."
 }
 
-# 5. Staging FIPS 201-3 / NIST SP 800-73 Cryptographic Service Engine Framework
-Write-Host "`n[3/3] Setting Up Local Software Key Storage Provider Enrollment Environment..." -ForegroundColor Cyan
-if (-not (Test-Path $CertEnrollPath)) {
-    try {
-        New-Item -Path $CertEnrollPath -Force | Out-Null
-        Write-Host "✅ System enrollment parameters initialized at: $CertEnrollPath" -ForegroundColor Green
-    }
-    catch {
-        Write-Host "ℹ️  Note: Path is managed directly by Enterprise AD CS services upon deployment active." -ForegroundColor Gray
-    }
-} else {
-    Write-Host "ℹ️  Enrollment service paths verified active." -ForegroundColor Yellow
-}
-
-Write-Host "`n=======================================================================" -ForegroundColor Cyan
-Write-Host "🎉 ENVIRONMENT SETUP SUCCESSFUL: ICAM LAB DESIGN READY FOR GPO APPLY" -ForegroundColor Green
-Write-Host "=======================================================================" -ForegroundColor Cyan
-Write-Host "[*] Log report written to: $LogPath" -ForegroundColor Gray
-Write-Host "[*] Review /Architecture/Blueprint.md next to build your Two-Tier PKI chain." -ForegroundColor White
+# ------------------------------------------------------------------
+# 3. Next steps (shown if -WhatIf or if reboot is deferred)
+# ------------------------------------------------------------------
+Write-Host ""
+Write-Host "[3/3] Domain controller promotion initiated." -ForegroundColor Green
+Write-Host ""
+Write-Host " After the server reboots, log in as $NetBIOSName\Administrator and run:" -ForegroundColor Cyan
+Write-Host "   .\Build-CA-GPO.ps1" -ForegroundColor White
+Write-Host ""
+Write-Host " That script installs the Certificate Authority, creates the"  -ForegroundColor Gray
+Write-Host " SmartCard-Pilot OU, builds the lock-on-removal GPO, and"        -ForegroundColor Gray
+Write-Host " publishes the initial CRL."                                     -ForegroundColor Gray
+Write-Host ""
+Write-Host " Transcript log: $LogPath" -ForegroundColor Gray
 
 Stop-Transcript

@@ -1,6 +1,8 @@
 # ⚙️ Group Policy Configuration Matrices
 
-This folder contains the Infrastructure-as-Code automation templates to push strict identity baselines across all domain-joined Windows endpoints.
+**Author:** Glenn Byron
+
+This folder contains the Group Policy automation templates that enforce smart card identity baselines across all domain-joined Windows endpoints.
 
 ### 🛡️ Smart Card Behavior Policy Baseline
 

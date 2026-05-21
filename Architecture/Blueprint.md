@@ -1,7 +1,12 @@
 🗺️ System Architecture Blueprint: Smart Card Identity Infrastructure
 Document ID: ARCH-ICAM-001
+Author: Glenn Byron
 Target System: Enterprise Cryptographic Multi-Factor Authentication (MFA) Baseline
-Framework Alignment: NIST SP 800-53 Rev. 5, FIPS 201-3, DISA STIG
+Framework Alignment: NIST SP 800-53 Rev. 5, FIPS 201-3, DISA STIG, NIST CSF 2.0, CISA ZTMM, MD SB 871
+
+> For full regulatory mapping (CISA Zero-Trust Maturity Model, NIST CSF 2.0,
+> CISA Cross-Sector CPGs, and incident reporting), see
+> [`Regulatory-Alignment.md`](Regulatory-Alignment.md).
 ________________________________________
 1. Executive Summary & Intent
 This document defines the production engineering baseline for migrating from password-based legacy authentication to a zero-password, hardware-backed Identity, Credential, and Access Management (ICAM) system.
@@ -67,16 +72,51 @@ The token enrollment cycle strictly separates administrative roles:
 •	Standard Enterprise Profile: Physical CardLogix GIDS smart card mapping User Principal Names (UPN) to standard interactive desktops.
 •	Privileged Administrative Profile: Dual-interface cryptographic security token (e.g., YubiKey 5 Series). Enforces a hard separation between a user's standard account and their administrative directory account by requiring separate hardware slots for each identity tier.
 ________________________________________
-5. Federal Compliance Gap Analysis
+5. Physical Access Control Integration
+
+CAC/PIV smart cards are dual-use credentials — the same hardware token used for
+Windows logon and VPN authentication can simultaneously serve as a physical
+access control (PACS) credential for door readers, turnstiles, and secure
+facility entry.
+
+Maryland Senate Bill 871 §9-2701(E)(2) explicitly classifies "physical access
+control mechanisms" as Operational Technology (OT). This classification means
+that organizations subject to the bill's cybersecurity requirements must treat
+PACS infrastructure with the same rigor as IT systems.
+
+**Logical + Physical Convergence Model**
+
+| Credential Use | Protocol | Infrastructure |
+|---|---|---|
+| Windows interactive logon | Kerberos PKINIT (smart card TLS) | Active Directory + AD CS |
+| Remote VPN access | EAP-TLS | WatchGuard IKEv2 |
+| Cloud / SaaS (Entra ID) | FIDO2 WebAuthn | Microsoft Entra ID |
+| Physical door/facility access | PACS card reader (125 kHz / 13.56 MHz contactless) | Physical access control system |
+
+**Implementation Notes**
+- Standard PIV/CAC cards carry a CHUID (Cardholder Unique Identifier) used by
+  compliant PACS readers. No separate credential or separate enrollment is
+  required.
+- FIPS 201-3 specifies PACS authentication assurance levels (LAK-1 through
+  LAK-4). Federal deployments require LAK-3 (biometric + PIN + card) for
+  high-security areas.
+- Commercial deployments can start with LAK-1 (card-only) and upgrade to
+  LAK-2 (card + PIN) without replacing cards.
+- PACS readers must be sourced from the GSA FIPS 201 APL for federal
+  compliance (see Federal Compliance Gap Analysis §6.2 below).
+
+---
+
+6. Federal Compliance Gap Analysis
 To scale this blueprint from a local commercial enterprise to a certified federal environment, four architectural changes must be addressed:
-5.1 Cryptographic Storage (FIPS 140-3 Level 3)
-•	Commercial Infrastructure: Relying on software-based Key Storage Providers (KSP) creates an operational dependency on the host operating system's kernel protection loops.
-•	Federal Requirement: CA private keys must reside inside a dedicated Hardware Security Module (HSM). The cryptographic keys must never leave the physical boundary of the HSM appliance.
-5.2 Supply Chain Procurement (GSA APL)
-•	Commercial Infrastructure: Procurement is open to cost-effective commercial off-the-shelf smart cards, readers, and tokens.
-•	Federal Requirement: Hardware must be sourced from the GSA FIPS 201 Approved Product List (APL), ensuring certified smart cards, PIV topologies, and middleware drivers are deployed.
-5.3 Root Trust Federation (NIST SP 800-217)
-•	Commercial Infrastructure: Trust is localized within an internal Active Directory forest NTAuth store.
-•	Federal Requirement: The internal Issuing CA must cross-certify or map directly to the Federal Common Policy Certificate Authority (FBCA) to enable federated cross-agency identity trust.
+6.1 Cryptographic Storage (FIPS 140-3 Level 3)
+•	Commercial Infrastructure: CA private keys are stored in a software-based Key Storage Provider (KSP), which relies on the host OS for protection.
+•	Federal Requirement: CA private keys must be generated inside and permanently bound to a FIPS 140-3 Level 3 Hardware Security Module (HSM). The keys never leave the physical boundary of the HSM.
+6.2 Supply Chain Procurement (GSA APL)
+•	Commercial Infrastructure: Open procurement — cost-effective commercial smart cards, readers, and tokens are acceptable.
+•	Federal Requirement: All hardware must be sourced from the GSA FIPS 201 Approved Product List (APL), which ensures certified PIV-compliant cards, middleware drivers, and readers are used.
+6.3 Root Trust Federation (NIST SP 800-217)
+•	Commercial Infrastructure: Trust is contained within the internal Active Directory forest NTAuth store.
+•	Federal Requirement: The internal Issuing CA must cross-certify or chain to the Federal Common Policy Certificate Authority (FBCA) to enable cross-agency identity trust under NIST SP 800-217.
 ________________________________________
 
