@@ -47,6 +47,7 @@
 
 .NOTES
     File Name      : Build-CA-GPO.ps1
+    Author         : Glenn Byron
     Framework Path : NIST SP 800-53 Rev. 5 (IA-2, IA-2(11), AC-11)
     Security Tier  : Sanitized lab / pilot deployment - NOT production-ready.
     Prerequisites  : Build-CAC-Lab.ps1 has run, server has rebooted, and the

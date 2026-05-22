@@ -1,0 +1,86 @@
+#!/bin/bash
+# Copyright (c) 2026 Glenn Byron
+# Licensed under the MIT License. See LICENSE in the repository root.
+#
+# Pre-commit hook: blocks sensitive files from ever being committed.
+# Install (per clone):
+#   ln -s ../../security/scripts/pre-commit .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+# Windows (copy instead of symlink):
+#   Copy-Item security\scripts\pre-commit .git\hooks\pre-commit
+
+echo "Running pre-commit security check..."
+
+# Sensitive file extensions (crypto, CA DB, VM images, backups)
+BLOCKED_EXTENSIONS=(
+    "pfx" "p12" "cer" "crt" "der" "pem" "csr" "key"
+    "vmdk" "ova" "ovf" "vmem" "vmsd" "vhdx"
+    "edb" "jrs"
+    "bak" "backup" "wbk"
+)
+
+# Exact filenames that must never be committed
+BLOCKED_FILES=(
+    "ConsoleHost_history.txt"
+    ".scrub-patterns.local.json"
+)
+
+# Path fragments that must never be committed
+BLOCKED_PATHS=(
+    "CertLog/"
+)
+
+STAGED=$(git diff --cached --name-only)
+FAIL=0
+
+for FILE in $STAGED; do
+    # Extension check (case-insensitive)
+    EXT="${FILE##*.}"
+    EXT_LC=$(echo "$EXT" | tr '[:upper:]' '[:lower:]')
+    for B in "${BLOCKED_EXTENSIONS[@]}"; do
+        if [ "$EXT_LC" = "$B" ]; then
+            echo "  BLOCKED: $FILE  (sensitive file type .$EXT)"
+            FAIL=1
+        fi
+    done
+
+    # Exact filename check
+    BASENAME=$(basename "$FILE")
+    for BN in "${BLOCKED_FILES[@]}"; do
+        if [ "$BASENAME" = "$BN" ]; then
+            echo "  BLOCKED: $FILE  (sensitive file)"
+            FAIL=1
+        fi
+    done
+
+    # Path fragment check
+    for BP in "${BLOCKED_PATHS[@]}"; do
+        case "$FILE" in
+            *"$BP"*)
+                echo "  BLOCKED: $FILE  (sensitive path $BP)"
+                FAIL=1
+                ;;
+        esac
+    done
+
+    # Content check: catch private keys even if the extension was changed.
+    # Only scan staged, existing, text-ish files.
+    if [ -f "$FILE" ] && grep -Iq . "$FILE" 2>/dev/null; then
+        if grep -Eq "BEGIN (RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY" "$FILE" 2>/dev/null; then
+            echo "  BLOCKED: $FILE  (contains a PRIVATE KEY block)"
+            FAIL=1
+        fi
+    fi
+done
+
+if [ "$FAIL" -eq 1 ]; then
+    echo ""
+    echo "Commit blocked: sensitive files detected."
+    echo "Remove them from staging or add them to .gitignore, then retry."
+    echo "If a secret was already committed in an earlier commit, see"
+    echo "security/INCIDENT_RESPONSE.md."
+    exit 1
+fi
+
+echo "Security check passed."
+exit 0

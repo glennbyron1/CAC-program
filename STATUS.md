@@ -57,8 +57,8 @@ Update this file as items are completed. Change `[ ]` to `[x]`.
 | 2 | Core Automation Scripts | Select + Implement | ✅ Complete | May 2026 |
 | 3 | Compliance & Regulatory Docs | Select — Tailoring | ✅ Complete | May 2026 |
 | **4** | **RMF Assess — STIG Execution** | **Assess** | **🔄 In Progress** | — |
-| 5 | RMF Authorize — ATO Package | Authorize | 📋 Planned | — |
-| 6 | Advanced Automation + Monitoring | Monitor | 📋 Planned | — |
+| 5 | RMF Authorize — ATO Package | Authorize | 🔄 In Progress (templates done) | — |
+| 6 | Advanced Automation + Monitoring | Monitor | 🔄 In Progress | — |
 | 7 | Portfolio Finalization | — | 📋 Planned | — |
 | 8 | Federal Upgrade Path | Full FISMA/FedRAMP | 🔭 Future | — |
 
@@ -66,10 +66,27 @@ Update this file as items are completed. Change `[ ]` to `[x]`.
 
 ## Next Phase Preview
 
-**Phase 5 — RMF Authorize**
-Once Phase 4 assessment artifacts are complete, Phase 5 produces the ATO package:
-System Security Plan (SSP), finalized POA&M, Security Assessment Report (SAR),
-and STIG deviation rationale documentation.
+**Phase 5 — RMF Authorize** 🔄 In Progress
+All ATO package templates are drafted:
+- `SSP-Template.md` (ARCH-ICAM-006) — system boundary, controls, ATO decision block
+- `POAM-Template.md` (ARCH-ICAM-007) — finding tracking, risk acceptance register
+- `SAR-Template.md` (ARCH-ICAM-008) — before/after assessment results, risk rating
+- `STIG-Deviation-Rationale.md` (ARCH-ICAM-010) — pre-populated with architecture-specific deviations
+- `ATO-Letter-Template.md` (ARCH-ICAM-009) — AO authorization memorandum
+
+**Remaining:** Populate SSP/POA&M/SAR with real Phase 4 scan data, then submit to AO.
+
+**Phase 5 — CSET item complete:**
+- `CSET-Assessment-Guide.md` (ARCH-ICAM-012) ✅ — CSET installation, question set guidance, CAC/PIV answer mapping, MD SB 871 compliance statement
+
+**Phase 6 — PKI Automation & Continuous Monitoring** 🔄 In Progress (near complete)
+- `New-TokenEnrollment.ps1` (SCRIPT-ICAM-011) ✅ — two-phase RA/Issuer ceremony with AC-5 enforcement
+- `Monitor-PKIHealth.ps1` (SCRIPT-ICAM-012) ✅ — CRL/OCSP health, cert expiry alerts, email notification
+- `Set-AuditLogForwarding.ps1` (SCRIPT-ICAM-013) ✅ — WEF Collector/Source modes, audit policy, SIEM XPath
+- `New-CertificateTemplates.ps1` (SCRIPT-ICAM-014) ✅ — Smart Card Logon and Admin templates via PSPKI
+- `Set-OCSPResponder.ps1` (SCRIPT-ICAM-015) ✅ — Online Responder install, signing cert, AIA update
+- `Annual-STIG-Rescan-SOP.md` (ARCH-ICAM-011) ✅ — full annual re-assessment cycle and ATO renewal checklist
+- Remaining: YubiKey provisioning script (deferred)
 
 ---
 

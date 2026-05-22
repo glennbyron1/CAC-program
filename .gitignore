@@ -27,13 +27,17 @@ CertLog/
 *.vhdx
 
 # =========================
-#  VIRTUAL MACHINE FILES
+#  VIRTUAL MACHINE FILES & INSTALL MEDIA
 # =========================
 *.vmdk
 *.ova
 *.ovf
 *.vmem
 *.vmsd
+# OS install media — multi-GB, never belongs in git (e.g. the lab Server 2025 ISO)
+*.iso
+*.img
+Lab-Kit/Server 2025 Standard.iso
 
 # =========================
 #  IDE & PROJECT FILES
@@ -79,3 +83,14 @@ archive/
 *-TransferKit/
 OfflineCA-TransferKit/
 CAC-Staging/
+
+# =========================
+#  CONVERSATION LOGS / EXPORTS (NEVER COMMIT)
+# =========================
+# AI session exports and transcripts contain internal narration, absolute
+# paths with your username, and the real-identifier scrub list. They are the
+# decoder ring for every placeholder in the repo. Keep them out entirely.
+Conversation-Export-*.md
+*-Conversation-Export.md
+*transcript*.md
+*.jsonl

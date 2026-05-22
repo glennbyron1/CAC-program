@@ -1,0 +1,102 @@
+SCAP Compliance Checker (SCC) — Manual Download Instructions
+Author: Glenn Byron
+============================================================
+
+The SCAP SCC installer is hosted on the DoD Cyber Exchange (cyber.mil) behind
+a CAC/ECA authentication wall. You cannot auto-download it without a PIV card
+or ECA certificate. Follow these steps to get it manually.
+
+------------------------------------------------------------
+OPTION A — If you have a DoD CAC or ECA certificate
+------------------------------------------------------------
+
+1. Navigate to:
+   https://public.cyber.mil/stigs/scap/
+
+2. Log in with your CAC or ECA certificate when prompted.
+
+3. Find "SCAP Compliance Checker (SCC)" and download the Windows 64-bit
+   installer (typically named something like SCC_X.X.X_Windows_bundle.zip).
+
+4. Place the downloaded .zip or .exe in:
+   FedCompliance-Tools\00-SCAP-SCC\
+
+5. Extract if it's a .zip, then run the installer as Administrator on each
+   lab VM where you want to run scans.
+
+
+------------------------------------------------------------
+OPTION B — If you do NOT have a CAC/ECA (most common for lab/portfolio work)
+------------------------------------------------------------
+
+The SCAP SCC is not publicly downloadable without a CAC. However, you have
+two solid alternatives that produce equivalent results:
+
+  ALTERNATIVE 1: OpenSCAP (free, open source, cross-platform)
+  ------------------------------------------------------------
+  OpenSCAP is the open-source implementation of the SCAP standard. It reads
+  the same XCCDF/OVAL content as DISA SCC and produces the same ARF output.
+
+  Download: https://www.open-scap.org/download/
+  Windows: Use the OpenSCAP Workbench GUI installer
+           https://github.com/OpenSCAP/scap-workbench/releases
+
+  Usage after install:
+  1. Open SCAP Workbench
+  2. Load the XCCDF file from FedCompliance-Tools\02-STIG-Content\Windows-Server-2022\
+  3. Select the appropriate profile (e.g., "MAC-3_Sensitive")
+  4. Run the scan
+  5. Export results as ARF XML — import into DISA STIG Viewer for review
+
+  ALTERNATIVE 2: Microsoft Security Compliance Toolkit (LGPO)
+  ------------------------------------------------------------
+  The MS SCT is already downloaded to FedCompliance-Tools\04-MS-Security-Compliance-Toolkit\
+  It includes LGPO.exe which can apply and audit STIG-aligned Group Policy settings.
+
+  For portfolio purposes, either tool produces valid before/after evidence.
+  Note in your SAR that you used OpenSCAP in place of DISA SCC and cite the
+  SCAP 1.3 standard compliance (both tools are SCAP-conformant).
+
+
+------------------------------------------------------------
+WHERE TO PUT THE FILES
+------------------------------------------------------------
+
+After downloading (whichever method):
+  - SCAP SCC installer    → FedCompliance-Tools\00-SCAP-SCC\
+  - OpenSCAP Workbench    → FedCompliance-Tools\00-SCAP-SCC\OpenSCAP\
+  - SCAP content for SCC  → FedCompliance-Tools\03-SCAP-Content\  (already staged by Get-LabTools.ps1)
+
+The DISA STIG Viewer (already downloaded to FedCompliance-Tools\01-STIG-Viewer\)
+works with output from both DISA SCC and OpenSCAP.
+
+
+------------------------------------------------------------
+NESSUS ESSENTIALS — ACTIVATION REQUIRED
+------------------------------------------------------------
+
+The Nessus Essentials installer IS downloaded automatically by Get-LabTools.ps1
+to FedCompliance-Tools\05-Nessus-Essentials\
+
+However, it requires a free activation code from Tenable before it will run scans.
+
+To get your free code:
+1. Go to: https://www.tenable.com/products/nessus/nessus-essentials
+2. Register with your email address
+3. Tenable emails you an activation code
+4. During Nessus install, enter the activation code when prompted
+5. Nessus will pull its plugin feed from Tenable's servers (requires internet on the VM)
+
+Free tier limits: up to 16 IP addresses per scan — more than enough for this lab.
+
+
+------------------------------------------------------------
+CSET — FULLY AUTOMATED
+------------------------------------------------------------
+
+CSET (CISA Cybersecurity Evaluation Tool) is downloaded automatically from
+GitHub by Get-LabTools.ps1. No registration required.
+
+Location after download: FedCompliance-Tools\08-CISA-CSET\
+Install by running the .exe as Administrator.
+See Architecture\CSET-Assessment-Guide.md for usage instructions.

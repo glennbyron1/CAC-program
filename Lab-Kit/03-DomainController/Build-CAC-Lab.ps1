@@ -43,6 +43,7 @@
 
 .NOTES
     File Name      : Build-CAC-Lab.ps1
+    Author         : Glenn Byron
     Framework      : NIST SP 800-53 Rev. 5 (IA-2, AC-11), FIPS 201-3 alignment
     Security Tier  : Sanitized lab deployment - LAB-SAFE ONLY, NOT production.
     Prerequisite   : Clean Windows Server VM with a static IP and its DNS set

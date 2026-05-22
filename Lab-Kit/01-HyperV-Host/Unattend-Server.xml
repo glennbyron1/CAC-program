@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Windows Server 2025 Unattended Answer File
+  Author: Glenn Byron
+
+  USAGE:
+    Before booting a VM into Windows Setup, inject this file so the installer
+    runs hands-free. Two ways to use it:
+
+    Option A — Mount VHDX and inject (run on Hyper-V host, before first boot):
+      $vhdx = Mount-VHD -Path "C:\HyperV-Lab\Lab-DC01\Lab-DC01.vhdx" -PassThru
+      $drive = ($vhdx | Get-Disk | Get-Partition | Where DriveLetter).DriveLetter
+      Copy-Item ".\Unattend-Server.xml" "$($drive):\unattend.xml"
+      Dismount-VHD -Path "C:\HyperV-Lab\Lab-DC01\Lab-DC01.vhdx"
+      Then start the VM — setup will find the file automatically.
+
+    Option B — Boot from ISO, press Shift+F10 at first setup screen to open cmd,
+      then copy this file from a network share or USB before setup begins.
+
+  BEFORE USE:
+    1. Replace CHANGE-ME-LAB-PASSWORD with a real lab password
+       (something you'll remember — this is a throwaway lab account)
+    2. Replace the ComputerName in the specialize pass below if you want
+       a different hostname (Lab-DC01, Lab-OfflineRootCA, Lab-Workstation01)
+    3. TimeZone: "Eastern Standard Time" — change if you're in a different zone
+
+  NOTE:
+    This installs Windows Server 2025 Standard (Desktop Experience) via image
+    index 2 (see the IMAGE/INDEX MetaData below). For Server Core (no GUI),
+    use index 1. ALWAYS verify the index against your actual ISO first:
+      dism /Get-WimInfo /WimFile:D:\sources\install.wim
+    Edition order can differ between evaluation and retail media.
+-->
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+
+  <!-- ================================================================
+       Windows PE pass — runs during initial setup boot
+       Handles: disk partitioning, edition selection, locale
+       ================================================================ -->
+  <settings pass="windowsPE">
+
+    <component name="Microsoft-Windows-International-Core-WinPE"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+      <SetupUILanguage>
+        <UILanguage>en-US</UILanguage>
+      </SetupUILanguage>
+      <InputLocale>en-US</InputLocale>
+      <SystemLocale>en-US</SystemLocale>
+      <UILanguage>en-US</UILanguage>
+      <UserLocale>en-US</UserLocale>
+    </component>
+
+    <component name="Microsoft-Windows-Setup"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+
+      <!-- Accept the license automatically -->
+      <UserData>
+        <AcceptEula>true</AcceptEula>
+        <!-- No product key needed for 180-day evaluation -->
+        <!-- If you have a VLSC/KMS key, add it here:
+        <ProductKey>
+          <Key>XXXXX-XXXXX-XXXXX-XXXXX-XXXXX</Key>
+        </ProductKey>
+        -->
+      </UserData>
+
+      <!-- Select Windows Server 2025 Standard with Desktop Experience (GUI) -->
+      <!-- Change Value to 2 for Server Core (no GUI) -->
+      <ImageInstall>
+        <OSImage>
+          <InstallFrom>
+            <MetaData wcm:action="add">
+              <Key>/IMAGE/INDEX</Key>
+              <Value>2</Value>
+              <!-- Typical index values for WS2025 install.wim:
+                   1 = Standard Core
+                   2 = Standard Desktop Experience    <-- this one (GUI)
+                   3 = Datacenter Core
+                   4 = Datacenter Desktop Experience
+                   VERIFY against your ISO: dism /Get-WimInfo /WimFile:D:\sources\install.wim
+                   (evaluation vs retail media can reorder these) -->
+            </MetaData>
+          </InstallFrom>
+          <InstallTo>
+            <DiskID>0</DiskID>
+            <PartitionID>2</PartitionID>
+          </InstallTo>
+        </OSImage>
+      </ImageInstall>
+
+      <!-- Disk configuration: EFI partition + Windows partition -->
+      <DiskConfiguration>
+        <Disk wcm:action="add">
+          <DiskID>0</DiskID>
+          <WillWipeDisk>true</WillWipeDisk>
+          <CreatePartitions>
+            <!-- EFI System Partition (300MB) -->
+            <CreatePartition wcm:action="add">
+              <Order>1</Order>
+              <Type>EFI</Type>
+              <Size>300</Size>
+            </CreatePartition>
+            <!-- MSR (Microsoft Reserved) -->
+            <CreatePartition wcm:action="add">
+              <Order>2</Order>
+              <Type>MSR</Type>
+              <Size>16</Size>
+            </CreatePartition>
+            <!-- Windows partition — takes all remaining space -->
+            <CreatePartition wcm:action="add">
+              <Order>3</Order>
+              <Type>Primary</Type>
+              <Extend>true</Extend>
+            </CreatePartition>
+          </CreatePartitions>
+          <ModifyPartitions>
+            <ModifyPartition wcm:action="add">
+              <Order>1</Order>
+              <PartitionID>1</PartitionID>
+              <Label>System</Label>
+              <Format>FAT32</Format>
+            </ModifyPartition>
+            <ModifyPartition wcm:action="add">
+              <Order>2</Order>
+              <PartitionID>3</PartitionID>
+              <Label>Windows</Label>
+              <Letter>C</Letter>
+              <Format>NTFS</Format>
+            </ModifyPartition>
+          </ModifyPartitions>
+        </Disk>
+      </DiskConfiguration>
+
+    </component>
+  </settings>
+
+  <!-- ================================================================
+       Specialize pass — runs after files are copied, before first boot
+       Handles: computer name, network identity
+       ================================================================ -->
+  <settings pass="specialize">
+
+    <component name="Microsoft-Windows-Shell-Setup"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+      <!-- Change this per VM: Lab-OfflineRootCA, Lab-DC01, Lab-Workstation01 -->
+      <ComputerName>Lab-DC01</ComputerName>
+      <TimeZone>Eastern Standard Time</TimeZone>
+    </component>
+
+  </settings>
+
+  <!-- ================================================================
+       OOBE System pass — runs at first interactive boot
+       Handles: admin account, skip OOBE wizard, auto-logon
+       ================================================================ -->
+  <settings pass="oobeSystem">
+
+    <component name="Microsoft-Windows-Shell-Setup"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+
+      <!-- Skip the OOBE setup wizard entirely -->
+      <OOBE>
+        <HideEULAPage>true</HideEULAPage>
+        <HideLocalAccountScreen>true</HideLocalAccountScreen>
+        <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+        <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+        <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+        <NetworkLocation>Work</NetworkLocation>
+        <ProtectYourPC>3</ProtectYourPC>
+        <SkipMachineOOBE>true</SkipMachineOOBE>
+        <SkipUserOOBE>true</SkipUserOOBE>
+      </OOBE>
+
+      <!-- Set local Administrator password -->
+      <!-- CHANGE THIS before using the file -->
+      <UserAccounts>
+        <AdministratorPassword>
+          <Value>CHANGE-ME-LAB-PASSWORD</Value>
+          <PlainText>true</PlainText>
+        </AdministratorPassword>
+      </UserAccounts>
+
+      <!-- Auto-logon as Administrator once after setup completes -->
+      <!-- Lets you land at the desktop without any prompts -->
+      <AutoLogon>
+        <Password>
+          <Value>CHANGE-ME-LAB-PASSWORD</Value>
+          <PlainText>true</PlainText>
+        </Password>
+        <Enabled>true</Enabled>
+        <LogonCount>1</LogonCount>
+        <Username>Administrator</Username>
+      </AutoLogon>
+
+    </component>
+
+    <!-- Skip Server Manager from launching at first logon -->
+    <component name="Microsoft-Windows-ServerManager-SvrMgrNc"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+      <DoNotOpenServerManagerAtLogon>true</DoNotOpenServerManagerAtLogon>
+    </component>
+
+  </settings>
+
+</unattend>

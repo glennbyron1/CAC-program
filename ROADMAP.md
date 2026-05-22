@@ -135,38 +135,42 @@ and a Security Assessment Report. This is the core RMF Assess deliverable phase.
 
 ---
 
-## Phase 5 — RMF Authorize: Package & ATO Documentation 📋 Planned
+## Phase 5 — RMF Authorize: Package & ATO Documentation 🔄 In Progress
 **RMF: Authorize — CA-6 Authorization**
 
 Produce the documentation package required to support an Authorization to Operate.
 
-- ⬜ **System Security Plan (SSP)** — document all implemented SP 800-53 controls, system boundary, data flows, and inherited controls
-- ⬜ **POA&M** finalized — all open STIG findings tracked with risk acceptance or remediation schedule
-- ⬜ **SAR** finalized — comprehensive assessment findings with risk ratings (Critical/High/Medium/Low)
-- ⬜ STIG deviation rationale documented for any findings accepted as operational requirements
-- ⬜ Authorizing Official (AO) package outline — boundary diagram, control inheritance diagram, ATO letter template
-- ⬜ CSET assessment export — OT maturity level documentation (MD SB 871 §9-2705(b)(3))
+- ✅ **SSP template** (`Architecture/SSP-Template.md`) — system boundary, FIPS 199 categorization, all implemented SP 800-53 controls mapped to repo artifacts (ARCH-ICAM-006)
+- ✅ **POA&M template** (`Architecture/POAM-Template.md`) — open finding tracking with CAT I/II/III breakdown, risk acceptance register, milestone schedule (ARCH-ICAM-007)
+- ✅ **SAR template** (`Architecture/SAR-Template.md`) — before/after assessment results, controls assessment summary, risk rating, recommendations (ARCH-ICAM-008)
+- ⬜ **SSP finalized** — populate with real Phase 4 scan scores and finding counts
+- ⬜ **POA&M finalized** — populate from actual SCAP SCC and Nessus results
+- ⬜ **SAR finalized** — populate with real assessment data
+- ✅ **STIG Deviation Rationale** (`Architecture/STIG-Deviation-Rationale.md`) — pre-populated deviations for software KSP and OCSP; template for Phase 4 findings (ARCH-ICAM-010)
+- ✅ **ATO Letter template** (`Architecture/ATO-Letter-Template.md`) — fillable authorization memorandum for AO signature (ARCH-ICAM-009)
+- ⬜ **SSP finalized** — populate with real Phase 4 scan scores and finding counts
+- ⬜ **POA&M finalized** — populate from actual SCAP SCC and Nessus results
+- ⬜ **SAR finalized** — populate with real assessment data
+- ✅ **CSET Assessment Guide** (`Architecture/CSET-Assessment-Guide.md`) — step-by-step CSET assessment procedure, CAC/PIV answer mapping, MD SB 871 compliance statement template (ARCH-ICAM-012)
 
 ---
 
-## Phase 6 — Advanced PKI Automation & Continuous Monitoring 📋 Planned
+## Phase 6 — Advanced PKI Automation & Continuous Monitoring 🔄 In Progress
 **RMF: Monitor — CA-7 Continuous Monitoring, SI-4 System Monitoring**
 
 Automate remaining token lifecycle gaps and establish ongoing monitoring posture.
 
 ### PKI Automation
-- ⬜ Certificate template automation — Smart Card Logon and Admin templates via PowerShell
-- ⬜ `New-TokenEnrollment.ps1` — guided RA/Issuer separation-of-duties enrollment workflow (AC-5)
+- ✅ `New-CertificateTemplates.ps1` — Smart Card Logon and Admin templates via PSPKI; EKU config, RSA 2048, non-exportable, enrollment ACLs, CA Manager approval for admin template (SCRIPT-ICAM-014)
+- ✅ `New-TokenEnrollment.ps1` — guided RA/Issuer separation-of-duties enrollment workflow; two-phase ceremony with AD flag enforcement, audit log, and Windows Event Log entries (SCRIPT-ICAM-011)
 - ⬜ YubiKey provisioning script — `ykman` integration, PIN enforcement, slot management
-- ⬜ OCSP responder configuration automation
-- ⬜ CRL expiry monitoring — alert before 6-month Root CA CRL expires
+- ✅ `Set-OCSPResponder.ps1` — Online Responder feature install, OCSP signing cert enrollment, revocation config, AIA extension update (SCRIPT-ICAM-015)
 
 ### Continuous Monitoring (RMF Monitor Phase)
-- ⬜ AD CS audit log forwarding to SIEM (certutil -setreg CA\AuditFilter 127 already applied)
-- ⬜ Automated delta STIG scan schedule — monthly SCAP SCC re-scan with variance reporting
-- ⬜ Windows Event Log forwarding configuration for smart card logon events (Event IDs 4768, 4769, 4776)
-- ⬜ CRL / OCSP health monitoring script — verify revocation endpoints are reachable and current
-- ⬜ Annual STIG re-scan procedure documented (CM-6, CA-7 compliance)
+- ✅ `Set-AuditLogForwarding.ps1` — Advanced Audit Policy for smart card events, WEF Collector and Source modes, AD CS AuditFilter=127, SIEM XPath filters (SCRIPT-ICAM-013)
+- ✅ `Annual-STIG-Rescan-SOP.md` — full annual re-assessment cycle: fresh STIG content, delta scan comparison, POA&M update, ATO renewal checklist (ARCH-ICAM-011)
+- ✅ `Monitor-PKIHealth.ps1` — CRL/OCSP reachability, Root CA CRL expiry alerts, Issuing CA and enrolled cert expiry, optional email alert (SCRIPT-ICAM-012)
+- ⬜ YubiKey provisioning script — `ykman` integration, PIN enforcement, slot management
 
 ---
 
@@ -234,7 +238,10 @@ The next milestone is the RMF **Assess** phase: executing DISA STIG audits and p
 | WatchGuard IKEv2 VPN Guide | `Architecture/WatchGuard-IKEv2-VPN-Guide.md` | Implement — remote access controls (AC-17, SC-8) |
 | Before/After Compliance Reports | `Compliance-Reports/` | Assess — evidence artifacts |
 | STIG Checklists (.ckl) | `Compliance-Reports/After-MFA/` | Assess — manual findings |
-| POA&M | *(Phase 5 deliverable)* | Authorize |
-| System Security Plan (SSP) | *(Phase 5 deliverable)* | Authorize |
-| Security Assessment Report (SAR) | *(Phase 5 deliverable)* | Authorize |
-| Continuous Monitoring Plan | *(Phase 6 deliverable)* | Monitor |
+| System Security Plan (SSP) | `Architecture/SSP-Template.md` | Authorize — system boundary, controls, ATO decision |
+| POA&M | `Architecture/POAM-Template.md` | Authorize — open findings tracking |
+| Security Assessment Report (SAR) | `Architecture/SAR-Template.md` | Authorize — assessment findings and risk rating |
+| STIG Deviation Rationale | `Architecture/STIG-Deviation-Rationale.md` | Authorize — accepted risk justifications |
+| ATO Letter | `Architecture/ATO-Letter-Template.md` | Authorize — AO authorization memorandum |
+| Annual STIG Re-Scan SOP | `Architecture/Annual-STIG-Rescan-SOP.md` | Monitor — CM-6, CA-7 |
+| CSET Assessment Guide | `Architecture/CSET-Assessment-Guide.md` | Authorize — MD SB 871 §9-2705(b)(3) |
