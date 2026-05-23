@@ -37,6 +37,18 @@ Before running anything, make sure you have:
    New-VMSwitch -Name "External" -NetAdapterName "Ethernet" -AllowManagementOS $true
    ```
 
+4. **Execution policy unblocked** on the Hyper-V host. Scripts cloned from GitHub
+   are flagged by Windows as "downloaded from the internet" and will be blocked
+   from running. Unblock the entire repo once before running anything:
+   ```powershell
+   Get-ChildItem 'C:\path\to\CAC-program\' -Recurse -Filter *.ps1 | Unblock-File
+   ```
+   This removes the block flag from every `.ps1` file in the project without
+   changing your system execution policy. You only need to do this once on the
+   Hyper-V host — scripts transferred into the VMs via PowerShell Direct do not
+   carry the flag, and `Set-VMPostConfig.ps1` sets `RemoteSigned` policy inside
+   each VM automatically.
+
 ---
 
 ## Step 1 — Create the VMs (run on Hyper-V host)

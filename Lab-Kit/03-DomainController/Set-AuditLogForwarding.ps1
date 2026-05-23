@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Audit Log Forwarding Configuration — Smart Card & AD CS Event Log Subscriptions
+    Audit Log Forwarding Configuration -- Smart Card & AD CS Event Log Subscriptions
 
 .DESCRIPTION
     Configures Windows Event Forwarding (WEF) subscriptions and audit policies to capture
@@ -18,24 +18,24 @@
       6. Optionally configures a Syslog/SIEM forwarding agent if present
 
     Event IDs tracked:
-      4624 — Successful logon (smart card logon type 12)
-      4625 — Failed logon attempt
-      4768 — Kerberos TGT request (smart card PKINIT)
-      4769 — Kerberos service ticket request
-      4776 — NTLM / credential validation attempt
-      4886 — Certificate Services received a certificate request
-      4887 — Certificate Services approved and issued a certificate
-      4888 — Certificate Services denied a certificate request
-      4890 — Certificate Services revoked a certificate
+      4624 -- Successful logon (smart card logon type 12)
+      4625 -- Failed logon attempt
+      4768 -- Kerberos TGT request (smart card PKINIT)
+      4769 -- Kerberos service ticket request
+      4776 -- NTLM / credential validation attempt
+      4886 -- Certificate Services received a certificate request
+      4887 -- Certificate Services approved and issued a certificate
+      4888 -- Certificate Services denied a certificate request
+      4890 -- Certificate Services revoked a certificate
 
     Document ID : SCRIPT-ICAM-013
     Framework   : NIST SP 800-53 AU-2, AU-12, CA-7, SI-4 | CISA ZTMM Detect pillar
 
 .PARAMETER Mode
-    Collector  — Configure this machine as the WEF event collector
-    Source     — Configure this machine as a WEF source (forwards events to collector)
-    AuditOnly  — Configure audit policies only, no WEF (use if you have a separate SIEM agent)
-    Status     — Show current audit policy and WEF subscription status
+    Collector  -- Configure this machine as the WEF event collector
+    Source     -- Configure this machine as a WEF source (forwards events to collector)
+    AuditOnly  -- Configure audit policies only, no WEF (use if you have a separate SIEM agent)
+    Status     -- Show current audit policy and WEF subscription status
 
 .PARAMETER CollectorFQDN
     FQDN of the Windows Event Collector server. Required for Source and Collector modes.
@@ -77,7 +77,7 @@
 
     GPO ALTERNATIVE:
     For domain environments, configure WEF via GPO instead of running this script on each host:
-    Computer Config → Windows Settings → Security Settings → Event Log Subscriptions
+    Computer Config -> Windows Settings -> Security Settings -> Event Log Subscriptions
 #>
 
 [CmdletBinding(SupportsShouldProcess)]
@@ -117,13 +117,13 @@ function Write-OK   { param([string]$Msg) Write-Host "  [OK]   $Msg" -Foreground
 function Write-Warn { param([string]$Msg) Write-Host "  [WARN] $Msg" -ForegroundColor Yellow }
 function Write-Fail { param([string]$Msg) Write-Host "  [FAIL] $Msg" -ForegroundColor Red }
 function Write-Info { param([string]$Msg) Write-Host "  [INFO] $Msg" -ForegroundColor DarkGray }
-function Write-Section { param([string]$T) Write-Host ""; Write-Host "── $T" -ForegroundColor White }
+function Write-Section { param([string]$T) Write-Host ""; Write-Host "-- $T" -ForegroundColor White }
 
 # ---------------------------------------------------------------------------
 # AUDIT POLICY CONFIGURATION
 # ---------------------------------------------------------------------------
 function Set-SmartCardAuditPolicy {
-    Write-Section "Advanced Audit Policy — Smart Card & Kerberos Events"
+    Write-Section "Advanced Audit Policy -- Smart Card & Kerberos Events"
 
     $auditCategories = @(
         # Subcategory                              | Success | Failure
@@ -150,7 +150,7 @@ function Set-SmartCardAuditPolicy {
                 Write-OK "Set: $subName"
             } else {
                 # Try GUID-based fallback for localized OS versions
-                Write-Warn "Name-based policy set failed for '$subName' — may need GUID or localized name"
+                Write-Warn "Name-based policy set failed for '$subName' -- may need GUID or localized name"
                 Write-Info "Manual: auditpol /set /subcategory:`"$subName`" /success:$success /failure:$failure"
             }
         }
@@ -178,10 +178,10 @@ function Set-ADCSAuditFilter {
     Write-Section "AD CS Audit Logging (AuditFilter = 127)"
 
     if (-not $CAServerName) {
-        Write-Info "No -CAServerName specified — skipping AD CS audit config."
+        Write-Info "No -CAServerName specified -- skipping AD CS audit config."
         Write-Info "To configure AD CS audit logging manually, run on the CA server:"
         Write-Info "  certutil -config `"<ServerFQDN>\<CAName>`" -setreg CA\AuditFilter 127"
-        Write-Info "  net stop certsvc && net start certsvc"
+        Write-Info "  net stop certsvc; net start certsvc"
         return
     }
 
@@ -192,15 +192,15 @@ function Set-ADCSAuditFilter {
         if ($currentFilter -match "AuditFilter REG_DWORD = 0x7f \(127\)") {
             Write-OK "AD CS AuditFilter is already set to 127 (all events audited)"
         } else {
-            Write-Warn "AD CS AuditFilter is NOT set to 127 — configuring..."
+            Write-Warn "AD CS AuditFilter is NOT set to 127 -- configuring..."
             if ($PSCmdlet.ShouldProcess($CAServerName, "Set AuditFilter = 127")) {
                 & certutil -config "$CAServerName" -setreg CA\AuditFilter 127
                 if ($LASTEXITCODE -eq 0) {
                     Write-OK "AuditFilter set to 127"
                     Write-Warn "Restart the Certificate Services service to apply:"
-                    Write-Info "  net stop certsvc && net start certsvc"
+                    Write-Info "  net stop certsvc; net start certsvc"
                 } else {
-                    Write-Fail "Failed to set AuditFilter — run manually on the CA server"
+                    Write-Fail "Failed to set AuditFilter -- run manually on the CA server"
                 }
             }
         }
@@ -208,13 +208,13 @@ function Set-ADCSAuditFilter {
         Write-Host ""
         Write-Info "AD CS audit events captured with AuditFilter 127:"
         @(
-            "4886 — Certificate request received",
-            "4887 — Certificate issued",
-            "4888 — Certificate request denied",
-            "4889 — Certificate template modified",
-            "4890 — Certificate revoked",
-            "4896 — Rows deleted from certificate database",
-            "4898 — Certificate Services loaded a template"
+            "4886 -- Certificate request received",
+            "4887 -- Certificate issued",
+            "4888 -- Certificate request denied",
+            "4889 -- Certificate template modified",
+            "4890 -- Certificate revoked",
+            "4896 -- Rows deleted from certificate database",
+            "4898 -- Certificate Services loaded a template"
         ) | ForEach-Object { Write-Info "  $_" }
 
     } catch {
@@ -227,7 +227,7 @@ function Set-ADCSAuditFilter {
 # WEF COLLECTOR MODE
 # ---------------------------------------------------------------------------
 function Set-WEFCollector {
-    Write-Section "Windows Event Forwarding — Collector Configuration"
+    Write-Section "Windows Event Forwarding -- Collector Configuration"
 
     if (-not $CollectorFQDN) {
         Write-Fail "-CollectorFQDN is required for Collector mode."
@@ -243,7 +243,7 @@ function Set-WEFCollector {
         if ($svc.Status -eq 'Running') {
             Write-OK "Windows Event Collector service is running"
         } else {
-            Write-Warn "Service may not have started — check: Get-Service wecsvc"
+            Write-Warn "Service may not have started -- check: Get-Service wecsvc"
         }
     }
 
@@ -261,7 +261,7 @@ function Set-WEFCollector {
 <Subscription xmlns="http://schemas.microsoft.com/2006/03/windows/events/subscription">
     <SubscriptionId>$SubscriptionName</SubscriptionId>
     <SubscriptionType>SourceInitiated</SubscriptionType>
-    <Description>ICAM Smart Card and AD CS Audit Events — NIST AU-2, AU-12, CA-7</Description>
+    <Description>ICAM Smart Card and AD CS Audit Events -- NIST AU-2, AU-12, CA-7</Description>
     <Enabled>true</Enabled>
     <Uri>http://schemas.microsoft.com/wbem/wsman/1/windows/EventLog</Uri>
     <ConfigurationMode>MinLatency</ConfigurationMode>
@@ -340,17 +340,17 @@ function Set-WEFCollector {
     Remove-Item $tempXML -Force -ErrorAction SilentlyContinue
 
     Write-Host ""
-    Write-Host "  Forwarded events will appear in: Windows Logs → Forwarded Events" -ForegroundColor DarkGray
+    Write-Host "  Forwarded events will appear in: Windows Logs -> Forwarded Events" -ForegroundColor DarkGray
     Write-Host "  Source machines must run this script in Source mode to subscribe." -ForegroundColor DarkGray
     Write-Host ""
-    Write-OK "Collector configured — $CollectorFQDN"
+    Write-OK "Collector configured -- $CollectorFQDN"
 }
 
 # ---------------------------------------------------------------------------
 # WEF SOURCE MODE
 # ---------------------------------------------------------------------------
 function Set-WEFSource {
-    Write-Section "Windows Event Forwarding — Source Configuration"
+    Write-Section "Windows Event Forwarding -- Source Configuration"
 
     if (-not $CollectorFQDN) {
         Write-Fail "-CollectorFQDN is required for Source mode."
@@ -389,12 +389,12 @@ function Set-WEFSource {
             & wevtutil sl Security /ca:"O:BAG:SYD:(A;;0xf0005;;;SY)(A;;0x5;;;BA)(A;;0x1;;;S-1-5-32-573)(A;;0x1;;;NS)" 2>&1 | Out-Null
             Write-OK "Security log permissions updated"
         } catch {
-            Write-Warn "Could not update Security log SDDL — $_"
+            Write-Warn "Could not update Security log SDDL -- $_"
         }
     }
 
     Write-Host ""
-    Write-OK "Source configured — this machine will forward events to $CollectorFQDN"
+    Write-OK "Source configured -- this machine will forward events to $CollectorFQDN"
     Write-Info "Run 'gpupdate /force' then wait up to 15 minutes for the subscription to activate."
     Write-Info "Verify with: wecutil gr `"$SubscriptionName`""
 }
@@ -419,7 +419,7 @@ function Get-ForwardingStatus {
     if ($winrmSvc.Status -eq 'Running') {
         Write-OK "WinRM service is running"
     } else {
-        Write-Warn "WinRM service is NOT running — required for event forwarding"
+        Write-Warn "WinRM service is NOT running -- required for event forwarding"
     }
 
     Write-Host ""
@@ -428,7 +428,7 @@ function Get-ForwardingStatus {
     if ($wecsvc) {
         Write-Info "Service status: $($wecsvc.Status) | Startup: $($wecsvc.StartType)"
     } else {
-        Write-Info "wecsvc not found — collector role not installed on this machine"
+        Write-Info "wecsvc not found -- collector role not installed on this machine"
     }
 
     Write-Host ""
@@ -449,21 +449,21 @@ function Get-ForwardingStatus {
             ForEach-Object { Write-Info "  $($_.Name): $($_.Value)" }
         }
     } else {
-        Write-Info "  No SubscriptionManager configured — Source mode not set up"
+        Write-Info "  No SubscriptionManager configured -- Source mode not set up"
     }
 
     Write-Host ""
     Write-Host "  KEY EVENT IDs TO MONITOR:" -ForegroundColor Cyan
     @(
-        "4624 — Account logon (Type 12 = Smart Card)",
-        "4625 — Failed logon",
-        "4768 — Kerberos TGT requested (PKINIT smart card)",
-        "4769 — Kerberos service ticket requested",
-        "4776 — NTLM credential validation",
-        "4886 — AD CS: Certificate request received",
-        "4887 — AD CS: Certificate issued",
-        "4888 — AD CS: Certificate request denied",
-        "4890 — AD CS: Certificate revoked"
+        "4624 -- Account logon (Type 12 = Smart Card)",
+        "4625 -- Failed logon",
+        "4768 -- Kerberos TGT requested (PKINIT smart card)",
+        "4769 -- Kerberos service ticket requested",
+        "4776 -- NTLM credential validation",
+        "4886 -- AD CS: Certificate request received",
+        "4887 -- AD CS: Certificate issued",
+        "4888 -- AD CS: Certificate request denied",
+        "4890 -- AD CS: Certificate revoked"
     ) | ForEach-Object { Write-Info "  $_" }
     Write-Host ""
 }
@@ -482,9 +482,9 @@ function Write-SIEMNote {
     Write-Host ""
     Write-Host "  Windows Event Log channels to monitor:" -ForegroundColor White
     @(
-        "Security              — logon, Kerberos, credential, and AD CS events",
-        "ForwardedEvents       — collected events from domain controllers and CA server",
-        "Microsoft-Windows-CertificateServicesClient-Lifecycle-System/Operational — cert lifecycle"
+        "Security              -- logon, Kerberos, credential, and AD CS events",
+        "ForwardedEvents       -- collected events from domain controllers and CA server",
+        "Microsoft-Windows-CertificateServicesClient-Lifecycle-System/Operational -- cert lifecycle"
     ) | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
     Write-Host ""
     Write-Host "  XPath filters for targeted ingestion (paste into your agent config):" -ForegroundColor White
@@ -504,7 +504,7 @@ Set-ADCSAuditFilter
 switch ($Mode) {
     'Collector' { Set-WEFCollector }
     'Source'    { Set-WEFSource }
-    'AuditOnly' { Write-Info "AuditOnly mode — skipping WEF configuration." }
+    'AuditOnly' { Write-Info "AuditOnly mode -- skipping WEF configuration." }
     'Status'    { Get-ForwardingStatus }
 }
 
@@ -512,7 +512,7 @@ Write-SIEMNote
 
 Write-Host ""
 Write-Host ("=" * 72) -ForegroundColor DarkCyan
-Write-Host "  CONFIGURATION COMPLETE — Mode: $Mode" -ForegroundColor Cyan
+Write-Host "  CONFIGURATION COMPLETE -- Mode: $Mode" -ForegroundColor Cyan
 Write-Host "  Run -Mode Status at any time to verify the current configuration." -ForegroundColor DarkGray
 Write-Host ("=" * 72) -ForegroundColor DarkCyan
 Write-Host ""

@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Smart Card / Hardware Token Enrollment — Guided RA/Issuer Separation-of-Duties Workflow
+    Smart Card / Hardware Token Enrollment - Guided RA/Issuer Separation-of-Duties Workflow
 
 .DESCRIPTION
     Guides two authorized administrators through the token enrollment ceremony, enforcing
@@ -12,20 +12,20 @@
     Workflow:
       1. RA logs in, verifies the enrollee's identity (two forms of ID), records attestation
       2. RA authorizes the enrollment in Active Directory (sets flag on user account)
-      3. RA logs off — the session is handed to the Card Issuer
+      3. RA logs off - the session is handed to the Card Issuer
       4. Card Issuer logs in, confirms RA authorization flag is set before proceeding
       5. Card Issuer runs the technical provisioning (certificate request + token issuance)
-      6. Enrollee sets PIN — administrator never knows the PIN
+      6. Enrollee sets PIN - administrator never knows the PIN
       7. Audit record written to log file and Windows Event Log
 
     Document ID : SCRIPT-ICAM-011
-    Framework   : NIST SP 800-53 AC-5, IA-2, IA-2(11), IA-5 | FIPS 201-3 §2.2
+    Framework   : NIST SP 800-53 AC-5, IA-2, IA-2(11), IA-5 | FIPS 201-3 S2.2
 
 .PARAMETER Mode
-    RA        — Registration Authority identity verification phase
-    Issuer    — Card Issuer technical provisioning phase
-    Status    — Show enrollment status for a user account
-    AuditLog  — Display the enrollment audit log
+    RA        - Registration Authority identity verification phase
+    Issuer    - Card Issuer technical provisioning phase
+    Status    - Show enrollment status for a user account
+    AuditLog  - Display the enrollment audit log
 
 .PARAMETER UserPrincipalName
     UPN of the account being enrolled (e.g., jsmith@lab.local)
@@ -37,10 +37,10 @@
     Domain controller to query/update. Default: auto-detected.
 
 .EXAMPLE
-    # Step 1 — RA phase (run as Registration Authority admin)
+    # Step 1 - RA phase (run as Registration Authority admin)
     .\New-TokenEnrollment.ps1 -Mode RA -UserPrincipalName jsmith@lab.local
 
-    # Step 2 — Issuer phase (run as Card Issuer admin — different person)
+    # Step 2 - Issuer phase (run as Card Issuer admin - different person)
     .\New-TokenEnrollment.ps1 -Mode Issuer -UserPrincipalName jsmith@lab.local
 
     # Check enrollment status
@@ -90,7 +90,7 @@ function Write-Banner {
     $width = 72
     Write-Host ""
     Write-Host ("=" * $width) -ForegroundColor DarkCyan
-    Write-Host "  TOKEN ENROLLMENT SYSTEM — $Mode PHASE" -ForegroundColor Cyan
+    Write-Host "  TOKEN ENROLLMENT SYSTEM - $Mode PHASE" -ForegroundColor Cyan
     Write-Host "  SCRIPT-ICAM-011 | Author: Glenn Byron" -ForegroundColor Cyan
     Write-Host "  NIST SP 800-53 AC-5 | Separation of Duties Enforced" -ForegroundColor Cyan
     Write-Host ("=" * $width) -ForegroundColor DarkCyan
@@ -121,7 +121,7 @@ function Write-AuditLog {
     try {
         Add-Content -Path $LogPath -Value $line -Encoding UTF8
     } catch {
-        Write-Warn "Could not write to log file: $LogPath — $_"
+        Write-Warn "Could not write to log file: $LogPath - $_"
     }
 
     # Write to Windows Application Event Log
@@ -132,7 +132,7 @@ function Write-AuditLog {
         }
         Write-EventLog -LogName Application -Source $source -EventId 4200 -EntryType Information -Message $line
     } catch {
-        Write-Warn "Could not write to Windows Event Log — $_"
+        Write-Warn "Could not write to Windows Event Log - $_"
     }
 }
 
@@ -176,7 +176,7 @@ function Invoke-RAPhase {
     $raOperator = Get-CurrentUser
 
     Write-Host ""
-    Write-Host "REGISTRATION AUTHORITY — IDENTITY VERIFICATION" -ForegroundColor Yellow
+    Write-Host "REGISTRATION AUTHORITY - IDENTITY VERIFICATION" -ForegroundColor Yellow
     Write-Host "Performing identity verification for: $UserPrincipalName" -ForegroundColor White
     Write-Host "RA Operator (this account): $raOperator" -ForegroundColor White
     Write-Host ""
@@ -200,7 +200,7 @@ function Invoke-RAPhase {
 
     foreach ($check in $checks) {
         if (-not (Confirm-Prompt "  [ ] $check")) {
-            Write-Fail "Identity verification failed — enrollment aborted."
+            Write-Fail "Identity verification failed - enrollment aborted."
             Write-AuditLog -Event "RA-ABORTED" -UPN $UserPrincipalName -PerformedBy $raOperator -Details "RA checklist item failed: $check"
             return
         }
@@ -232,7 +232,7 @@ function Invoke-RAPhase {
         Write-Host "  $($user.$RA_ATTR)" -ForegroundColor DarkYellow
         Write-Host ""
         if (-not (Confirm-Prompt "Override the existing RA authorization and re-authorize?")) {
-            Write-Warn "Enrollment cancelled — existing authorization preserved."
+            Write-Warn "Enrollment cancelled - existing authorization preserved."
             return
         }
     }
@@ -283,7 +283,7 @@ function Invoke-IssuerPhase {
     $issuerOperatorSam = ($issuerOperator -split '\\')[-1]
 
     Write-Host ""
-    Write-Host "CARD ISSUER — TECHNICAL PROVISIONING" -ForegroundColor Yellow
+    Write-Host "CARD ISSUER - TECHNICAL PROVISIONING" -ForegroundColor Yellow
     Write-Host "Provisioning token for: $UserPrincipalName" -ForegroundColor White
     Write-Host "Issuer (this account): $issuerOperator" -ForegroundColor White
     Write-Host ""
@@ -315,11 +315,11 @@ function Invoke-IssuerPhase {
         Write-Host ""
         Write-Host "  This transaction has been blocked and logged." -ForegroundColor Red
         Write-AuditLog -Event "SOD-VIOLATION-BLOCKED" -UPN $UserPrincipalName -PerformedBy $issuerOperator `
-            -Details "RA and Issuer are the same account: $raWho — BLOCKED per NIST AC-5"
+            -Details "RA and Issuer are the same account: $raWho - BLOCKED per NIST AC-5"
         return
     }
 
-    Write-OK "Separation of duties verified — RA ($raWho) ≠ Issuer ($issuerOperatorSam)"
+    Write-OK "Separation of duties verified - RA ($raWho) != Issuer ($issuerOperatorSam)"
     Write-Host ""
 
     # --- Pre-issuance checklist ---
@@ -328,11 +328,11 @@ function Invoke-IssuerPhase {
         "The physical token (smart card or security key) is in my hand and has not been pre-initialized",
         "The token serial number has been recorded (see audit log entry below)",
         "I have confirmed with the RA that the enrollee identity was verified in person",
-        "The enrollee is present to set their own PIN — I will NOT know or record the PIN"
+        "The enrollee is present to set their own PIN - I will NOT know or record the PIN"
     )
     foreach ($check in $issuerChecks) {
         if (-not (Confirm-Prompt "  [ ] $check")) {
-            Write-Fail "Pre-issuance check failed — provisioning aborted."
+            Write-Fail "Pre-issuance check failed - provisioning aborted."
             Write-AuditLog -Event "ISSUER-ABORTED" -UPN $UserPrincipalName -PerformedBy $issuerOperator -Details "Pre-issuance checklist failed: $check"
             return
         }
@@ -351,7 +351,7 @@ function Invoke-IssuerPhase {
     Write-Host "    certreq -enroll -machine -policyserver <CA-Server> SmartCardLogon" -ForegroundColor White
     Write-Host ""
     Write-Host "  Alternatively, use the Certificates MMC snap-in:" -ForegroundColor DarkGray
-    Write-Host "  certmgr.msc → Personal → Certificates → All Tasks → Request New Certificate" -ForegroundColor White
+    Write-Host "  certmgr.msc -> Personal -> Certificates -> All Tasks -> Request New Certificate" -ForegroundColor White
     Write-Host "  Select the 'Smart Card Logon' or 'Smart Card User' template." -ForegroundColor White
     Write-Host ""
     Write-Host "  The certificate will be written directly to the hardware token." -ForegroundColor DarkGray
@@ -359,7 +359,7 @@ function Invoke-IssuerPhase {
     Write-Host ""
 
     if (-not (Confirm-Prompt "Certificate enrolled successfully onto the token?")) {
-        Write-Warn "Provisioning paused — complete certificate enrollment and re-run Issuer phase."
+        Write-Warn "Provisioning paused - complete certificate enrollment and re-run Issuer phase."
         Write-AuditLog -Event "ISSUER-PAUSED" -UPN $UserPrincipalName -PerformedBy $issuerOperator -Details "Certificate enrollment not confirmed"
         return
     }
@@ -383,14 +383,14 @@ function Invoke-IssuerPhase {
     Write-Host "  YubiKey default PIN: 123456  |  Default PUK: 12345678" -ForegroundColor DarkGray
     Write-Host ""
     Write-Host "  The enrollee changes their PIN using:" -ForegroundColor DarkGray
-    Write-Host "  Windows: Ctrl+Alt+Del → Change a password → select the Smart Card" -ForegroundColor White
+    Write-Host "  Windows: Ctrl+Alt+Del -> Change a password -> select the Smart Card" -ForegroundColor White
     Write-Host "  YubiKey: ykman piv change-pin" -ForegroundColor White
     Write-Host ""
 
     if (-not (Confirm-Prompt "Enrollee has set their own PIN and confirmed the token works?")) {
-        Write-Warn "PIN setup not confirmed — mark token as incomplete until resolved."
+        Write-Warn "PIN setup not confirmed - mark token as incomplete until resolved."
         Write-AuditLog -Event "ISSUER-PIN-INCOMPLETE" -UPN $UserPrincipalName -PerformedBy $issuerOperator `
-            -Details "Enrollee did not confirm PIN setup — Token: $tokenSerial"
+            -Details "Enrollee did not confirm PIN setup - Token: $tokenSerial"
         return
     }
 
@@ -447,12 +447,12 @@ function Invoke-StatusCheck {
 
     if ($user.$RA_ATTR -like "$RA_PREFIX*") {
         $parts = $user.$RA_ATTR -split '\|'
-        Write-Host "  RA Authorization:  PENDING — authorized by '$($parts[1])' at $($parts[2])" -ForegroundColor Yellow
+        Write-Host "  RA Authorization:  PENDING - authorized by '$($parts[1])' at $($parts[2])" -ForegroundColor Yellow
         Write-Host "  Awaiting Card Issuer provisioning phase." -ForegroundColor Yellow
     } elseif ($user.SmartcardLogonRequired) {
-        Write-Host "  Enrollment Status: COMPLETE — smart card logon is required" -ForegroundColor Green
+        Write-Host "  Enrollment Status: COMPLETE - smart card logon is required" -ForegroundColor Green
     } else {
-        Write-Host "  Enrollment Status: NOT ENROLLED — RA phase has not been run" -ForegroundColor DarkGray
+        Write-Host "  Enrollment Status: NOT ENROLLED - RA phase has not been run" -ForegroundColor DarkGray
     }
     Write-Host ""
 }
@@ -467,7 +467,7 @@ function Invoke-AuditLog {
     }
 
     Write-Host ""
-    Write-Host "ENROLLMENT AUDIT LOG — $LogPath" -ForegroundColor Cyan
+    Write-Host "ENROLLMENT AUDIT LOG - $LogPath" -ForegroundColor Cyan
     Write-Host ""
 
     if ($UserPrincipalName) {

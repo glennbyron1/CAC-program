@@ -30,6 +30,11 @@
     use index 1. ALWAYS verify the index against your actual ISO first:
       dism /Get-WimInfo /WimFile:D:\sources\install.wim
     Edition order can differ between evaluation and retail media.
+
+  BUG FIXES (from original):
+    - InstallTo PartitionID corrected from 2 to 3. The disk layout creates
+      three partitions: EFI (1), MSR (2), Windows (3). The original pointed
+      setup at the MSR partition, which would cause installation to fail.
 -->
 <unattend xmlns="urn:schemas-microsoft-com:unattend">
 
@@ -73,7 +78,6 @@
       </UserData>
 
       <!-- Select Windows Server 2025 Standard with Desktop Experience (GUI) -->
-      <!-- Change Value to 2 for Server Core (no GUI) -->
       <ImageInstall>
         <OSImage>
           <InstallFrom>
@@ -91,12 +95,15 @@
           </InstallFrom>
           <InstallTo>
             <DiskID>0</DiskID>
-            <PartitionID>2</PartitionID>
+            <!-- FIX: Was PartitionID 2 (MSR) — corrected to 3 (Windows partition).
+                 Partition layout: 1=EFI, 2=MSR, 3=Windows (Primary/Extend).
+                 Installing to partition 2 would fail or corrupt the MSR. -->
+            <PartitionID>3</PartitionID>
           </InstallTo>
         </OSImage>
       </ImageInstall>
 
-      <!-- Disk configuration: EFI partition + Windows partition -->
+      <!-- Disk configuration: EFI partition + MSR + Windows partition -->
       <DiskConfiguration>
         <Disk wcm:action="add">
           <DiskID>0</DiskID>

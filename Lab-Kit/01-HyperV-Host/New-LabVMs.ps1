@@ -54,7 +54,7 @@
 .EXAMPLE
     # Custom storage path and switch name, skip workstation
     .\New-LabVMs.ps1 -ISOPath "..\Server 2025 Standard.iso" `
-                     -VMStoragePath "D:\VMs\CAC-Lab\" `
+                     -VMStoragePath 'D:\VMs\CAC-Lab\' `
                      -ExternalSwitchName "LAN" `
                      -SkipWorkstation
 
@@ -70,7 +70,7 @@
 [CmdletBinding(SupportsShouldProcess)]
 param(
     [Parameter()]
-    [string]$VMStoragePath = "C:\HyperV-Lab\",
+    [string]$VMStoragePath = 'C:\HyperV-Lab\',
 
     [Parameter()]
     [string]$ISOPath = (Join-Path $PSScriptRoot "..\Server 2025 Standard.iso"),
@@ -176,8 +176,8 @@ Write-Host ""
 # Create each VM
 # ---------------------------------------------------------------------------
 foreach ($vm in $VMs) {
-    $name    = $vm.Name
-    $vmPath  = Join-Path $VMStoragePath $name
+    $name     = $vm.Name
+    $vmPath   = Join-Path $VMStoragePath $name
     $vhdxPath = Join-Path $vmPath "$name.vhdx"
 
     Write-Host "── $name" -ForegroundColor White
@@ -280,11 +280,11 @@ Write-Host "  VM BUILD COMPLETE" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  Next steps:" -ForegroundColor White
 Write-Host "  1. Start each VM and boot from the ISO to install Windows Server 2025" -ForegroundColor DarkGray
-Write-Host "     Use the Datacenter (Desktop Experience) edition for the GUI" -ForegroundColor DarkGray
+Write-Host "     Use the Standard (Desktop Experience) edition for the GUI" -ForegroundColor DarkGray
 Write-Host "  2. After OS install, run Set-VMPostConfig.ps1 INSIDE each VM" -ForegroundColor DarkGray
 Write-Host "     to set hostname, IP, and DNS before running the CAC scripts" -ForegroundColor DarkGray
 Write-Host "  3. Transfer files to Lab-OfflineRootCA via PowerShell Direct:" -ForegroundColor DarkGray
-Write-Host "     `$s = New-PSSession -VMName 'Lab-OfflineRootCA' -Credential (Get-Credential)" -ForegroundColor Cyan
-Write-Host "     Copy-Item -Path 'C:\FedCompliance-Tools' -ToSession `$s -Destination 'C:\' -Recurse" -ForegroundColor Cyan
+Write-Host '     $s = New-PSSession -VMName "Lab-OfflineRootCA" -Credential (Get-Credential)' -ForegroundColor Cyan
+Write-Host '     Copy-Item -Path "C:\FedCompliance-Tools" -ToSession $s -Destination "C:\" -Recurse' -ForegroundColor Cyan
 Write-Host ("=" * 70) -ForegroundColor DarkCyan
 Write-Host ""

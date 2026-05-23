@@ -26,15 +26,15 @@
 
 .PARAMETER Hostname
     The hostname to set. Defaults match the names from New-LabVMs.ps1:
-      OfflineRootCA    → Lab-OfflineRootCA
-      DomainController → Lab-DC01
-      Workstation      → Lab-Workstation01
+      OfflineRootCA    -> Lab-OfflineRootCA
+      DomainController -> Lab-DC01
+      Workstation      -> Lab-Workstation01
 
 .PARAMETER IPAddress
     Static IPv4 address for this VM. Only used for DomainController and Workstation.
     Suggested defaults:
-      Lab-DC01          → 10.10.10.10
-      Lab-Workstation01 → 10.10.10.20
+      Lab-DC01          -> 10.10.10.10
+      Lab-Workstation01 -> 10.10.10.20
 
 .PARAMETER SubnetPrefix
     Subnet prefix length. Default: 24 (255.255.255.0)
@@ -45,14 +45,14 @@
 
 .PARAMETER DNSServer
     DNS server IP. For Lab-Workstation01, point this at Lab-DC01 (10.10.10.10).
-    For Lab-DC01 itself, defaults to 127.0.0.1 (loopback — it IS the DNS server).
+    For Lab-DC01 itself, defaults to 127.0.0.1 (loopback - it IS the DNS server).
 
 .EXAMPLE
     # Configure the Domain Controller VM (run inside Lab-DC01)
     .\Set-VMPostConfig.ps1 -VMRole DomainController -IPAddress 10.10.10.10
 
 .EXAMPLE
-    # Configure the Offline Root CA (no network — sets hostname only)
+    # Configure the Offline Root CA (no network - sets hostname only)
     .\Set-VMPostConfig.ps1 -VMRole OfflineRootCA
 
 .EXAMPLE
@@ -194,7 +194,7 @@ if ($VMRole -ne 'OfflineRootCA' -and $IPAddress) {
 # ---------------------------------------------------------------------------
 Write-Step "Applying common baseline settings..."
 
-# Disable IPv6 (keeps things simple in a lab — CAC auth uses IPv4)
+# Disable IPv6 (keeps things simple in a lab - CAC auth uses IPv4)
 Get-NetAdapter | ForEach-Object {
     Disable-NetAdapterBinding -Name $_.Name -ComponentID ms_tcpip6 -ErrorAction SilentlyContinue
 }
@@ -210,9 +210,9 @@ Enable-PSRemoting -Force -SkipNetworkProfileCheck | Out-Null
 Set-Item WSMan:\localhost\Client\TrustedHosts -Value "*" -Force
 Write-OK "WinRM enabled"
 
-# Turn off Windows Firewall for lab (you'll want it on in production — this is lab only)
+# Turn off Windows Firewall for lab (you'll want it on in production - this is lab only)
 Set-NetFirewallProfile -Profile Domain, Public, Private -Enabled False
-Write-Warn "Windows Firewall disabled — lab environment only, not for production"
+Write-Warn "Windows Firewall disabled - lab environment only, not for production"
 
 # Disable hibernation (common annoyance on VMs)
 powercfg /hibernate off
@@ -229,15 +229,15 @@ if ($VMRole -eq 'OfflineRootCA') {
     Write-Step "Offline Root CA: confirming network isolation..."
     $adapters = Get-NetAdapter
     if ($adapters.Count -eq 0) {
-        Write-OK "No network adapters present — VM is properly air-gapped"
+        Write-OK "No network adapters present - VM is properly air-gapped"
     } else {
         Write-Warn "Network adapter found on Offline Root CA!"
         Write-Warn "This VM should have NO network adapter. Disable it in Hyper-V Manager."
         Write-Info "Adapters found: $($adapters.Name -join ', ')"
     }
     Write-Info "Transfer files to this VM using PowerShell Direct from the Hyper-V host:"
-    Write-Info "  `$s = New-PSSession -VMName 'Lab-OfflineRootCA' -Credential (Get-Credential)"
-    Write-Info "  Copy-Item 'C:\FedCompliance-Tools' -ToSession `$s -Destination 'C:\' -Recurse"
+    Write-Info '  $s = New-PSSession -VMName "Lab-OfflineRootCA" -Credential (Get-Credential)'
+    Write-Info '  Copy-Item -Path "C:\FedCompliance-Tools" -ToSession $s -Destination "C:\" -Recurse'
 }
 
 if ($VMRole -eq 'DomainController') {
@@ -252,13 +252,13 @@ if ($VMRole -eq 'DomainController') {
 if ($VMRole -eq 'Workstation') {
     Write-Info "After rebooting, verify you can ping Lab-DC01 ($DNSServer)."
     Write-Info "Then join the domain with:"
-    Write-Info "  Add-Computer -DomainName lab.local -Credential (Get-Credential) -Restart"
+    Write-Info '  Add-Computer -DomainName lab.local -Credential (Get-Credential) -Restart'
 }
 
 # ---------------------------------------------------------------------------
 Write-Host ""
 Write-Host ("=" * 70) -ForegroundColor DarkCyan
-Write-Host "  POST-CONFIG COMPLETE — REBOOT NOW" -ForegroundColor Cyan
+Write-Host "  POST-CONFIG COMPLETE - REBOOT NOW" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  Run this to reboot:" -ForegroundColor White
 Write-Host "  Restart-Computer -Force" -ForegroundColor Cyan
