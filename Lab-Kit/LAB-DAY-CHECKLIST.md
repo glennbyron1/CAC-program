@@ -8,10 +8,37 @@
 ## Before You Start
 
 - [ ] Hyper-V host is up, sufficient RAM available for 2–3 VMs simultaneously
-- [ ] VMs snapshotted at clean state before any changes
+- [ ] Take a clean-state checkpoint before making any changes:
+  ```powershell
+  .\Lab-Kit\01-HyperV-Host\New-LabSnapshot.ps1 -Mode Create -Label "03-Before-Scan"
+  ```
 - [ ] Internet access available on host (download tools if not already staged)
 - [ ] USB drive ready if testing offline CA transfer workflow
 - [ ] Log file location set: `C:\Windows\Logs\` on each VM
+
+---
+
+## Pre-Scan Validation (Run Before Any SCAP Scan)
+
+Run the lab validation script and confirm all seven layers pass before starting scans.
+A failed layer will skew your results — fix issues here, not after the scan.
+
+```powershell
+.\Lab-Kit\05-Compliance\Invoke-LabValidation.ps1 `
+    -DomainName "lab.local" `
+    -DCHostname "Lab-DC01" `
+    -CRLUrl "http://pki.lab.local/crl/IssuingCA.crl" `
+    -OCSPUrl "http://pki.lab.local/ocsp" `
+    -ExportReport
+```
+
+- [ ] Layer 1 — Domain & Network: PASS
+- [ ] Layer 2 — PKI: PASS
+- [ ] Layer 3 — Smart Card: PASS
+- [ ] Layer 4 — GPO: PASS
+- [ ] Layer 5 — Audit Policy: PASS
+- [ ] Layer 6 — VPN: PASS
+- [ ] Layer 7 — Recent Auth Events: PASS
 
 ---
 
@@ -20,7 +47,7 @@
 ### Install SCAP SCC
 - [ ] On the domain-joined VM, run:
   ```powershell
-  .\Automation-Scripts\Download-FedCompliance-Kit.ps1 -OutputPath "C:\FedCompliance-Tools"
+  .\Tools-Kit\Download-FedCompliance-Kit.ps1 -OutputPath "C:\FedCompliance-Tools"
   ```
 - [ ] Install SCAP SCC from `C:\FedCompliance-Tools\00-SCAP-SCC\`
 - [ ] Confirm SCAP SCC opens and sees the local machine
@@ -33,22 +60,39 @@
 - [ ] Export results: HTML report + XCCDF XML
 - [ ] Stage them:
   ```powershell
-  .\Stage-Reports.ps1   # choose option 1 (Before-MFA)
+  .\Lab-Kit\05-Compliance\Stage-Reports.ps1   # choose option 1 (Before-MFA)
   ```
 - [ ] Note the compliance percentage and CAT I open count — you'll need these for the SAR
 
 ### Apply Hardening
+- [ ] Take a checkpoint at the pre-hardening state:
+  ```powershell
+  .\Lab-Kit\01-HyperV-Host\New-LabSnapshot.ps1 -Mode Create -Label "04-After-GPO"
+  ```
 - [ ] Run `Build-CAC-Lab.ps1` if not already done (domain build)
+  ```powershell
+  .\Lab-Kit\03-DomainController\Build-CAC-Lab.ps1
+  ```
 - [ ] Run `Build-CA-GPO.ps1` (CA + GPO deployment)
-- [ ] Apply smart card GPOs from `Group-Policy\Enforce-SmartCard.ps1`
+  ```powershell
+  .\Lab-Kit\03-DomainController\Build-CA-GPO.ps1
+  ```
+- [ ] Apply smart card GPOs from:
+  ```powershell
+  .\Lab-Kit\04-Workstation\Enforce-SmartCard.ps1
+  ```
 - [ ] Reboot VM
 
 ### After-MFA Hardened Scan
+- [ ] Re-run pre-scan validation and confirm all layers still pass:
+  ```powershell
+  .\Lab-Kit\05-Compliance\Invoke-LabValidation.ps1 -DomainName "lab.local" -DCHostname "Lab-DC01" -ExportReport
+  ```
 - [ ] Run SCAP SCC scan again (same benchmarks)
 - [ ] Export results: HTML report + XCCDF XML
 - [ ] Stage them:
   ```powershell
-  .\Stage-Reports.ps1   # choose option 2 (After-MFA)
+  .\Lab-Kit\05-Compliance\Stage-Reports.ps1   # choose option 2 (After-MFA)
   ```
 - [ ] Note the new compliance percentage — record in SAR-Template.md
 
@@ -81,29 +125,45 @@
 
 ## Phase 4.4 — Token Enrollment Ceremony (Live Test)
 
+### Standard Smart Card (New-TokenEnrollment.ps1)
 - [ ] Have a second domain account ready to act as Card Issuer (not yourself)
 - [ ] As Registration Authority, run:
   ```powershell
-  .\Automation-Scripts\New-TokenEnrollment.ps1 -Mode RA -UserPrincipalName target@lab.local
+  .\Lab-Kit\03-DomainController\New-TokenEnrollment.ps1 -Mode RA -UserPrincipalName target@lab.local
   ```
 - [ ] Complete the identity verification checklist in the script
 - [ ] Confirm the AD extensionAttribute1 flag is set on the target user
 - [ ] Switch to the Card Issuer account, run:
   ```powershell
-  .\Automation-Scripts\New-TokenEnrollment.ps1 -Mode Issuer -UserPrincipalName target@lab.local
+  .\Lab-Kit\03-DomainController\New-TokenEnrollment.ps1 -Mode Issuer -UserPrincipalName target@lab.local
   ```
 - [ ] Confirm the SOD block fires if you try to issue your own card
 - [ ] Complete certificate enrollment and PIN set
 - [ ] Screenshot: card login prompt, session lock on removal
+
+### YubiKey Provisioning (New-YubiKeyToken.ps1)
+- [ ] YubiKey plugged into the provisioning workstation, ykman installed
+- [ ] Run provisioning (generates management key, sets PIN/PUK, enrolls cert from CA):
+  ```powershell
+  .\Lab-Kit\03-DomainController\New-YubiKeyToken.ps1 -Mode Provision -UserPrincipalName target@lab.local -CAServer "Lab-DC01"
+  ```
+- [ ] Record the displayed management key in a secure location (shown once only)
+- [ ] Verify the token after provisioning:
+  ```powershell
+  .\Lab-Kit\03-DomainController\New-YubiKeyToken.ps1 -Mode Verify -UserPrincipalName target@lab.local
+  ```
+- [ ] Confirm EventID 7200 appears in the Application Event Log
 
 ---
 
 ## Phase 4.5 — PKI Health Check (Baseline Reading)
 
 ```powershell
-.\Automation-Scripts\Monitor-PKIHealth.ps1 `
+.\Lab-Kit\03-DomainController\Monitor-PKIHealth.ps1 `
     -CRLUrls @("http://pki.lab.local/crl/RootCA.crl","http://pki.lab.local/crl/IssuingCA.crl") `
-    -IssuingCAServer "ca01.lab.local"
+    -OCSPUrl "http://pki.lab.local/ocsp" `
+    -IssuingCAServer "Lab-DC01" `
+    -AlertThresholdDays 60
 ```
 
 - [ ] All CRL URLs reachable and within validity window
@@ -117,7 +177,7 @@
 - [ ] Smart card cert enrolled on test endpoint
 - [ ] Run:
   ```powershell
-  .\Automation-Scripts\Deploy-VPNClient.ps1 -VPNServerAddress "vpn.lab.local" -RunTest
+  .\Lab-Kit\04-Workstation\Deploy-VPNClient.ps1 -VPNServerAddress "vpn.lab.local" -RunTest
   ```
 - [ ] Connect VPN — confirm certificate auth, no password prompt
 - [ ] Screenshot: VPN connected status, certificate subject in connection details
@@ -130,11 +190,11 @@ When scans are done, go fill in the real data in these files (all have [FILL IN]
 
 | File | What to fill in |
 |------|----------------|
-| `Architecture/SAR-Template.md` | Before/after SCAP scores, CAT I/II counts, Nessus crit/high counts |
-| `Architecture/POAM-Template.md` | Real open findings from the After-MFA scan |
-| `Architecture/SSP-Template.md` | Actual compliance score, ATO decision block |
-| `Architecture/Annual-STIG-Rescan-SOP.md` | 2026 row in the assessment record table |
-| `Architecture/CSET-Assessment-Guide.md` | 2026 assessment date and score, once CSET is run |
+| `Architecture/RMF-Templates/SAR-Template.md` | Before/after SCAP scores, CAT I/II counts, Nessus crit/high counts |
+| `Architecture/RMF-Templates/POAM-Template.md` | Real open findings from the After-MFA scan |
+| `Architecture/RMF-Templates/SSP-Template.md` | Actual compliance score, ATO decision block |
+| `Architecture/RMF-Templates/Annual-STIG-Rescan-SOP.md` | 2026 row in the assessment record table |
+| `Architecture/RMF-Templates/CSET-Assessment-Guide.md` | 2026 assessment date and score, once CSET is run |
 | `Compliance-Reports/README.md` | Real SCAP SCC compliance % and Nessus finding counts |
 
 ---

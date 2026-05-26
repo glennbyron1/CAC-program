@@ -1,7 +1,7 @@
 # Program Status — Current Phase Tracker
 
 **Author:** Glenn Byron
-**Last Updated:** May 2026
+**Last Updated:** May 23, 2026
 
 ---
 
@@ -79,14 +79,26 @@ All ATO package templates are drafted:
 **Phase 5 — CSET item complete:**
 - `CSET-Assessment-Guide.md` (ARCH-ICAM-012) ✅ — CSET installation, question set guidance, CAC/PIV answer mapping, MD SB 871 compliance statement
 
-**Phase 6 — PKI Automation & Continuous Monitoring** 🔄 In Progress (near complete)
+**Phase 6 — PKI Automation & Continuous Monitoring** ✅ Automation Complete
 - `New-TokenEnrollment.ps1` (SCRIPT-ICAM-011) ✅ — two-phase RA/Issuer ceremony with AC-5 enforcement
 - `Monitor-PKIHealth.ps1` (SCRIPT-ICAM-012) ✅ — CRL/OCSP health, cert expiry alerts, email notification
 - `Set-AuditLogForwarding.ps1` (SCRIPT-ICAM-013) ✅ — WEF Collector/Source modes, audit policy, SIEM XPath
 - `New-CertificateTemplates.ps1` (SCRIPT-ICAM-014) ✅ — Smart Card Logon and Admin templates via PSPKI
 - `Set-OCSPResponder.ps1` (SCRIPT-ICAM-015) ✅ — Online Responder install, signing cert, AIA update
+- `New-YubiKeyToken.ps1` (SCRIPT-ICAM-016) ✅ — YubiKey PIV provisioning: reset, management key, PIN/PUK, key gen, CA enrollment, cert import, audit log
 - `Annual-STIG-Rescan-SOP.md` (ARCH-ICAM-011) ✅ — full annual re-assessment cycle and ATO renewal checklist
-- Remaining: YubiKey provisioning script (deferred)
+
+**Live-Server Tooling** (added May 23, 2026) ✅ Complete
+- `Live-Servers/Test-ServerReadiness.ps1` ✅ — pre-deployment role-based readiness checker (DC, IssuingCA, OfflineRootCA, Workstation)
+- `Live-Servers/Test-GPOCompliance.ps1` ✅ — GPO existence + application + registry settings validator
+- `Live-Servers/Install-Guide.md` ✅ — 6-phase live server deployment walkthrough
+- `Live-Servers/GPO-Check-Guide.md` ✅ — how-to guide for the GPO compliance checker
+
+**Lab Infrastructure** (added May 22, 2026) ✅ Complete
+- `Lab-Kit/01-HyperV-Host/New-LabVMs.ps1` ✅ — creates lab VMs (OfflineRootCA, DC01, Workstation01) in Hyper-V
+- `Lab-Kit/01-HyperV-Host/Set-VMPostConfig.ps1` ✅ — post-OS static IP, WinRM, timezone, role-specific configuration
+- `Lab-Kit/01-HyperV-Host/Unattend-Server.xml` ✅ — hands-free Windows Server install (Gen 2, UEFI, EFI partition)
+- `Package-LabKit.ps1` ✅ — packages self-contained Lab-Kit + Tools-Kit ZIP for USB transfer
 
 ---
 

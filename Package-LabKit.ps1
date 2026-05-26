@@ -86,7 +86,15 @@ Copy-Item (Join-Path $repoRoot "Architecture\RMF-Templates\*.md") $rmf -Force
 # 3. Tools-Kit downloaders — so the kit's ..\..\Tools-Kit references resolve
 Copy-Item (Join-Path $repoRoot "Tools-Kit") (Join-Path $staging "Tools-Kit") -Recurse -Force
 
-# 4. Compliance-Reports skeleton — so Stage-Reports.ps1 has somewhere to write
+# 4. Live-Servers — readiness checker, GPO compliance script, install and how-to guides
+$liveServers = Join-Path $staging "Live-Servers"
+New-Item -ItemType Directory -Path $liveServers -Force | Out-Null
+$liveSrc = Join-Path $repoRoot "Live-Servers"
+if (Test-Path $liveSrc) {
+    Get-ChildItem -Path $liveSrc | Copy-Item -Destination $liveServers -Force
+}
+
+# 5. Compliance-Reports skeleton — so Stage-Reports.ps1 has somewhere to write
 $cr = Join-Path $staging "Compliance-Reports"
 New-Item -ItemType Directory -Path (Join-Path $cr "Before-MFA") -Force | Out-Null
 New-Item -ItemType Directory -Path (Join-Path $cr "After-MFA")  -Force | Out-Null
@@ -94,7 +102,7 @@ if (Test-Path (Join-Path $repoRoot "Compliance-Reports\README.md")) {
     Copy-Item (Join-Path $repoRoot "Compliance-Reports\README.md") $cr -Force
 }
 
-# 5. LICENSE + a short package README
+# 6. LICENSE + a short package README
 if (Test-Path (Join-Path $repoRoot "LICENSE")) {
     Copy-Item (Join-Path $repoRoot "LICENSE") $staging -Force
 }
@@ -110,6 +118,7 @@ Contents:
 - ``Lab-Kit/``            build and operate scripts (run these on the lab machines)
 - ``Tools-Kit/``          downloaders for the free DoD/federal tools
 - ``Architecture/``       reference docs the kit links to (PKI, STIG, VPN, RMF templates)
+- ``Live-Servers/``        production server tools (readiness checker, GPO compliance, install guide)
 - ``Compliance-Reports/`` drop SCAP/Nessus before/after output here
 
 Note: the Windows Server 2025 ISO is NOT included (it is multi-GB). Copy it to
@@ -120,7 +129,7 @@ Author: Glenn Byron - MIT License (see LICENSE).
 "@
 Set-Content -Path (Join-Path $staging "README.md") -Value $pkgReadme -Encoding UTF8
 
-# 6. Zip it
+# 7. Zip it
 if ($PSCmdlet.ShouldProcess($zipPath, "Create ZIP archive")) {
     if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
     Compress-Archive -Path (Join-Path $staging "*") -DestinationPath $zipPath -Force
@@ -128,7 +137,7 @@ if ($PSCmdlet.ShouldProcess($zipPath, "Create ZIP archive")) {
     Write-Host "  -> Created $zipPath ($sizeMB MB)" -ForegroundColor Green
 }
 
-# 7. Clean up staging
+# 8. Clean up staging
 Remove-Item $staging -Recurse -Force -ErrorAction SilentlyContinue
 
 Write-Host ""

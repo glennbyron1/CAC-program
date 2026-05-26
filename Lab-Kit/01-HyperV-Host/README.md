@@ -135,18 +135,41 @@ Reboot each VM after the script finishes.
 
 ---
 
-## Step 5 — Hand Off to the CAC Scripts
+## Step 5 — Take a Baseline Snapshot
 
-Once all three VMs are configured and rebooted, you're ready for the CAC lab work:
+Before running any CAC scripts, take a checkpoint of each VM at its clean post-config state. This gives you a reliable rollback point if anything goes wrong during the build.
+
+```powershell
+# Run from the Hyper-V host
+.\New-LabSnapshot.ps1 -Mode Create -Label "00-BaseOS"
+```
+
+The snapshot manager supports Create, List, Restore, Delete, and Cleanup modes. Recommended label sequence as you progress through the lab:
+
+| Label | When to take it |
+|-------|----------------|
+| `00-BaseOS` | After Set-VMPostConfig.ps1, before any CAC scripts |
+| `01-DomainJoined` | After Build-CAC-Lab.ps1 and reboot |
+| `02-PKI-Ready` | After Build-CA-GPO.ps1 and CA is operational |
+| `03-Before-Scan` | Before running SCAP SCC baseline scan |
+| `04-After-GPO` | After applying smart card enforcement GPOs |
+| `05-After-Scan` | After both SCAP SCC scans complete |
+| `06-Validated` | After Invoke-LabValidation.ps1 confirms all layers pass |
+
+---
+
+## Step 6 — Hand Off to the CAC Scripts
+
+Once all three VMs are configured, rebooted, and snapshotted, you're ready for the CAC lab work:
 
 | VM | Next Script | Location |
 |----|------------|----------|
-| Lab-DC01 | `Build-CAC-Lab.ps1` | Automation-Scripts\ |
-| Lab-DC01 (after reboot) | `Build-CA-GPO.ps1` | Automation-Scripts\ |
-| Lab-OfflineRootCA | `Download-OfflineCA-Kit.ps1` output | Transfer via PowerShell Direct |
-| Lab-Workstation01 | Join domain, then test smart card login | After DC is up |
+| Lab-DC01 | `Build-CAC-Lab.ps1` | `Lab-Kit\03-DomainController\` |
+| Lab-DC01 (after reboot) | `Build-CA-GPO.ps1` | `Lab-Kit\03-DomainController\` |
+| Lab-OfflineRootCA | `Initialize-OfflineRootCA.ps1` | `Lab-Kit\02-OfflineRootCA\` (transfer via PowerShell Direct) |
+| Lab-Workstation01 | Join domain, then `Enforce-SmartCard.ps1` | `Lab-Kit\04-Workstation\` |
 
-See `LAB-DAY-CHECKLIST.md` in the repo root for the full Phase 4 execution sequence.
+See `Lab-Kit/LAB-DAY-CHECKLIST.md` for the full Phase 4 execution sequence.
 
 ---
 

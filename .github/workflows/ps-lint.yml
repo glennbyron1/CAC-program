@@ -1,0 +1,107 @@
+name: PowerShell Lint (PSScriptAnalyzer)
+
+# Runs on every push and pull request that touches a .ps1 file.
+# Uses PSScriptAnalyzer with the default rule set plus a few extras
+# that matter for this repo (avoid positional parameters, use approved verbs, etc.)
+
+on:
+  push:
+    paths:
+      - '**/*.ps1'
+      - '**/*.psm1'
+      - '**/*.psd1'
+      - '.github/workflows/ps-lint.yml'
+  pull_request:
+    paths:
+      - '**/*.ps1'
+      - '**/*.psm1'
+      - '**/*.psd1'
+
+jobs:
+  lint:
+    name: PSScriptAnalyzer
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+
+      - name: Run PSScriptAnalyzer on all scripts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Continue'
+
+          # Rules to treat as errors (hard fail the build)
+          # NOTE: PSAvoidUsingWriteHost is intentionally NOT here — all scripts in this
+          # repo are interactive admin tools that use Write-Host for color-coded console
+          # output. The rule targets module functions that pollute the pipeline; it does
+          # not apply to standalone scripts. Moving it to warnings keeps the badge green.
+          $errorRules = @(
+            'PSAvoidUsingPlainTextForPassword',
+            'PSAvoidUsingConvertToSecureStringWithPlainText',
+            'PSUseApprovedVerbs',
+            'PSReservedCmdletChar',
+            'PSReservedParams'
+          )
+
+          # Rules to surface as warnings (visible in the log but do not fail the build)
+          $warnRules = @(
+            'PSAvoidUsingWriteHost',                    # valid for interactive scripts; warn only
+            'PSAvoidUsingPositionalParameters',
+            'PSUseDeclaredVarsMoreThanAssignments',
+            'PSUseShouldProcessForStateChangingFunctions',
+            'PSAvoidGlobalVars'
+          )
+
+          # Find all PowerShell files (exclude archive snapshots)
+          $scripts = Get-ChildItem -Recurse -Include '*.ps1','*.psm1','*.psd1' |
+            Where-Object { $_.FullName -notmatch '\\archive\\' }
+
+          Write-Host "Scanning $($scripts.Count) PowerShell file(s)..." -ForegroundColor Cyan
+          Write-Host ""
+
+          $allResults = foreach ($script in $scripts) {
+            $results = Invoke-ScriptAnalyzer -Path $script.FullName -Severity Error,Warning,Information
+            $results
+          }
+
+          $errors   = $allResults | Where-Object { $_.Severity -eq 'Error'   -and $errorRules -contains $_.RuleName }
+          $warnings = $allResults | Where-Object { $_.Severity -in 'Warning','Error' -and $warnRules -contains $_.RuleName }
+          $info     = $allResults | Where-Object { $_.Severity -eq 'Information' }
+
+          if ($errors) {
+            Write-Host "ERRORS (will fail build):" -ForegroundColor Red
+            $errors | ForEach-Object {
+              Write-Host "  [$($_.Severity)] $($_.ScriptName):$($_.Line) — $($_.RuleName): $($_.Message)" -ForegroundColor Red
+            }
+          }
+
+          if ($warnings) {
+            Write-Host "WARNINGS:" -ForegroundColor Yellow
+            $warnings | ForEach-Object {
+              Write-Host "  [$($_.Severity)] $($_.ScriptName):$($_.Line) — $($_.RuleName): $($_.Message)" -ForegroundColor Yellow
+            }
+          }
+
+          if ($info) {
+            Write-Host "INFO: $($info.Count) informational finding(s) (not shown)." -ForegroundColor Gray
+          }
+
+          if (-not $errors -and -not $warnings) {
+            Write-Host "No PSScriptAnalyzer issues found." -ForegroundColor Green
+          }
+
+          Write-Host ""
+          Write-Host "Summary: $($errors.Count) error(s), $($warnings.Count) warning(s), $($info.Count) info" -ForegroundColor Cyan
+
+          # Fail the build only on hard-error rules
+          if ($errors.Count -gt 0) {
+            Write-Host "::error::PSScriptAnalyzer found $($errors.Count) error(s). See output above."
+            exit 1
+          }

@@ -1,5 +1,8 @@
 🛡️ Enterprise ICAM: "CAC-Style" Identity & Access Deployment Blueprint
 
+[![Secret Scan](https://github.com/glennbyron1/CAC-program/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/glennbyron1/CAC-program/actions/workflows/secret-scan.yml)
+[![PowerShell Lint](https://github.com/glennbyron1/CAC-program/actions/workflows/ps-lint.yml/badge.svg)](https://github.com/glennbyron1/CAC-program/actions/workflows/ps-lint.yml)
+
 **Author:** Glenn Byron | **GitHub:** [@glennbyron1](https://github.com/glennbyron1)
 
 An end-to-end, script-driven blueprint for deploying hardware-backed, certificate-based MFA across an enterprise environment. This project takes the model used by the U.S. DoD Common Access Card (CAC) and Federal PIV programs and adapts it for organizations running Active Directory, AD CS, WatchGuard IKEv2 VPN, and Microsoft 365 (Entra ID).
@@ -114,50 +117,9 @@ This architecture directly addresses and satisfies the following security contro
 ________________________________________
 🎬 Lab Demonstration Walkthrough
 
-> **Coming after Phase 4 lab work.** This section will document the full end-to-end demonstration with screenshots showing the before and after states. Placeholder sections are below — replace each [screenshot] block with actual captures from the lab VMs.
+The full end-to-end demo guide lives in **`Demo-Walkthrough.md`** (DEMO-ICAM-001) at the repo root. It covers seven steps — lock screen with no password option, smart card PIN entry with certificate subject visible, Event 4768 Pre-Auth Type 16 in Event Viewer, session lock on card removal under two seconds, VPN connection via EAP-TLS without a password prompt, PKI health monitor green dashboard, and SCAP before/after compliance delta — with screenshot placeholder slots, hiring manager talking points, and a NIST SP 800-53 controls-demonstrated table.
 
-**Step 1 — Baseline (password-only login)**
-Walk the reviewer through logging in with a standard domain password. Show that no smart card is required and document the SCAP SCC before-hardening compliance score.
-
-[screenshot: standard domain login prompt — no smart card required]
-[screenshot: SCAP SCC before-hardening scan results — compliance score and open findings count]
-
-**Step 2 — Run hardening scripts**
-Execute `Build-CAC-Lab.ps1` to build the domain, then `Build-CA-GPO.ps1` to deploy the smart card enforcement GPOs. Show the GPO summary output.
-
-[screenshot: Build-CAC-Lab.ps1 console output — domain promotion complete]
-[screenshot: Build-CA-GPO.ps1 console output — GPOs applied]
-
-**Step 3 — Token enrollment ceremony**
-Run `New-TokenEnrollment.ps1` in RA mode as the Registration Authority, then switch accounts and run it in Issuer mode as the Card Issuer. Show the separation of duties enforcement (the script blocks the same account from completing both phases).
-
-[screenshot: RA phase — identity verification checklist and AD flag set]
-[screenshot: Issuer phase — SOD block if same account attempts to issue]
-[screenshot: Issuer phase — certificate enrolled, SmartcardLogonRequired set]
-
-**Step 4 — Smart card-enforced login**
-Remove the password and attempt to log in without the card — show the access denial. Then log in with the card inserted. Show the 2-second session lock when the card is pulled.
-
-[screenshot: password login rejected — smart card required]
-[screenshot: smart card login prompt with certificate selection]
-[screenshot: session lock triggered on card removal]
-
-**Step 5 — VPN with EAP-TLS**
-Run `Deploy-VPNClient.ps1` to configure the IKEv2 profile. Connect to the WatchGuard VPN using the smart card certificate. Show the authentication log on the firewall confirming EAP-TLS and the certificate subject.
-
-[screenshot: Deploy-VPNClient.ps1 output — profile created and validated]
-[screenshot: VPN connected — certificate auth confirmed, no password prompt]
-
-**Step 6 — After-hardening SCAP SCC scan**
-Run the post-hardening SCAP SCC scan and export results. Stage them with `Stage-Reports.ps1`. Show the compliance score improvement.
-
-[screenshot: SCAP SCC after-hardening scan results — improved score and reduced CAT I findings]
-[screenshot: Stage-Reports.ps1 output — reports staged to Compliance-Reports/After-MFA/]
-
-**Step 7 — PKI health monitor**
-Run `Monitor-PKIHealth.ps1` to confirm all CRLs and certificates are within validity windows. Show the CRIT/WARN/OK status dashboard.
-
-[screenshot: Monitor-PKIHealth.ps1 output — all checks green]
+Screenshots will be added after Phase 4 lab work is complete.
 ________________________________________
 🔒 Security Statement & Sanitization
 This repository is maintained completely separate from any live production environment.

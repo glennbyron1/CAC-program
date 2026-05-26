@@ -163,14 +163,14 @@ Automate remaining token lifecycle gaps and establish ongoing monitoring posture
 ### PKI Automation
 - ✅ `New-CertificateTemplates.ps1` — Smart Card Logon and Admin templates via PSPKI; EKU config, RSA 2048, non-exportable, enrollment ACLs, CA Manager approval for admin template (SCRIPT-ICAM-014)
 - ✅ `New-TokenEnrollment.ps1` — guided RA/Issuer separation-of-duties enrollment workflow; two-phase ceremony with AD flag enforcement, audit log, and Windows Event Log entries (SCRIPT-ICAM-011)
-- ⬜ YubiKey provisioning script — `ykman` integration, PIN enforcement, slot management
+- ✅ `New-YubiKeyToken.ps1` — YubiKey PIV provisioning: PIV reset, AES-256 management key, PIN/PUK setup (complexity-enforced), key generation (ECCP256/384/RSA2048), CSR + CA enrollment via certreq, certificate import, chain verification, full audit log (SCRIPT-ICAM-016)
 - ✅ `Set-OCSPResponder.ps1` — Online Responder feature install, OCSP signing cert enrollment, revocation config, AIA extension update (SCRIPT-ICAM-015)
 
 ### Continuous Monitoring (RMF Monitor Phase)
 - ✅ `Set-AuditLogForwarding.ps1` — Advanced Audit Policy for smart card events, WEF Collector and Source modes, AD CS AuditFilter=127, SIEM XPath filters (SCRIPT-ICAM-013)
 - ✅ `Annual-STIG-Rescan-SOP.md` — full annual re-assessment cycle: fresh STIG content, delta scan comparison, POA&M update, ATO renewal checklist (ARCH-ICAM-011)
 - ✅ `Monitor-PKIHealth.ps1` — CRL/OCSP reachability, Root CA CRL expiry alerts, Issuing CA and enrolled cert expiry, optional email alert (SCRIPT-ICAM-012)
-- ⬜ YubiKey provisioning script — `ykman` integration, PIN enforcement, slot management
+- ✅ `New-YubiKeyToken.ps1` — YubiKey PIV provisioning: PIV reset, AES-256 management key, PIN/PUK setup (complexity-enforced), key generation (ECCP256/384/RSA2048), CSR + CA enrollment via certreq, certificate import, chain verification, full audit log (SCRIPT-ICAM-016)
 
 ---
 
@@ -199,30 +199,47 @@ federally authorized system. See `Architecture/Blueprint.md §6` for detailed ga
 
 ---
 
-## Immediate Next Action — Phase 4 Kickoff
+## Immediate Next Action — Phase 4 Lab Execution
 
 All architecture, automation, and documentation is complete (RMF Prepare through Select/Implement).
-The next milestone is the RMF **Assess** phase: executing DISA STIG audits and populating evidence.
+Scripts, VM tooling, and live-server tooling are all ready. The next milestone is the RMF **Assess**
+phase: spinning up the Hyper-V lab, executing DISA STIG audits, and populating evidence.
 
 ```powershell
-# Step 1 — Download all federal compliance tools (SCAP SCC, STIG Viewer, Nessus, etc.)
-.\Automation-Scripts\Download-FedCompliance-Kit.ps1
+# ── STEP 0 — Spin up the lab VMs (on the Hyper-V host) ──────────────────
+cd C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\
+.\New-LabVMs.ps1 -ISOPath "C:\ISOs\WS2025.iso"   # creates OfflineRootCA, DC01, Workstation01
 
-# Step 2 — Install SCAP SCC, import SCAP 1.3 benchmarks from FedCompliance-Tools\03-SCAP-Content\
-# (See Architecture\FedGov-Tools-Setup-Guide.md §1 for step-by-step)
+# ── STEP 1 — Download all federal compliance tools ───────────────────────
+# Run on a machine with internet access, then copy to lab USB / Hyper-V
+cd C:\path\to\CAC-program\Tools-Kit\
+.\Get-LabTools.ps1 -OutputPath "E:\FedCompliance-Tools"   # E:\ = USB or network share
 
-# Step 3 — Run pre-hardening SCAP SCC scan on clean VM, then stage:
+# ── STEP 2 — Install SCAP SCC, import SCAP 1.3 benchmarks ──────────────
+# See Architecture\FedGov-Tools-Setup-Guide.md §1 for step-by-step
+# Benchmarks land in: FedCompliance-Tools\03-SCAP-Content\
+
+# ── STEP 3 — Run pre-hardening SCAP SCC scan, then stage ────────────────
+cd C:\path\to\CAC-program\Lab-Kit\05-Compliance\
 .\Stage-Reports.ps1    # option 1 — Before-MFA
 
-# Step 4 — Apply hardening scripts
-.\Automation-Scripts\Build-CAC-Lab.ps1
-.\Automation-Scripts\Build-CA-GPO.ps1
+# ── STEP 4 — Apply hardening scripts (on DC01) ──────────────────────────
+cd C:\path\to\CAC-program\Lab-Kit\03-DomainController\
+.\Build-CAC-Lab.ps1
+.\Build-CA-GPO.ps1
 
-# Step 5 — Reboot, re-scan, stage post-hardening results:
+# ── STEP 5 — Reboot, re-scan, stage post-hardening results ──────────────
 .\Stage-Reports.ps1    # option 2 — After-MFA
 
-# Step 6 — Open STIG Viewer, import XCCDF results, complete .ckl checklists
-# (See Architecture\FedGov-Tools-Setup-Guide.md §2)
+# ── STEP 6 — Open STIG Viewer, complete .ckl checklists ─────────────────
+# See Architecture\FedGov-Tools-Setup-Guide.md §2
+
+# ── STEP 7 — Enroll a user token ────────────────────────────────────────
+.\New-TokenEnrollment.ps1 -Mode RA     -UserPrincipalName testuser@lab.local
+.\New-TokenEnrollment.ps1 -Mode Issuer -UserPrincipalName testuser@lab.local
+# For YubiKey tokens:
+.\New-YubiKeyToken.ps1 -Mode Provision -UserPrincipalName testuser@lab.local `
+    -CAServer "Lab-DC01\Lab Issuing CA"
 ```
 
 ---
@@ -245,3 +262,8 @@ The next milestone is the RMF **Assess** phase: executing DISA STIG audits and p
 | ATO Letter | `Architecture/ATO-Letter-Template.md` | Authorize — AO authorization memorandum |
 | Annual STIG Re-Scan SOP | `Architecture/Annual-STIG-Rescan-SOP.md` | Monitor — CM-6, CA-7 |
 | CSET Assessment Guide | `Architecture/CSET-Assessment-Guide.md` | Authorize — MD SB 871 §9-2705(b)(3) |
+| Live Server Readiness Checker | `Live-Servers/Test-ServerReadiness.ps1` | Implement — pre-deployment validation (all roles) |
+| Live Server Install Guide | `Live-Servers/Install-Guide.md` | Implement — 6-phase production deployment |
+| GPO Compliance Checker | `Live-Servers/Test-GPOCompliance.ps1` | Monitor — CM-6, CM-7 continuous GPO validation |
+| GPO Check How-To Guide | `Live-Servers/GPO-Check-Guide.md` | Monitor — operator reference |
+| Hyper-V Lab VM Scripts | `Lab-Kit/01-HyperV-Host/` | Implement — lab environment setup |

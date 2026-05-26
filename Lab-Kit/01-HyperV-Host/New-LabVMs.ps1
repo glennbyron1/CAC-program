@@ -30,7 +30,10 @@
 
 .PARAMETER VMStoragePath
     Root folder where VM files (VHDX, config) are stored on the Hyper-V host.
-    Default: C:\HyperV-Lab\
+    If not specified, the script scans all fixed drives, calculates required space,
+    and recommends the best drive — then asks you to confirm before proceeding.
+    Typical recommendations: D:\ if it has enough room (keeps VMs off the OS drive);
+    otherwise C:\ if D:\ is too small or does not exist.
 
 .PARAMETER ISOPath
     Full path to the Windows Server 2025 ISO file. Defaults to the ISO kept in
@@ -70,7 +73,10 @@
 [CmdletBinding(SupportsShouldProcess)]
 param(
     [Parameter()]
-    [string]$VMStoragePath = 'C:\HyperV-Lab\',
+    [string]$VMStoragePath = '',    # Empty = auto-detect and recommend
+
+    [Parameter()]
+    [string]$VMFolderName = "HyperV-Lab",   # Subfolder created on the chosen drive
 
     [Parameter()]
     [string]$ISOPath = (Join-Path $PSScriptRoot "..\Server 2025 Standard.iso"),
@@ -86,14 +92,150 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 # ---------------------------------------------------------------------------
-# VM definitions — adjust RAM/disk here if your host is resource-constrained
+# Drive recommendation — runs when -VMStoragePath is not explicitly provided
+# ---------------------------------------------------------------------------
+function Select-VMStorageDrive {
+    param([long]$RequiredGB, [string]$FolderName = "HyperV-Lab")
+
+    Write-Host ""
+    Write-Host "  Scanning drives for VM storage recommendation..." -ForegroundColor Cyan
+    Write-Host ""
+
+    # Collect all fixed local drives (DriveType 3 = Fixed)
+    $drives = Get-CimInstance -ClassName Win32_LogicalDisk -Filter "DriveType=3" |
+        Select-Object DeviceID,
+            @{N='TotalGB'; E={[math]::Round($_.Size / 1GB, 1)}},
+            @{N='FreeGB';  E={[math]::Round($_.FreeSpace / 1GB, 1)}},
+            @{N='UsedPct'; E={[math]::Round(100 - ($_.FreeSpace / $_.Size * 100), 0)}} |
+        Sort-Object DeviceID
+
+    if (-not $drives) {
+        Write-Warning "Could not enumerate drives. Defaulting to C:\$FolderName\"
+        return "C:\$FolderName\"
+    }
+
+    # Add headroom: VMs need RequiredGB of VHDX space plus ~15 GB for checkpoints/overhead
+    $neededGB = $RequiredGB + 15
+
+    # Score each drive:
+    #   +2 if it's not the OS drive (C:) — keeps VMs off the system partition
+    #   +1 if it has 2x the required space (comfortable headroom)
+    #   disqualify if free space < neededGB
+    $osDrive = $env:SystemDrive.TrimEnd('\').ToUpper()
+
+    $candidates = foreach ($d in $drives) {
+        $letter   = $d.DeviceID.TrimEnd('\').ToUpper()
+        $enough   = $d.FreeGB -ge $neededGB
+        $score    = 0
+        $reasons  = [System.Collections.Generic.List[string]]::new()
+
+        if (-not $enough) {
+            $reasons.Add("insufficient space (need $neededGB GB, have $($d.FreeGB) GB)")
+        } else {
+            if ($letter -ne $osDrive) {
+                $score += 2
+                $reasons.Add("not the OS drive — better for performance")
+            } else {
+                $reasons.Add("OS drive — acceptable but not ideal")
+            }
+            if ($d.FreeGB -ge ($neededGB * 2)) {
+                $score += 1
+                $reasons.Add("plenty of headroom")
+            }
+        }
+
+        [PSCustomObject]@{
+            Letter   = $letter
+            TotalGB  = $d.TotalGB
+            FreeGB   = $d.FreeGB
+            UsedPct  = $d.UsedPct
+            Enough   = $enough
+            Score    = $score
+            Reasons  = $reasons
+        }
+    }
+
+    # Print drive table
+    $colW = 10
+    Write-Host ("  {0,-6} {1,10} {2,10} {3,8}   {4}" -f "Drive","Total GB","Free GB","Used %","Notes") -ForegroundColor White
+    Write-Host ("  {0,-6} {1,10} {2,10} {3,8}   {4}" -f "-----","--------","-------","------","-----") -ForegroundColor DarkGray
+
+    foreach ($c in $candidates) {
+        $flag  = if (-not $c.Enough) { "[NOT ENOUGH]" } elseif ($c.Letter -eq $osDrive) { "[OS Drive]" } else { "" }
+        $color = if (-not $c.Enough) { 'Red' } elseif ($c.Letter -eq $osDrive) { 'Yellow' } else { 'Green' }
+        Write-Host ("  {0,-6} {1,10} {2,10} {3,7}%   {4}" -f `
+            "$($c.Letter):\", $c.TotalGB, $c.FreeGB, $c.UsedPct, $flag) -ForegroundColor $color
+    }
+
+    Write-Host ""
+    Write-Host "  VMs need approximately $neededGB GB total ($RequiredGB GB VHDX + ~15 GB overhead)." -ForegroundColor White
+    Write-Host ""
+
+    # Pick the recommendation: highest-scoring eligible drive
+    $best = $candidates | Where-Object { $_.Enough } | Sort-Object Score -Descending | Select-Object -First 1
+
+    if (-not $best) {
+        Write-Host "  [!] No drive has enough free space for all VMs ($neededGB GB needed)." -ForegroundColor Red
+        Write-Host "      Free up space, add a drive, or reduce VM disk sizes at the top of this script." -ForegroundColor Red
+        throw "Insufficient disk space on all available drives."
+    }
+
+    $recPath = "$($best.Letter):\$FolderName\"
+    $recNote = $best.Reasons -join "; "
+
+    Write-Host "  RECOMMENDATION:  $recPath" -ForegroundColor Cyan
+    Write-Host "  Reason        :  $recNote" -ForegroundColor Cyan
+    Write-Host ""
+
+    # Let the user confirm or choose a different drive
+    Write-Host "  Options:" -ForegroundColor White
+    $i = 1
+    $eligible = $candidates | Where-Object { $_.Enough }
+    foreach ($c in $eligible) {
+        $marker = if ($c.Letter -eq $best.Letter) { " <-- recommended" } else { "" }
+        Write-Host "    [$i] $($c.Letter):\$FolderName\  ($($c.FreeGB) GB free)$marker" -ForegroundColor White
+        $i++
+    }
+    Write-Host "    [C] Enter a custom path" -ForegroundColor White
+    Write-Host ""
+
+    $choice = Read-Host "  Press Enter to accept recommendation, or choose an option"
+    $choice = $choice.Trim()
+
+    if ($choice -eq '' -or $choice -eq '1' -and $eligible.Count -eq 1) {
+        return $recPath
+    }
+
+    if ($choice -match '^\d+$') {
+        $idx = [int]$choice - 1
+        $picked = @($eligible)[$idx]
+        if ($picked) {
+            return "$($picked.Letter):\$FolderName\"
+        }
+    }
+
+    if ($choice -match '^[Cc]$') {
+        $custom = Read-Host "  Enter full path (e.g. D:\MyVMs\$FolderName)"
+        return $custom.TrimEnd('\') + '\'
+    }
+
+    # Default: accept recommendation
+    return $recPath
+}
+
+# ---------------------------------------------------------------------------
+# VM definitions — adjust RAM/disk here if your host is resource-constrained.
+# DiskGB is the MAXIMUM size of a DYNAMIC VHDX: the file only grows as space is
+# actually used, so real disk consumption is far lower (a fresh Server 2025
+# install is ~15-20 GB). These caps are trimmed for a space-constrained host
+# while staying above the Server 2025 minimum (32 GB).
 # ---------------------------------------------------------------------------
 $VMs = @(
     @{
         Name        = "Lab-OfflineRootCA"
         RAM         = 2GB
         CPU         = 2
-        DiskGB      = 60
+        DiskGB      = 40
         Networked   = $false   # Air-gapped — no network adapter
         Description = "Offline Root CA - standalone, air-gapped, never domain-joined"
     },
@@ -101,7 +243,7 @@ $VMs = @(
         Name        = "Lab-DC01"
         RAM         = 4GB
         CPU         = 2
-        DiskGB      = 80
+        DiskGB      = 60
         Networked   = $true
         Description = "Domain Controller + Enterprise Issuing CA"
     }
@@ -112,10 +254,21 @@ if (-not $SkipWorkstation) {
         Name        = "Lab-Workstation01"
         RAM         = 4GB
         CPU         = 2
-        DiskGB      = 60
+        DiskGB      = 40
         Networked   = $true
         Description = "Smart card test workstation"
     }
+}
+
+# ---------------------------------------------------------------------------
+# Drive auto-selection (runs only when -VMStoragePath was not passed)
+# ---------------------------------------------------------------------------
+$totalDiskGB = ($VMs | Measure-Object -Property DiskGB -Sum).Sum
+
+if ($VMStoragePath -eq '') {
+    $VMStoragePath = Select-VMStorageDrive -RequiredGB $totalDiskGB -FolderName $VMFolderName
+    Write-Host "  Using: $VMStoragePath" -ForegroundColor Cyan
+    Write-Host ""
 }
 
 # ---------------------------------------------------------------------------
@@ -126,6 +279,7 @@ function Write-Banner {
     Write-Host "  Storage : $VMStoragePath" -ForegroundColor Cyan
     Write-Host "  ISO     : $ISOPath" -ForegroundColor Cyan
     Write-Host "  Switch  : $ExternalSwitchName" -ForegroundColor Cyan
+    Write-Host "  VMs     : $($VMs.Count) — total VHDX: $totalDiskGB GB" -ForegroundColor Cyan
     Write-Host ("=" * 70) -ForegroundColor DarkCyan
     Write-Host ""
 }
@@ -142,11 +296,43 @@ Write-Banner
 # Preflight checks
 Write-Step "Running preflight checks..."
 
-if (-not (Get-Command Get-VM -ErrorAction SilentlyContinue)) {
-    Write-Fail "Hyper-V PowerShell module not found. Install Hyper-V role first:"
-    Write-Host "    Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All" -ForegroundColor Cyan
+# Must run as Administrator
+$currentPrincipal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
+if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Fail "This script must be run as Administrator."
+    Write-Info "Right-click PowerShell and choose 'Run as Administrator', then try again."
     exit 1
 }
+Write-OK "Running as Administrator"
+
+# Hyper-V PowerShell module — if Get-VM is missing, the feature isn't installed at all
+if (-not (Get-Command Get-VM -ErrorAction SilentlyContinue)) {
+    Write-Fail "Hyper-V is not installed on this machine."
+    Write-Host ""
+    Write-Host "  Enable it with one of these methods:" -ForegroundColor Cyan
+    Write-Host "  Option A — PowerShell (requires reboot):" -ForegroundColor White
+    Write-Host "    Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All -Restart" -ForegroundColor Cyan
+    Write-Host "  Option B — Windows Features UI:" -ForegroundColor White
+    Write-Host "    Control Panel > Programs > Turn Windows features on or off > Hyper-V" -ForegroundColor Cyan
+    Write-Host "  Option C — Server Manager (Server OS):" -ForegroundColor White
+    Write-Host "    Add Roles and Features > Hyper-V role" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  NOTE: Hyper-V requires a 64-bit CPU with SLAT and hardware virtualization" -ForegroundColor Yellow
+    Write-Host "  enabled in BIOS/UEFI (Intel VT-x or AMD-V). Enable it before installing." -ForegroundColor Yellow
+    exit 1
+}
+Write-OK "Hyper-V PowerShell module found"
+
+# Hyper-V hypervisor service — module can exist even if Hyper-V is only partially configured
+$vmms = Get-Service -Name vmms -ErrorAction SilentlyContinue
+if (-not $vmms -or $vmms.Status -ne 'Running') {
+    Write-Fail "Hyper-V Virtual Machine Management service (vmms) is not running."
+    Write-Info "This usually means Hyper-V is installed but the hypervisor is not active."
+    Write-Info "Try: Start-Service vmms   (or reboot after enabling Hyper-V)"
+    Write-Info "If the service does not exist, re-enable Hyper-V and restart the host."
+    exit 1
+}
+Write-OK "Hyper-V service running"
 
 if (-not (Test-Path $ISOPath)) {
     Write-Fail "ISO not found at: $ISOPath"
