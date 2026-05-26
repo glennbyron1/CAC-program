@@ -10,7 +10,7 @@
 - [ ] Hyper-V host is up, sufficient RAM available for 2–3 VMs simultaneously
 - [ ] Take a clean-state checkpoint before making any changes:
   ```powershell
-  .\Lab-Kit\01-HyperV-Host\New-LabSnapshot.ps1 -Mode Create -Label "03-Before-Scan"
+  .\01-HyperV-Host\New-LabSnapshot.ps1 -Mode Create -Label "03-Before-Scan"
   ```
 - [ ] Internet access available on host (download tools if not already staged)
 - [ ] USB drive ready if testing offline CA transfer workflow
@@ -24,7 +24,7 @@ Run the lab validation script and confirm all seven layers pass before starting 
 A failed layer will skew your results — fix issues here, not after the scan.
 
 ```powershell
-.\Lab-Kit\05-Compliance\Invoke-LabValidation.ps1 `
+.\05-Compliance\Invoke-LabValidation.ps1 `
     -DomainName "lab.local" `
     -DCHostname "Lab-DC01" `
     -CRLUrl "http://pki.lab.local/crl/IssuingCA.crl" `
@@ -60,39 +60,39 @@ A failed layer will skew your results — fix issues here, not after the scan.
 - [ ] Export results: HTML report + XCCDF XML
 - [ ] Stage them:
   ```powershell
-  .\Lab-Kit\05-Compliance\Stage-Reports.ps1   # choose option 1 (Before-MFA)
+  .\05-Compliance\Stage-Reports.ps1   # choose option 1 (Before-MFA)
   ```
 - [ ] Note the compliance percentage and CAT I open count — you'll need these for the SAR
 
 ### Apply Hardening
 - [ ] Take a checkpoint at the pre-hardening state:
   ```powershell
-  .\Lab-Kit\01-HyperV-Host\New-LabSnapshot.ps1 -Mode Create -Label "04-After-GPO"
+  .\01-HyperV-Host\New-LabSnapshot.ps1 -Mode Create -Label "04-After-GPO"
   ```
 - [ ] Run `Build-CAC-Lab.ps1` if not already done (domain build)
   ```powershell
-  .\Lab-Kit\03-DomainController\Build-CAC-Lab.ps1
+  .\03-DomainController\Build-CAC-Lab.ps1
   ```
 - [ ] Run `Build-CA-GPO.ps1` (CA + GPO deployment)
   ```powershell
-  .\Lab-Kit\03-DomainController\Build-CA-GPO.ps1
+  .\03-DomainController\Build-CA-GPO.ps1
   ```
 - [ ] Apply smart card GPOs from:
   ```powershell
-  .\Lab-Kit\04-Workstation\Enforce-SmartCard.ps1
+  .\04-Workstation\Enforce-SmartCard.ps1
   ```
 - [ ] Reboot VM
 
 ### After-MFA Hardened Scan
 - [ ] Re-run pre-scan validation and confirm all layers still pass:
   ```powershell
-  .\Lab-Kit\05-Compliance\Invoke-LabValidation.ps1 -DomainName "lab.local" -DCHostname "Lab-DC01" -ExportReport
+  .\05-Compliance\Invoke-LabValidation.ps1 -DomainName "lab.local" -DCHostname "Lab-DC01" -ExportReport
   ```
 - [ ] Run SCAP SCC scan again (same benchmarks)
 - [ ] Export results: HTML report + XCCDF XML
 - [ ] Stage them:
   ```powershell
-  .\Lab-Kit\05-Compliance\Stage-Reports.ps1   # choose option 2 (After-MFA)
+  .\05-Compliance\Stage-Reports.ps1   # choose option 2 (After-MFA)
   ```
 - [ ] Note the new compliance percentage — record in SAR-Template.md
 
@@ -129,13 +129,13 @@ A failed layer will skew your results — fix issues here, not after the scan.
 - [ ] Have a second domain account ready to act as Card Issuer (not yourself)
 - [ ] As Registration Authority, run:
   ```powershell
-  .\Lab-Kit\03-DomainController\New-TokenEnrollment.ps1 -Mode RA -UserPrincipalName target@lab.local
+  .\03-DomainController\New-TokenEnrollment.ps1 -Mode RA -UserPrincipalName target@lab.local
   ```
 - [ ] Complete the identity verification checklist in the script
 - [ ] Confirm the AD extensionAttribute1 flag is set on the target user
 - [ ] Switch to the Card Issuer account, run:
   ```powershell
-  .\Lab-Kit\03-DomainController\New-TokenEnrollment.ps1 -Mode Issuer -UserPrincipalName target@lab.local
+  .\03-DomainController\New-TokenEnrollment.ps1 -Mode Issuer -UserPrincipalName target@lab.local
   ```
 - [ ] Confirm the SOD block fires if you try to issue your own card
 - [ ] Complete certificate enrollment and PIN set
@@ -145,12 +145,12 @@ A failed layer will skew your results — fix issues here, not after the scan.
 - [ ] YubiKey plugged into the provisioning workstation, ykman installed
 - [ ] Run provisioning (generates management key, sets PIN/PUK, enrolls cert from CA):
   ```powershell
-  .\Lab-Kit\03-DomainController\New-YubiKeyToken.ps1 -Mode Provision -UserPrincipalName target@lab.local -CAServer "Lab-DC01"
+  .\03-DomainController\New-YubiKeyToken.ps1 -Mode Provision -UserPrincipalName target@lab.local -CAServer "Lab-DC01"
   ```
 - [ ] Record the displayed management key in a secure location (shown once only)
 - [ ] Verify the token after provisioning:
   ```powershell
-  .\Lab-Kit\03-DomainController\New-YubiKeyToken.ps1 -Mode Verify -UserPrincipalName target@lab.local
+  .\03-DomainController\New-YubiKeyToken.ps1 -Mode Verify -UserPrincipalName target@lab.local
   ```
 - [ ] Confirm EventID 7200 appears in the Application Event Log
 
@@ -159,7 +159,7 @@ A failed layer will skew your results — fix issues here, not after the scan.
 ## Phase 4.5 — PKI Health Check (Baseline Reading)
 
 ```powershell
-.\Lab-Kit\03-DomainController\Monitor-PKIHealth.ps1 `
+.\03-DomainController\Monitor-PKIHealth.ps1 `
     -CRLUrls @("http://pki.lab.local/crl/RootCA.crl","http://pki.lab.local/crl/IssuingCA.crl") `
     -OCSPUrl "http://pki.lab.local/ocsp" `
     -IssuingCAServer "Lab-DC01" `
@@ -177,7 +177,7 @@ A failed layer will skew your results — fix issues here, not after the scan.
 - [ ] Smart card cert enrolled on test endpoint
 - [ ] Run:
   ```powershell
-  .\Lab-Kit\04-Workstation\Deploy-VPNClient.ps1 -VPNServerAddress "vpn.lab.local" -RunTest
+  .\04-Workstation\Deploy-VPNClient.ps1 -VPNServerAddress "vpn.lab.local" -RunTest
   ```
 - [ ] Connect VPN — confirm certificate auth, no password prompt
 - [ ] Screenshot: VPN connected status, certificate subject in connection details
@@ -199,27 +199,6 @@ When scans are done, go fill in the real data in these files (all have [FILL IN]
 
 ---
 
-## Pre-Push Sanitization (Before Any Commit)
-
-```powershell
-# 1. Verify your local patterns file exists
-Test-Path .scrub-patterns.local.json   # should return True
-
-# 2. Preview what will be scrubbed
-.\Scrub-Repo.ps1 -WhatIf
-
-# 3. Apply scrub
-.\Scrub-Repo.ps1
-
-# 4. Review the diff
-git diff
-
-# 5. Commit
-git add Compliance-Reports/ Architecture/
-git commit -m "Phase 4 scan results — SCAP SCC and Nessus evidence"
-git push
-```
-
 ---
 
-*When Phase 4 is done, update `STATUS.md` Phase 4 checkboxes and change the phase row to ✅ Complete.*
+*When Phase 4 is done, update the phase tracking notes in your project documentation.*

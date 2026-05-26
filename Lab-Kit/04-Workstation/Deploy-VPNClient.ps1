@@ -61,7 +61,7 @@
 
 .NOTES
     Author  : Glenn Byron
-    Repo    : github.com/glennbyron1/CAC-program
+    Repo    : CAC Lab Kit (standalone)
     Version : 1.0
 
     CRYPTO POLICY — matches WatchGuard IKEv2 Phase 1/2 settings in ARCH-ICAM-005:

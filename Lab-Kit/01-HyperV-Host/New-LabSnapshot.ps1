@@ -1,17 +1,17 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Hyper-V Lab Checkpoint Manager — Create, list, restore, and clean up named snapshots.
+    Hyper-V Lab Checkpoint Manager -- Create, list, restore, and clean up named snapshots.
 
 .DESCRIPTION
     Manages Hyper-V checkpoints for the CAC/PIV lab VM set (Lab-OfflineRootCA,
     Lab-DC01, Lab-Workstation01). Taking a checkpoint before each major phase
     means you can roll back instantly if something breaks during the SCAP scan,
-    CA configuration, or GPO hardening — without rebuilding from scratch.
+    CA configuration, or GPO hardening -- without rebuilding from scratch.
 
     Recommended checkpoint schedule:
-      00-BaseOS        After OS install and Set-VMPostConfig — clean OS baseline
-      01-DomainJoined  After Build-CAC-Lab.ps1 — domain + DNS working
+      00-BaseOS        After OS install and Set-VMPostConfig -- clean OS baseline
+      01-DomainJoined  After Build-CAC-Lab.ps1 -- domain + DNS working
       02-PKI-Ready     After Root CA + Issuing CA configured and CRL publishing live
       03-Before-Scan   Immediately before the SCAP SCC before-hardening scan
       04-After-GPO     After Build-CA-GPO.ps1 + Enforce-SmartCard.ps1 applied
@@ -19,11 +19,11 @@
       06-Validated     After Invoke-LabValidation.ps1 passes all checks
 
     Modes:
-      Create   — Snapshot all lab VMs (or a named subset) with a phase label
-      List     — Show all checkpoints across lab VMs in a table
-      Restore  — Restore all lab VMs to a named checkpoint
-      Delete   — Delete a named checkpoint from all lab VMs
-      Cleanup  — Keep only the N most recent checkpoints per VM (prune old ones)
+      Create   -- Snapshot all lab VMs (or a named subset) with a phase label
+      List     -- Show all checkpoints across lab VMs in a table
+      Restore  -- Restore all lab VMs to a named checkpoint
+      Delete   -- Delete a named checkpoint from all lab VMs
+      Cleanup  -- Keep only the N most recent checkpoints per VM (prune old ones)
 
 .PARAMETER Mode
     Create | List | Restore | Delete | Cleanup
@@ -31,7 +31,7 @@
 .PARAMETER Label
     Checkpoint label used in Create / Restore / Delete.
     The script prepends a timestamp so multiple "Before-Scan" checkpoints
-    can exist — when restoring or deleting, the most recent matching label
+    can exist -- when restoring or deleting, the most recent matching label
     is used unless -Exact is specified.
 
     Suggested labels: 00-BaseOS, 01-DomainJoined, 02-PKI-Ready,
@@ -71,14 +71,14 @@
 
     CHECKPOINT STORAGE NOTE:
     Checkpoints consume disk space (differencing disks). Before the SCAP scan
-    each VM may be 60–80 GB — a single checkpoint set can add 10–20 GB per VM
+    each VM may be 60-80 GB -- a single checkpoint set can add 10-20 GB per VM
     as changes accumulate. Run -Mode Cleanup periodically during lab work.
 
     RUNNING VMs:
     This script checkpoints VMs regardless of power state. Checkpointing a running
     VM uses a "Production Checkpoint" (VSS-based, application-consistent) if the
     VM supports it; otherwise a Standard checkpoint. For the cleanest restore
-    points, shut down the VM first — the script warns you if a VM is running.
+    points, shut down the VM first -- the script warns you if a VM is running.
 #>
 
 [CmdletBinding(SupportsShouldProcess)]
@@ -118,7 +118,7 @@ function Write-Warn { param([string]$M) Write-Host "  [WARN]  $M" -ForegroundCol
 function Write-Err  { param([string]$M) Write-Host "  [FAIL]  $M" -ForegroundColor Red    }
 function Write-Info { param([string]$M) Write-Host "  [INFO]  $M" -ForegroundColor Cyan   }
 function Write-Step { param([string]$M) Write-Host ""
-                      Write-Host "  ── $M" -ForegroundColor White }
+                      Write-Host "  -- $M" -ForegroundColor White }
 
 # ---------------------------------------------------------------------------
 # Resolve which VMs exist on this host
@@ -131,7 +131,7 @@ function Get-LabVMs {
         if ($vm) {
             $found += $vm
         } else {
-            Write-Warn "VM '$name' not found on this host — skipping."
+            Write-Warn "VM '$name' not found on this host -- skipping."
         }
     }
     if ($found.Count -eq 0) {
@@ -148,7 +148,7 @@ function Invoke-Create {
 
     if (-not $Label) { throw "-Label is required for Create mode. Example: -Label '03-Before-Scan'" }
 
-    $stamp      = (Get-Date).ToString("yyyyMMdd-HHmm")
+    $stamp          = (Get-Date).ToString("yyyyMMdd-HHmm")
     $checkpointName = "$stamp-$Label"
 
     Write-Step "Creating checkpoint: '$checkpointName'"
@@ -164,7 +164,7 @@ function Invoke-Create {
         Write-Info "Checkpointing $($vm.Name)..."
         if ($PSCmdlet.ShouldProcess($vm.Name, "Checkpoint-VM '$checkpointName'")) {
             Checkpoint-VM -VM $vm -SnapshotName $checkpointName -ErrorAction Stop
-            Write-OK "$($vm.Name) — '$checkpointName'"
+            Write-OK "$($vm.Name) -- '$checkpointName'"
         }
     }
 
@@ -186,7 +186,7 @@ function Invoke-List {
     foreach ($vm in $LabVMs) {
         $snaps = Get-VMSnapshot -VM $vm | Sort-Object CreationTime -Descending
         if (-not $snaps) {
-            Write-Info "$($vm.Name) — no checkpoints"
+            Write-Info "$($vm.Name) -- no checkpoints"
             continue
         }
         $any = $true
@@ -194,7 +194,6 @@ function Invoke-List {
         foreach ($s in $snaps) {
             $age  = ((Get-Date) - $s.CreationTime).TotalDays
             $ageS = if ($age -lt 1) { "today" } elseif ($age -lt 2) { "yesterday" } else { "$([math]::Round($age,0)) days ago" }
-            $state = $s.ParentSnapshotName ? "  (parent: $($s.ParentSnapshotName))" : ""
             Write-Host ("    {0,-36}  {1,-20}  {2}" -f `
                 $s.Name,
                 $s.CreationTime.ToString("yyyy-MM-dd HH:mm"),
@@ -238,7 +237,7 @@ function Invoke-Restore {
         }
 
         if (-not $target) {
-            Write-Warn "$($vm.Name) — no checkpoint matching '$Label' found, skipping."
+            Write-Warn "$($vm.Name) -- no checkpoint matching '$Label' found, skipping."
             continue
         }
 
@@ -282,7 +281,7 @@ function Invoke-Delete {
         }
 
         if (-not $targets) {
-            Write-Info "$($vm.Name) — no checkpoint matching '$Label', skipping."
+            Write-Info "$($vm.Name) -- no checkpoint matching '$Label', skipping."
             continue
         }
 
@@ -290,14 +289,14 @@ function Invoke-Delete {
             Write-Info "Deleting $($vm.Name) / '$($t.Name)'..."
             if ($PSCmdlet.ShouldProcess($vm.Name, "Remove-VMSnapshot '$($t.Name)'")) {
                 Remove-VMSnapshot -VMSnapshot $t -IncludeAllChildSnapshots -Confirm:$false
-                Write-OK "$($vm.Name) — '$($t.Name)' deleted"
+                Write-OK "$($vm.Name) -- '$($t.Name)' deleted"
             }
         }
     }
 }
 
 # ---------------------------------------------------------------------------
-# Cleanup — keep newest N checkpoints per VM
+# Cleanup -- keep newest N checkpoints per VM
 # ---------------------------------------------------------------------------
 function Invoke-Cleanup {
     param([object[]]$LabVMs, [int]$Keep)
@@ -309,12 +308,12 @@ function Invoke-Cleanup {
         $snaps = Get-VMSnapshot -VM $vm | Sort-Object CreationTime -Descending
 
         if ($snaps.Count -le $Keep) {
-            Write-Info "$($vm.Name) — $($snaps.Count) checkpoint(s), nothing to prune."
+            Write-Info "$($vm.Name) -- $($snaps.Count) checkpoint(s), nothing to prune."
             continue
         }
 
         $toDelete = $snaps | Select-Object -Skip $Keep
-        Write-Info "$($vm.Name) — removing $($toDelete.Count) old checkpoint(s)..."
+        Write-Info "$($vm.Name) -- removing $($toDelete.Count) old checkpoint(s)..."
 
         foreach ($s in $toDelete) {
             if ($PSCmdlet.ShouldProcess($vm.Name, "Remove-VMSnapshot '$($s.Name)'")) {

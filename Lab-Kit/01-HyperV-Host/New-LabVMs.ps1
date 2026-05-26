@@ -8,18 +8,18 @@
 .DESCRIPTION
     Builds the full lab VM set on a Windows Hyper-V host:
 
-      VM 1 — Lab-OfflineRootCA
-        Standalone Windows Server 2025 (no network adapter — air-gapped by design).
+      VM 1 - Lab-OfflineRootCA
+        Standalone Windows Server 2025 (no network adapter - air-gapped by design).
         Used to host the Offline Root Certificate Authority. Never joins the domain.
         Run Download-OfflineCA-Kit.ps1 output is transferred here via USB or
         PowerShell Direct from the Hyper-V host.
 
-      VM 2 — Lab-DC01
+      VM 2 - Lab-DC01
         Windows Server 2025, connected to your lab network switch.
         Becomes the domain controller AND Enterprise Issuing CA.
         Run Build-CAC-Lab.ps1 then Build-CA-GPO.ps1 on this VM.
 
-      VM 3 — Lab-Workstation01 (optional)
+      VM 3 - Lab-Workstation01 (optional)
         Windows Server 2025 (or Windows 11 if you supply that ISO separately).
         Used to test smart card logon, VPN client, and session-lock behavior.
         Skip with -SkipWorkstation if you already have a workstation VM.
@@ -31,9 +31,12 @@
 .PARAMETER VMStoragePath
     Root folder where VM files (VHDX, config) are stored on the Hyper-V host.
     If not specified, the script scans all fixed drives, calculates required space,
-    and recommends the best drive — then asks you to confirm before proceeding.
+    and recommends the best drive - then asks you to confirm before proceeding.
     Typical recommendations: D:\ if it has enough room (keeps VMs off the OS drive);
     otherwise C:\ if D:\ is too small or does not exist.
+
+.PARAMETER VMFolderName
+    Subfolder created on the chosen drive. Default: "HyperV-Lab"
 
 .PARAMETER ISOPath
     Full path to the Windows Server 2025 ISO file. Defaults to the ISO kept in
@@ -51,7 +54,7 @@
     or are using a physical machine for smart card testing.
 
 .EXAMPLE
-    # Create all three VMs using the ISO kept in the Lab-Kit folder (default)
+    # Create all three VMs - script will recommend a drive automatically
     .\New-LabVMs.ps1
 
 .EXAMPLE
@@ -79,7 +82,7 @@ param(
     [string]$VMFolderName = "HyperV-Lab",   # Subfolder created on the chosen drive
 
     [Parameter()]
-    [string]$ISOPath = (Join-Path $PSScriptRoot "..\Server 2025 Standard.iso"),
+    [string]$ISOPath = "D:\Server2025.iso",
 
     [Parameter()]
     [string]$ExternalSwitchName = "External",
@@ -92,7 +95,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 # ---------------------------------------------------------------------------
-# Drive recommendation — runs when -VMStoragePath is not explicitly provided
+# Drive recommendation - runs when -VMStoragePath is not explicitly provided
 # ---------------------------------------------------------------------------
 function Select-VMStorageDrive {
     param([long]$RequiredGB, [string]$FolderName = "HyperV-Lab")
@@ -118,7 +121,7 @@ function Select-VMStorageDrive {
     $neededGB = $RequiredGB + 15
 
     # Score each drive:
-    #   +2 if it's not the OS drive (C:) — keeps VMs off the system partition
+    #   +2 if it's not the OS drive (C:) - keeps VMs off the system partition
     #   +1 if it has 2x the required space (comfortable headroom)
     #   disqualify if free space < neededGB
     $osDrive = $env:SystemDrive.TrimEnd('\').ToUpper()
@@ -134,9 +137,9 @@ function Select-VMStorageDrive {
         } else {
             if ($letter -ne $osDrive) {
                 $score += 2
-                $reasons.Add("not the OS drive — better for performance")
+                $reasons.Add("not the OS drive - better for performance")
             } else {
-                $reasons.Add("OS drive — acceptable but not ideal")
+                $reasons.Add("OS drive - acceptable but not ideal")
             }
             if ($d.FreeGB -ge ($neededGB * 2)) {
                 $score += 1
@@ -156,7 +159,6 @@ function Select-VMStorageDrive {
     }
 
     # Print drive table
-    $colW = 10
     Write-Host ("  {0,-6} {1,10} {2,10} {3,8}   {4}" -f "Drive","Total GB","Free GB","Used %","Notes") -ForegroundColor White
     Write-Host ("  {0,-6} {1,10} {2,10} {3,8}   {4}" -f "-----","--------","-------","------","-----") -ForegroundColor DarkGray
 
@@ -180,7 +182,7 @@ function Select-VMStorageDrive {
         throw "Insufficient disk space on all available drives."
     }
 
-    $recPath = "$($best.Letter):\$FolderName\"
+    $recPath = "$($best.Letter)\$FolderName\"
     $recNote = $best.Reasons -join "; "
 
     Write-Host "  RECOMMENDATION:  $recPath" -ForegroundColor Cyan
@@ -202,15 +204,18 @@ function Select-VMStorageDrive {
     $choice = Read-Host "  Press Enter to accept recommendation, or choose an option"
     $choice = $choice.Trim()
 
-    if ($choice -eq '' -or $choice -eq '1' -and $eligible.Count -eq 1) {
-        return $recPath
-    }
+    $eligibleList = @($eligible)
+    if ($choice -eq '' -or ($choice -eq '1' -and $eligibleList.Count -eq 1)) {
+    return $recPath
+
+}
+
 
     if ($choice -match '^\d+$') {
         $idx = [int]$choice - 1
-        $picked = @($eligible)[$idx]
+        $picked = $eligibleList[$idx]
         if ($picked) {
-            return "$($picked.Letter):\$FolderName\"
+            return "$($picked.Letter)\$FolderName\"
         }
     }
 
@@ -224,7 +229,7 @@ function Select-VMStorageDrive {
 }
 
 # ---------------------------------------------------------------------------
-# VM definitions — adjust RAM/disk here if your host is resource-constrained.
+# VM definitions - adjust RAM/disk here if your host is resource-constrained.
 # DiskGB is the MAXIMUM size of a DYNAMIC VHDX: the file only grows as space is
 # actually used, so real disk consumption is far lower (a fresh Server 2025
 # install is ~15-20 GB). These caps are trimmed for a space-constrained host
@@ -236,7 +241,7 @@ $VMs = @(
         RAM         = 2GB
         CPU         = 2
         DiskGB      = 40
-        Networked   = $false   # Air-gapped — no network adapter
+        Networked   = $false   # Air-gapped - no network adapter
         Description = "Offline Root CA - standalone, air-gapped, never domain-joined"
     },
     @{
@@ -263,7 +268,7 @@ if (-not $SkipWorkstation) {
 # ---------------------------------------------------------------------------
 # Drive auto-selection (runs only when -VMStoragePath was not passed)
 # ---------------------------------------------------------------------------
-$totalDiskGB = ($VMs | Measure-Object -Property DiskGB -Sum).Sum
+$totalDiskGB = ($VMs | ForEach-Object { $_.DiskGB } | Measure-Object -Sum).Sum
 
 if ($VMStoragePath -eq '') {
     $VMStoragePath = Select-VMStorageDrive -RequiredGB $totalDiskGB -FolderName $VMFolderName
@@ -279,7 +284,7 @@ function Write-Banner {
     Write-Host "  Storage : $VMStoragePath" -ForegroundColor Cyan
     Write-Host "  ISO     : $ISOPath" -ForegroundColor Cyan
     Write-Host "  Switch  : $ExternalSwitchName" -ForegroundColor Cyan
-    Write-Host "  VMs     : $($VMs.Count) — total VHDX: $totalDiskGB GB" -ForegroundColor Cyan
+    Write-Host "  VMs     : $($VMs.Count) - total VHDX: $totalDiskGB GB" -ForegroundColor Cyan
     Write-Host ("=" * 70) -ForegroundColor DarkCyan
     Write-Host ""
 }
@@ -305,16 +310,16 @@ if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Adm
 }
 Write-OK "Running as Administrator"
 
-# Hyper-V PowerShell module — if Get-VM is missing, the feature isn't installed at all
+# Hyper-V PowerShell module - if Get-VM is missing, the feature isn't installed at all
 if (-not (Get-Command Get-VM -ErrorAction SilentlyContinue)) {
     Write-Fail "Hyper-V is not installed on this machine."
     Write-Host ""
     Write-Host "  Enable it with one of these methods:" -ForegroundColor Cyan
-    Write-Host "  Option A — PowerShell (requires reboot):" -ForegroundColor White
+    Write-Host "  Option A - PowerShell (requires reboot):" -ForegroundColor White
     Write-Host "    Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All -Restart" -ForegroundColor Cyan
-    Write-Host "  Option B — Windows Features UI:" -ForegroundColor White
+    Write-Host "  Option B - Windows Features UI:" -ForegroundColor White
     Write-Host "    Control Panel > Programs > Turn Windows features on or off > Hyper-V" -ForegroundColor Cyan
-    Write-Host "  Option C — Server Manager (Server OS):" -ForegroundColor White
+    Write-Host "  Option C - Server Manager (Server OS):" -ForegroundColor White
     Write-Host "    Add Roles and Features > Hyper-V role" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "  NOTE: Hyper-V requires a 64-bit CPU with SLAT and hardware virtualization" -ForegroundColor Yellow
@@ -323,7 +328,7 @@ if (-not (Get-Command Get-VM -ErrorAction SilentlyContinue)) {
 }
 Write-OK "Hyper-V PowerShell module found"
 
-# Hyper-V hypervisor service — module can exist even if Hyper-V is only partially configured
+# Hyper-V hypervisor service - module can exist even if Hyper-V is only partially configured
 $vmms = Get-Service -Name vmms -ErrorAction SilentlyContinue
 if (-not $vmms -or $vmms.Status -ne 'Running') {
     Write-Fail "Hyper-V Virtual Machine Management service (vmms) is not running."
@@ -337,7 +342,7 @@ Write-OK "Hyper-V service running"
 if (-not (Test-Path $ISOPath)) {
     Write-Fail "ISO not found at: $ISOPath"
     Write-Info "Download Windows Server 2025 evaluation ISO from:"
-    Write-Info "https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2022"
+    Write-Info "https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2025"
     exit 1
 }
 
@@ -366,19 +371,19 @@ foreach ($vm in $VMs) {
     $vmPath   = Join-Path $VMStoragePath $name
     $vhdxPath = Join-Path $vmPath "$name.vhdx"
 
-    Write-Host "── $name" -ForegroundColor White
+    Write-Host "-- $name" -ForegroundColor White
     Write-Info $vm.Description
 
     # Check if VM already exists
     if (Get-VM -Name $name -ErrorAction SilentlyContinue) {
-        Write-Warn "VM '$name' already exists — skipping. Delete it first to recreate."
+        Write-Warn "VM '$name' already exists - skipping. Delete it first to recreate."
         Write-Host ""
         continue
     }
 
     # Skip networked VMs if the switch doesn't exist
     if ($vm.Networked -and -not $switch) {
-        Write-Warn "Skipping '$name' — external switch '$ExternalSwitchName' not found."
+        Write-Warn "Skipping '$name' - external switch '$ExternalSwitchName' not found."
         Write-Host ""
         continue
     }
@@ -394,7 +399,7 @@ foreach ($vm in $VMs) {
         Write-OK "VHDX created"
     }
 
-    # Create VM (Generation 2, no default VHDX — we attach our own)
+    # Create VM (Generation 2, no default VHDX - we attach our own)
     Write-Step "Creating VM: $name"
     if ($PSCmdlet.ShouldProcess($name, "New-VM")) {
         $newVMParams = @{
@@ -451,7 +456,7 @@ foreach ($vm in $VMs) {
         if ($adapters) {
             Write-Step "Removing network adapter from air-gapped VM..."
             $adapters | Remove-VMNetworkAdapter
-            Write-OK "Network adapter removed — VM is fully isolated"
+            Write-OK "Network adapter removed - VM is fully isolated"
         }
         Write-Warn "Root CA VM has NO network adapter by design. Transfer files via PowerShell Direct."
     }
