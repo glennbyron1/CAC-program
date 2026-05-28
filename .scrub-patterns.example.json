@@ -1,14 +1,14 @@
 {
-  "_README": "Copy this file to .scrub-patterns.local.json (which is gitignored) and replace the example values below with your real organizational identifiers. Each KEY is the real string to find; each VALUE is the safe placeholder it will be replaced with. Patterns are matched as literal strings (regex-escaped automatically). Order matters when one pattern is a substring of another - put the more specific pattern first.",
+  "_README": "Copy this file to .scrub-patterns.local.json (which is gitignored) and replace the example values below with your real organizational identifiers. Each KEY is the real string to find; each VALUE is the safe placeholder it will be replaced with. Patterns are matched as literal strings (regex-escaped automatically). Order matters — put more-specific patterns before less-specific ones (e.g. full email before just the domain).",
 
-  "RealCompanyNameLikely": "AgencyName",
-  "realcompanydomain.com": "agency.gov",
-  "10.10.": "10.0.",
-  "192.168.50.": "10.0.",
-  "P@ssw0rd123!": "REPLACED_SAFE_PASSWORD_PLACEHOLDER",
-  "yourgithubusername": "candidate-gh",
-  "yourpersonalemail@example.com": "candidate@example.com",
-  "YourLastName": "Candidate",
-  "your-real-server-name": "lab-server-01",
-  "AcmeCorp": "AgencyName"
+  "yourpersonalemail@gmail.com":            "NNNNNNN+yourgithubuser@users.noreply.github.com",
+  "yourworkemail@agency.gov":               "candidate@agency.gov",
+  "realagencydomain.gov":                   "agency.gov",
+  "RealAgencyName":                         "Agency",
+  "realagencyname":                         "agency",
+  "10.0.0.":                              "10.0.0.",
+  "10.10.11":                               "10.0.0",
+  "10.0.":                                 "10.0.",
+  "your-windows-shortname":                 "labuser",
+  "your-real-server-name":                  "lab-server-01"
 }
