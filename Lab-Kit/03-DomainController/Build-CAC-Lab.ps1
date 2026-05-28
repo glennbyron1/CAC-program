@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Glenn Byron
+﻿# Copyright (c) 2026 Glenn Byron
 # Licensed under the MIT License. See LICENSE in the repository root.
 
 <#

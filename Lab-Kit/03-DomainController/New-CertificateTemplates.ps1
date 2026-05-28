@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     AD CS Certificate Template Automation — Smart Card Logon and Privileged Admin Templates
@@ -160,9 +160,50 @@ function New-SmartCardTemplate {
     } else {
         Write-Step "Duplicating base template '$SourceTemplateName'..."
         if ($PSCmdlet.ShouldProcess($TemplateName, "Duplicate from $SourceTemplateName")) {
-            # Get the source template and duplicate it
-            $sourceTemplate = Get-CertificateTemplate -Name $SourceTemplateName
-            $newTemplate = $sourceTemplate | Copy-CertificateTemplate -Name $TemplateName -DisplayName $DisplayName
+            Import-Module ActiveDirectory -ErrorAction Stop
+            $cfgNC       = (Get-ADRootDSE).configurationNamingContext
+            $containerDN = "CN=Certificate Templates,CN=Public Key Services,CN=Services,$cfgNC"
+
+            # Fetch only the specific pKICertificateTemplate attributes we need.
+            # Using -Properties * causes Get-ADObject to return synthetic PS properties
+            # (Created, Modified, etc.) that are not valid LDAP attribute names and cause
+            # New-ADObject -OtherAttributes to throw "attribute or value does not exist".
+            $src = Get-ADObject -Identity "CN=$SourceTemplateName,$containerDN" -Properties `
+                flags, revision, 'msPKI-Template-Schema-Version', 'msPKI-Template-Minor-Revision',
+                'msPKI-RA-Signature', 'msPKI-Minimal-Key-Size', pKIDefaultKeySpec,
+                pKIMaxIssuingDepth, pKIKeyUsage, pKIExpirationPeriod, pKIOverlapPeriod,
+                'msPKI-Certificate-Name-Flag', 'msPKI-Enrollment-Flag', 'msPKI-Private-Key-Flag',
+                pKIDefaultCSPs, pKIExtendedKeyUsage, 'msPKI-Certificate-Application-Policy',
+                pKICriticalExtensions -ErrorAction Stop
+
+            $gb = [System.Guid]::NewGuid().ToByteArray()
+            $oidSuffix = "$([System.BitConverter]::ToUInt32($gb,0)).$([System.BitConverter]::ToUInt32($gb,4))"
+
+            $other = @{
+                'displayName'                          = $DisplayName
+                'msPKI-Cert-Template-OID'              = "1.3.6.1.4.1.311.21.8.$oidSuffix"
+                'flags'                                = [int]$src.flags
+                'revision'                             = [int]$src.revision
+                'msPKI-Template-Schema-Version'        = [int]$src.'msPKI-Template-Schema-Version'
+                'msPKI-Template-Minor-Revision'        = [int]$src.'msPKI-Template-Minor-Revision'
+                'msPKI-RA-Signature'                   = [int]$src.'msPKI-RA-Signature'
+                'msPKI-Minimal-Key-Size'               = 2048
+                'pKIDefaultKeySpec'                    = [int]$src.pKIDefaultKeySpec
+                'pKIMaxIssuingDepth'                   = [int]$src.pKIMaxIssuingDepth
+                'pKIKeyUsage'                          = [byte[]]$src.pKIKeyUsage
+                'pKIExpirationPeriod'                  = [byte[]]$src.pKIExpirationPeriod
+                'pKIOverlapPeriod'                     = [byte[]]$src.pKIOverlapPeriod
+                'msPKI-Certificate-Name-Flag'          = [int]$src.'msPKI-Certificate-Name-Flag'
+                'msPKI-Enrollment-Flag'                = [int]$src.'msPKI-Enrollment-Flag'
+                'msPKI-Private-Key-Flag'               = [int]$src.'msPKI-Private-Key-Flag'
+                'pKIExtendedKeyUsage'                  = @('1.3.6.1.4.1.311.20.2.2','1.3.6.1.5.5.7.3.2')
+                'msPKI-Certificate-Application-Policy' = @('1.3.6.1.4.1.311.20.2.2','1.3.6.1.5.5.7.3.2')
+            }
+            if ($src.pKIDefaultCSPs)        { $other['pKIDefaultCSPs']        = @($src.pKIDefaultCSPs) }
+            if ($src.pKICriticalExtensions)  { $other['pKICriticalExtensions']  = @($src.pKICriticalExtensions) }
+
+            New-ADObject -Name $TemplateName -Type 'pKICertificateTemplate' `
+                         -Path $containerDN -OtherAttributes $other -ErrorAction Stop
             Write-OK "Template duplicated: $TemplateName"
         }
     }

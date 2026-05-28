@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     OCSP Online Responder Configuration — AD CS Online Certificate Status Protocol Setup

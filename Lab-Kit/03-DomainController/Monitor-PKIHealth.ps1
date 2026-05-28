@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     PKI Health Monitor — CRL/OCSP Endpoint Checks and Certificate Expiry Alerts

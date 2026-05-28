@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Smart Card / Hardware Token Enrollment - Guided RA/Issuer Separation-of-Duties Workflow
@@ -80,9 +80,10 @@ $ErrorActionPreference = 'Stop'
 
 # ---------------------------------------------------------------------------
 # AD attribute used to carry RA authorization flag and RA identity between phases
-# Uses the extensionAttribute1 field (available in most AD environments without schema changes)
+# Uses the pager field (single-valued string, present in base AD schema without Exchange)
+# extensionAttribute1 requires Exchange schema extensions — not available in base AD.
 # Format: "RA-AUTHORIZED|<RA-samAccountName>|<timestamp>"
-$RA_ATTR = "extensionAttribute1"
+$RA_ATTR = "pager"
 $RA_PREFIX = "RA-AUTHORIZED"
 
 # ---------------------------------------------------------------------------

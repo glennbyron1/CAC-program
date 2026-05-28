@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     YubiKey PIV Token Provisioning — PIN/PUK/Management Key Setup + Certificate Enrollment

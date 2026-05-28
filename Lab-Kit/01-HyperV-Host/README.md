@@ -69,50 +69,167 @@ Optional parameters:
 
 ---
 
-## Step 2 — Inject the Unattend File (optional, for hands-free OS install)
+## Step 2 — Create an Answer ISO (optional, for hands-free OS install)
 
-If you want Windows to install itself without any clicking, inject `Unattend-Server.xml` into each VM's VHDX before first boot.
+**Why an ISO, not a VHDX?**
+Windows Setup (windowsPE pass) only scans **removable media** — DVD drives and USB — for
+answer files. A SCSI VHDX is a hard disk; Setup ignores it entirely. The answer file must
+be delivered on a virtual DVD drive, and the filename must be `autounattend.xml` (not
+`unattend.xml`) when placed at the root of that media.
 
-**Before injecting — edit Unattend-Server.xml:**
-- Replace `CHANGE-ME-LAB-PASSWORD` with a real lab admin password
-- Change the `<ComputerName>` tag to match each VM (Lab-OfflineRootCA / Lab-DC01 / Lab-Workstation01)
+**Before running — edit Unattend-Server.xml:**
+- Set the `<ComputerName>` tag to match the VM you are building
+  (`Lab-OfflineRootCA`, `Lab-DC01`, or `Lab-Workstation01`)
+- The Administrator password is already set in the file. Change it if needed.
+- Verify the image index matches your ISO (`dism /Get-WimInfo /WimFile:D:\sources\install.wim`).
+  Index 2 = Standard Desktop Experience on most WS2025 media.
 
-**Inject via PowerShell (run on Hyper-V host, VM must be off):**
+**Build the answer ISO and attach it as a second DVD (run on Hyper-V host, VM must be off):**
 
 ```powershell
-# Example for Lab-DC01
-$vhdxPath = "C:\HyperV-Lab\Lab-DC01\Lab-DC01.vhdx"
-$vhd = Mount-VHD -Path $vhdxPath -PassThru
-$driveLetter = ($vhd | Get-Disk | Get-Partition | Where-Object { $_.DriveLetter -match '[C-Z]' }).DriveLetter
-Copy-Item ".\Unattend-Server.xml" "$($driveLetter):\unattend.xml"
-Dismount-VHD -Path $vhdxPath
+$VMName      = "Lab-DC01"        # change per VM
+$UnattendSrc = "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\Unattend-Server.xml"
+$AnswerDir   = "C:\Temp\AnswerISO-Source"
+$AnswerISO   = "C:\HyperV-Lab\Answer.iso"
+
+# Stage autounattend.xml (Setup scans for this exact name on removable media)
+New-Item -ItemType Directory -Path $AnswerDir -Force | Out-Null
+Copy-Item $UnattendSrc "$AnswerDir\autounattend.xml" -Force
+
+# C# helper — PowerShell 5.1 cannot cast COM objects to IStream directly
+if (-not ([System.Management.Automation.PSTypeName]'IsoWriter').Type) {
+    Add-Type -TypeDefinition @'
+using System;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
+public class IsoWriter {
+    public static void Write(object comStream, string path) {
+        IStream stream = (IStream)comStream;
+        using (FileStream fs = File.Create(path)) {
+            byte[] buf = new byte[1048576];
+            IntPtr pRead = Marshal.AllocHGlobal(4);
+            try {
+                while (true) {
+                    stream.Read(buf, buf.Length, pRead);
+                    int n = Marshal.ReadInt32(pRead);
+                    if (n == 0) break;
+                    fs.Write(buf, 0, n);
+                }
+            } finally { Marshal.FreeHGlobal(pRead); }
+        }
+    }
+}
+'@
+}
+
+# Build the ISO using IMAPI2 (no ADK required)
+$image = New-Object -ComObject IMAPI2FS.MsftFileSystemImage
+$image.FileSystemsToCreate = 3       # Joliet + ISO9660
+$image.VolumeName = "ANSWER"
+$image.Root.AddTree($AnswerDir, $false)
+
+[IsoWriter]::Write($image.CreateResultImage().ImageStream, $AnswerISO)
+Write-Host "Answer ISO built: $AnswerISO" -ForegroundColor Green
+
+# Remove any previous answer ISO from the VM's DVD drives (handles reruns)
+Get-VMDvdDrive -VMName $VMName |
+    Where-Object { $_.Path -like "*Answer*" } |
+    Remove-VMDvdDrive
+
+# Attach the answer ISO as a second DVD drive
+Add-VMDvdDrive -VMName $VMName -Path $AnswerISO
+Write-Host "Answer ISO attached as DVD drive" -ForegroundColor Green
 ```
 
-Repeat for each VM, updating the hostname in the XML each time.
+> **Rerunning this script** is safe — it removes the previous answer DVD before re-attaching,
+> so you will never get "the disk is already connected" errors.
 
-**Without the unattend file:** Just boot the VM and click through the Windows setup wizard manually. Choose "Windows Server 2025 Standard (Desktop Experience)" for the GUI version.
+> **Note:** `Get-VMDvdDrive` does not accept `-ControllerType` as a parameter — filter on
+> the returned object properties instead (as shown above). Passing `-ControllerType` directly
+> causes a parameter binding error.
+
+`New-LabVMs.ps1` already attaches the Windows Server ISO and sets DVD-first boot order, so
+no additional firmware changes are needed after attaching the answer ISO.
+
+**Without the unattend file:** Boot the VM and click through setup manually.
+Choose **Windows Server 2025 Standard (Desktop Experience)** for the GUI version.
 
 ---
 
 ## Step 3 — Install Windows Server on Each VM
 
-1. In Hyper-V Manager, start each VM and connect to it (double-click > Connect)
-2. Boot from the ISO — press any key when prompted
-3. Select **Windows Server 2025 Standard (Desktop Experience)**
-4. Choose **Custom Install**, select the unallocated disk, and let it run
-5. Set the Administrator password when prompted (or it's already set if you used unattend)
+**Important — open the VM window BEFORE starting it.** The UEFI DVD boot shows a
+"Press any key to boot from CD or DVD..." prompt for about 5 seconds. If the window
+isn't open and focused in time, the prompt disappears and the VM reports
+"boot loader failed" and skips the DVD entirely.
+
+**Correct sequence:**
+
+1. In Hyper-V Manager, double-click the VM to open the connection window
+2. From inside that window: **Action → Start** (or the Start button in the toolbar)
+3. The moment the screen shows any activity — **click inside the window and spam Space**
+   Keep pressing until the Windows Setup loading screen appears
+4. Setup will load — if you attached the answer drive, it runs hands-free from here
+
+**What to expect during unattended install:**
+
+| Phase | What you see | Approx. time |
+|-------|-------------|-------------|
+| WinPE loads | Blue "Windows Setup" loading screen | ~1 min |
+| Disk partitioning | Black screen, no input needed | ~2 min |
+| File copy | "Installing Windows" progress bar | ~10 min |
+| Specialize + reboots | Several automatic restarts | ~5 min |
+| OOBE | Skipped automatically | instant |
+| Desktop | Auto-logs in as Administrator | done |
+
+When complete you land at the desktop. The password is whatever you set in
+`Unattend-Server.xml` (`AdministratorPassword`).
+
+**If setup starts but shows "Select language settings" (unattend.xml was not picked up):**
+The answer drive wasn't attached or wasn't found before setup started. Since Windows hasn't
+been written to the VHDX yet it is safe to stop the VM and try again:
+
+```powershell
+Stop-VM -Name "Lab-DC01" -Force
+```
+
+Then run the answer drive script from Step 2, open the connection window, start the VM from
+inside it, and spam Space. Setup will find `unattend.xml` on the answer drive and run
+hands-free this time.
+
+**Without the answer drive:** Setup will stop and ask questions. Choose
+**Windows Server 2025 Standard (Desktop Experience)**, accept the license,
+pick **Custom Install**, select the unallocated disk, and set a password when prompted.
+Use the same password as in `Unattend-Server.xml` to keep things consistent.
+
+**If you still see "boot loader failed" after pressing Space:**
+```powershell
+# Verify Secure Boot is set correctly (must be done while VM is off)
+Stop-VM -Name "Lab-DC01" -Force
+Set-VMFirmware -VMName "Lab-DC01" -EnableSecureBoot On -SecureBootTemplate MicrosoftWindows
+# Then re-open the connection window and start from inside it
+```
 
 ---
 
 ## Step 4 — Run Post-Config on Each VM
 
-After Windows is installed and you're at the desktop, open PowerShell as Administrator and run `Set-VMPostConfig.ps1` inside each VM. Transfer the script via PowerShell Direct from the host, or copy it manually.
+Once you're at the desktop (setup complete, auto-logged in), transfer and run
+`Set-VMPostConfig.ps1` inside each VM. Run this from the **Hyper-V host** — it uses
+PowerShell Direct which works without any network connection.
 
 **Transfer script to a VM using PowerShell Direct (from Hyper-V host):**
 ```powershell
 $cred = Get-Credential  # use the VM's local Administrator credentials
 $s = New-PSSession -VMName "Lab-DC01" -Credential $cred
-Copy-Item -Path ".\Set-VMPostConfig.ps1" -ToSession $s -Destination "C:\Scripts\"
+
+# Create the destination folder inside the VM first — New-Item runs on the HOST
+# if not wrapped in Invoke-Command, and Copy-Item will fail with "path not found"
+Invoke-Command -Session $s -ScriptBlock { New-Item -ItemType Directory -Path "C:\Scripts" -Force | Out-Null }
+
+Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
+          -ToSession $s -Destination "C:\Scripts\"
 Remove-PSSession $s
 ```
 
@@ -141,6 +258,7 @@ Before running any CAC scripts, take a checkpoint of each VM at its clean post-c
 
 ```powershell
 # Run from the Hyper-V host
+cd C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\
 .\New-LabSnapshot.ps1 -Mode Create -Label "00-BaseOS"
 ```
 

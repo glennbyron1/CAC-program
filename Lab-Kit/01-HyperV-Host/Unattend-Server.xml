@@ -198,7 +198,7 @@
       <!-- CHANGE THIS before using the file -->
       <UserAccounts>
         <AdministratorPassword>
-          <Value>CHANGE-ME-LAB-PASSWORD</Value>
+          <Value><LAB-ADMIN-PASSWORD></Value>
           <PlainText>true</PlainText>
         </AdministratorPassword>
       </UserAccounts>
@@ -207,7 +207,7 @@
       <!-- Lets you land at the desktop without any prompts -->
       <AutoLogon>
         <Password>
-          <Value>CHANGE-ME-LAB-PASSWORD</Value>
+          <Value><LAB-ADMIN-PASSWORD></Value>
           <PlainText>true</PlainText>
         </Password>
         <Enabled>true</Enabled>

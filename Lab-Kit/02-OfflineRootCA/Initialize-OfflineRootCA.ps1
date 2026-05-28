@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Guided Offline Root CA initialization — interactive step-by-step ceremony.

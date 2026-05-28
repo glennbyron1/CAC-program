@@ -227,7 +227,7 @@ Write-OK "Time zone: Eastern Standard Time"
 # ---------------------------------------------------------------------------
 if ($VMRole -eq 'OfflineRootCA') {
     Write-Step "Offline Root CA: confirming network isolation..."
-    $adapters = Get-NetAdapter
+    $adapters = @(Get-NetAdapter)
     if ($adapters.Count -eq 0) {
         Write-OK "No network adapters present - VM is properly air-gapped"
     } else {

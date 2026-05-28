@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Audit Log Forwarding Configuration -- Smart Card & AD CS Event Log Subscriptions

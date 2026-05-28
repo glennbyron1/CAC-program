@@ -82,11 +82,12 @@ cd .\Lab-Kit\01-HyperV-Host\
 
 ```powershell
 # Downloads all tools to C:\FedCompliance-Tools\
-& '.\Tools-Kit\Get-LabTools.ps1'
+cd C:\CAC-Lab-Kit-20260526\Tools-Kit\
+.\Get-LabTools.ps1
 
 # Or run individually:
-& 'Tools-Kit\Download-IssuingCA-Kit.ps1'       # Stages Issuing CA prerequisites + PSPKI
-& 'Tools-Kit\Download-FedCompliance-Kit.ps1'   # Downloads SCAP SCC, STIG Viewer, Nessus
+.\Download-IssuingCA-Kit.ps1        # Stages Issuing CA prerequisites + PSPKI
+.\Download-FedCompliance-Kit.ps1    # Downloads SCAP SCC, STIG Viewer, Nessus
 ```
 
 Then transfer the tools folder to Lab-DC01 (see Phase 5 transfer instructions below).
@@ -95,39 +96,64 @@ Then transfer the tools folder to Lab-DC01 (see Phase 5 transfer instructions be
 
 ### PHASE 3 — Install Windows on Each VM
 
-1. Start each VM in Hyper-V Manager and connect (double-click > Connect)
-2. Boot from the ISO — press any key when prompted
-3. Select **Windows Server 2025 Standard (Desktop Experience)**
-4. Choose **Custom Install**, select the unallocated disk, let it run
-5. Set the Administrator password when prompted
+**IMPORTANT — open the VM window BEFORE starting it.** The UEFI DVD boot shows a
+"Press any key to boot from CD or DVD..." prompt for only ~5 seconds. If the window
+isn't already open and focused, you'll miss it.
 
-After OS install, open PowerShell as Administrator inside each VM and run
-`Set-VMPostConfig.ps1`. Transfer it via PowerShell Direct from the host:
+**Correct boot sequence for each VM:**
+1. In Hyper-V Manager, **double-click the VM** to open the connection window
+2. From inside that window: **Action → Start**
+3. The moment any text appears — **click inside the window and spam Space**
+4. When "Windows Setup [EMS Enabled]" appears in the Boot Manager, press **Enter**
+5. Wait through the white screen (~2 min) — that is WinPE loading, it is normal
+
+**Click through setup on each VM:**
+1. Next → **Install now**
+2. Select **Windows Server 2025 Standard (Desktop Experience)**
+3. Accept license → Next
+4. **Custom: Install Windows only**
+5. Click the unallocated disk → Next — walk away, it installs and reboots automatically
+6. Set Administrator password when prompted (use `<LAB-ADMIN-PASSWORD>` to match the lab default)
+
+**After OS install — transfer and run post-config on each VM from the Hyper-V host:**
+
+> `Invoke-Command` creates `C:\Scripts` inside the VM. Running `New-Item` bare (without
+> `Invoke-Command`) creates the folder on the Hyper-V host instead, causing `Copy-Item` to fail.
 
 ```powershell
-# From the Hyper-V host — transfer and run post-config on each VM:
-$cred = Get-Credential   # local Administrator on the VM
-
 # Lab-DC01
+$cred = Get-Credential   # Administrator / <LAB-ADMIN-PASSWORD>
 $s = New-PSSession -VMName "Lab-DC01" -Credential $cred
-Copy-Item -Path ".\Set-VMPostConfig.ps1" -ToSession $s -Destination "C:\Scripts\"
+Invoke-Command -Session $s -ScriptBlock { New-Item -ItemType Directory -Path "C:\Scripts" -Force | Out-Null }
+Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
+          -ToSession $s -Destination "C:\Scripts\"
 Remove-PSSession $s
 # Then inside Lab-DC01:
-& 'C:\Scripts\Set-VMPostConfig.ps1' -VMRole DomainController -IPAddress 10.10.10.10
+C:\Scripts\Set-VMPostConfig.ps1 -VMRole DomainController -IPAddress 10.10.10.10
+```
 
+```powershell
 # Lab-OfflineRootCA
+$cred = Get-Credential   # Administrator / <LAB-ADMIN-PASSWORD>
 $s = New-PSSession -VMName "Lab-OfflineRootCA" -Credential $cred
-Copy-Item -Path ".\Set-VMPostConfig.ps1" -ToSession $s -Destination "C:\Scripts\"
+Invoke-Command -Session $s -ScriptBlock { New-Item -ItemType Directory -Path "C:\Scripts" -Force | Out-Null }
+Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
+          -ToSession $s -Destination "C:\Scripts\"
 Remove-PSSession $s
 # Then inside Lab-OfflineRootCA:
-& 'C:\Scripts\Set-VMPostConfig.ps1' -VMRole OfflineRootCA
+C:\Scripts\Set-VMPostConfig.ps1 -VMRole OfflineRootCA
+```
 
+```powershell
 # Lab-Workstation01
+$cred = Get-Credential   # Administrator / <LAB-ADMIN-PASSWORD>
 $s = New-PSSession -VMName "Lab-Workstation01" -Credential $cred
-Copy-Item -Path ".\Set-VMPostConfig.ps1" -ToSession $s -Destination "C:\Scripts\"
+Invoke-Command -Session $s -ScriptBlock { New-Item -ItemType Directory -Path "C:\Scripts" -Force | Out-Null }
+Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
+          -ToSession $s -Destination "C:\Scripts\"
 Remove-PSSession $s
 # Then inside Lab-Workstation01:
-& 'C:\Scripts\Set-VMPostConfig.ps1' -VMRole Workstation -IPAddress 10.10.10.20 -DNSServer 10.10.10.10
+C:\Scripts\Set-VMPostConfig.ps1 -VMRole Workstation -IPAddress 10.10.10.20 -DNSServer 10.10.10.10
 ```
 
 Reboot each VM after the script finishes.

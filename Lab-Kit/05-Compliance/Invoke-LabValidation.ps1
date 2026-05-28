@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     End-to-end CAC/PIV lab readiness validator — run this before the formal SCAP scan.
@@ -223,7 +223,7 @@ try {
 # Kerberos time skew
 try {
     $domainTime = ([System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().FindDomainController()).CurrentTime
-    $skewSec    = [math]::Abs(((Get-Date) - $domainTime).TotalSeconds)
+    $skewSec    = [math]::Abs(([datetime]::UtcNow - $domainTime.ToUniversalTime()).TotalSeconds)
     if ($skewSec -le 300) {
         Write-Result "L1" "Kerberos time skew" "PASS" "$([math]::Round($skewSec,0))s skew (limit: 300s / 5 min)"
     } else {
@@ -402,7 +402,7 @@ Write-LayerHeader "Layer 5 — Audit Policy"
 function Test-AuditSubcategory {
     param([string]$Subcategory, [string]$Layer)
     $out = & auditpol /get /subcategory:"$Subcategory" 2>&1
-    $line = $out | Where-Object { $_ -match $Subcategory } | Select-Object -First 1
+    $line = $out | Where-Object { $_ -match "^\s+$([regex]::Escape($Subcategory))" } | Select-Object -First 1
     if ($line -match 'Success and Failure') {
         Write-Result $Layer "Audit: $Subcategory" "PASS" "Success and Failure"
     } elseif ($line -match 'Success|Failure') {
