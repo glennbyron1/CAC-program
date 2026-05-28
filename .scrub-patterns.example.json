@@ -6,8 +6,8 @@
   "realagencydomain.gov":                   "agency.gov",
   "RealAgencyName":                         "Agency",
   "realagencyname":                         "agency",
-  "10.0.0.":                              "10.0.0.",
-  "10.10.11":                               "10.0.0",
+  "10.50.11.":                              "10.0.0.",
+  "10.50.11":                               "10.0.0",
   "10.0.":                                 "10.0.",
   "your-windows-shortname":                 "labuser",
   "your-real-server-name":                  "lab-server-01"
