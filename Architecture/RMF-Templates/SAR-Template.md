@@ -229,9 +229,14 @@ scoped as the next phase (`Lab-Kit/Ansible/windows-stig-hardening.yml`).
 
 | Role | Name | Organization |
 |------|------|-------------|
-| Lead Assessor | Glenn Byron | [FILL IN] |
-| Technical Reviewer | [FILL IN] | [FILL IN] |
-| System Owner Representative | [FILL IN] | [FILL IN] |
+| Lead Assessor | Glenn Byron | Lab Program Manager / ISSO |
+| Authorizing Official (AO) | Glenn Byron | System Owner / Lab Program Manager — Self-Assessed Lab |
+| Technical Reviewer | Self-assessed | Lab environment — no independent reviewer |
+| System Owner Representative | Glenn Byron | Lab Program Manager |
+
+> **Note:** This is a personal learning and portfolio lab with no production ATO.
+> The assessment demonstrates the RMF workflow and documentation discipline,
+> not a formal DoD authorization decision.
 
 ---
 
@@ -246,3 +251,5 @@ scoped as the next phase (`Lab-Kit/Ansible/windows-stig-hardening.yml`).
 
 *Related documents: `Architecture/SSP-Template.md` (system description and controls),
 `Architecture/POAM-Template.md` (open finding tracking), `Compliance-Reports/` (raw scan artifacts).*
+
+*Note: This is a personal learning and portfolio lab with no production ATO. The "authorization" here demonstrates the RMF workflow and documentation discipline — not a formal DoD authorization decision.*

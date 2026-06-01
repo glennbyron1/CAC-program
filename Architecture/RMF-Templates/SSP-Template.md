@@ -19,7 +19,7 @@ Framework: NIST SP 800-53 Rev. 5 | NIST SP 800-37 Rev. 2 RMF Authorize | FIPS 19
 | System Abbreviation | ICAM-01 |
 | Document ID | ARCH-ICAM-006 |
 | System Owner | Glenn Byron |
-| Authorizing Official (AO) | [FILL IN — Name, Title] |
+| Authorizing Official (AO) | Glenn Byron | System Owner / Lab Program Manager | Self-Assessed Lab Environment |
 | Information System Security Officer (ISSO) | Glenn Byron |
 | Prepared By | Glenn Byron |
 | Date Prepared | June 1, 2026 |
@@ -119,7 +119,7 @@ Per FIPS 199 and NIST SP 800-60, this system is categorized as follows:
 | Role | Responsibilities | Assigned To |
 |------|-----------------|-------------|
 | System Owner | Overall accountability for system security and ATO maintenance | Glenn Byron |
-| Authorizing Official (AO) | Accept residual risk; grant or deny ATO | [FILL IN — Name, Title] |
+| Authorizing Official (AO) | Accept residual risk; grant or deny ATO | Glenn Byron | System Owner / Lab Program Manager | Self-Assessed Lab Environment|
 | ISSO | Day-to-day security posture monitoring; POA&M tracking; annual reviews | Glenn Byron |
 | PKI Administrator | CA operations, CRL publishing, certificate template management | Glenn Byron |
 | Registration Authority (RA) | Identity verification during token enrollment (NIST AC-5) | Designated RA account (separate from Issuer) |
@@ -239,7 +239,7 @@ accepts residual risk for findings with an accepted risk disposition before the 
 | Authorization Decision | Pending — ATO with conditions recommended (see SAR) |
 | Authorization Date | Pending |
 | Authorization Expiration | Pending — typically 3 years from authorization date |
-| Authorizing Official Signature | Pending |
+| Authorizing Official Signature | Glenn Byron | System Owner / Lab Program Manager | Self-Assessed Lab Environment|
 | Conditions | Complete Ansible STIG hardening pass (CAT I/II remediation); complete Nessus scan; IIS STIG assessment |
 
 ---
@@ -255,3 +255,5 @@ accepts residual risk for findings with an accepted risk disposition before the 
 
 *See `ROADMAP.md` for the full program phase plan. See `Architecture/SAR-Template.md` for the
 Security Assessment Report and `Architecture/POAM-Template.md` for the Plan of Action & Milestones.*
+
+*Note: This is a personal learning and portfolio lab with no production ATO. The "authorization" here demonstrates the RMF workflow and documentation discipline — not a formal DoD authorization decision.*
