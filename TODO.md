@@ -1,7 +1,7 @@
 # CAC Program — Outstanding Tasks
 
 **Author:** Glenn Byron
-**Last Updated:** May 24, 2026
+**Last Updated:** May 29, 2026
 
 This is the living task list for the CAC/PIV ICAM portfolio project. Items marked ✅ are complete. Items marked ⬜ require hands-on work by Glenn. Items marked 📋 are blocked until Phase 4 lab data exists.
 
@@ -35,6 +35,52 @@ This is the living task list for the CAC/PIV ICAM portfolio project. Items marke
   ad-cs  watchguard  entra-id  powershell  nist-csf  cisa-cpg
   regulatory-compliance
   ```
+
+---
+
+## DevSecOps — Pipeline and IaC
+
+### CI/CD Security Pipeline (GitHub Actions)
+- ✅ Secret & sensitive file scan — blocks private keys and cert files
+- ✅ PowerShell lint (PSScriptAnalyzer) — enforces approved verbs, no plaintext passwords
+- ✅ CodeQL SAST — static analysis on Python code, weekly scheduled scan
+- ✅ Trivy container scan — CVE scanning on Docker images, daily scheduled scan
+- ✅ Dependency review — blocks PRs with HIGH/CRITICAL CVEs in new dependencies
+- ⬜ Add SBOM generation (Syft or `trivy sbom`) on container build — EO 14028 compliance
+- ⬜ Add Gitleaks workflow for deeper secret detection beyond the current scan
+
+### Container
+- ✅ `docker/scap-summary/` — containerized SCAP XCCDF parser, multi-stage Dockerfile, non-root
+- ⬜ Push image to GitHub Container Registry (ghcr.io) on merge to main
+- ⬜ Add Docker content trust / image signing (cosign) — supply chain integrity
+
+### Infrastructure as Code (Ansible)
+- ✅ `Lab-Kit/Ansible/windows-stig-hardening.yml` — automates 8 STIG sections on Windows Server
+- ⬜ Add Ansible playbook for AD health check (stale accounts, privileged group audit)
+- ⬜ Add Ansible playbook for certificate expiry reporting
+- ⬜ Run hardening playbook against physical lab machines once they're set up
+
+### Next Learning Targets
+- ⬜ AZ-500 (Azure Security Engineer) — builds on AZ-900, high DoD value
+- ⬜ Certified DevSecOps Professional (CDP) from Practical DevSecOps
+- ⬜ WGU MSSWEDOE — enroll after starting new job, use tuition assistance
+
+---
+
+## Physical Lab Setup (Dell Hardware Path)
+
+- ⬜ Pull service tags and verify Server 2022 support for each machine at dell.com/support
+- ⬜ Update iDRAC firmware on all PowerEdge servers (via Lifecycle Controller or manual upload)
+- ⬜ Set static IPs and change default passwords on all iDRAC interfaces
+- ⬜ Configure VLAN segmentation on managed switch (VLAN 10 Lab-LAN, VLAN 1 Management)
+- ⬜ Install Server 2022 on DC01 via iDRAC virtual media or USB
+- ⬜ Install Server 2022 on MEMBER01
+- ⬜ Install Dell OpenManage Server Administrator on each PowerEdge
+- ⬜ Verify TPM 2.0 enabled on all machines (BIOS → Security → TPM)
+- ⬜ Apply iDRAC 9 STIG items (default password, TLS 1.2+, session timeout, audit logging)
+- ⬜ Proceed from `Lab-Kit/02-OfflineRootCA/` — scripts are hardware-agnostic from this point
+
+Full setup guide: `Lab-Kit/Physical-Lab-Setup.md`
 
 ---
 
@@ -129,6 +175,50 @@ All templates are written. These items need real scan data to complete.
 
 ---
 
+## Phase 8 — Zero Trust Extension (After Phase 4)
+
+Design complete. Scripts are the next build phase. Full design in `Lab-Kit/Phase-8-Zero-Trust-Extension.md`.
+
+### 8.1 — Authorization & Least Privilege
+- ⬜ `Set-TieredAdminModel.ps1` — AD admin tiering (Tier 0/1/2), OUs, groups, deny-logon rules
+- ⬜ `Set-LeastPrivilegeGPO.ps1` — User Rights Assignment hardening, strip broad local-admin
+- ⬜ `New-RBACModel.ps1` — role groups, role → resource mapping, AD delegation
+- ⬜ `Set-AuthenticationPolicySilo.ps1` — Kerberos Authentication Policy Silos
+- ⬜ `Deploy-ResourceGateway.ps1` — reverse proxy / app gateway as working PEP demo
+
+### 8.2 — Device Trust
+- ⬜ `New-DeviceCertTemplate.ps1` — machine-authentication cert template from Issuing CA
+- ⬜ `Enroll-DeviceCertificates.ps1` — device cert autoenrollment
+- ⬜ `Set-DeviceComplianceCheck.ps1` — pre-access posture gate (AV, patch, BitLocker)
+- ⬜ `Update-VPN-DeviceAuth.ps1` — require both user and machine certs on VPN
+
+### 8.3 — Continuous & Conditional Access
+- ⬜ `Set-KerberosTicketLifetime.ps1` — shorten TGT/TGS lifetimes via Authentication Policies
+- ⬜ `Deploy-ConditionalAccess.ps1` — PIV federation into Entra ID / AD FS with conditional access
+- ⬜ `New-RiskPolicy.ps1` — step-up and deny conditions, Continuous Access Evaluation
+
+### 8.4 — Workload / Non-Person Identity *(optional)*
+- ⬜ `New-WorkloadCertTemplate.ps1` — short-lived service/machine identity cert template
+- ⬜ `Set-ServiceAccountHardening.ps1` — convert to gMSA, remove stored secrets
+- ⬜ `Enable-mTLS.ps1` — mutual TLS between two lab services
+
+### 8.5 — Network Segmentation & Per-App Access
+- ⬜ `Set-Microsegmentation.ps1` — default-deny east-west between lab VMs
+- ⬜ `Convert-VPNToPerApp.ps1` — per-resource VPN access (ZTNA-style)
+
+### 8.6 — Visibility, Analytics → Decisioning
+- ⬜ `Deploy-SIEM.ps1` — forward WEF stream into Sentinel or Elastic
+- ⬜ `New-DetectionRules.ps1` — anomalous auth, lateral movement, policy violation detections
+- ⬜ `Connect-Analytics-To-Policy.ps1` — risk signal feeds back into conditional access
+
+### 8.7 — Validation & Evidence
+- ⬜ `Invoke-ZeroTrustValidation.ps1` — extend 7-layer validator with ZT checks
+- ⬜ Extend `Stage-Reports.ps1` with Before-ZT / After-ZT delta
+- ⬜ Update SSP control mapping with Phase 8 control families
+- ⬜ Add `Demo-Walkthrough-ZT.md`
+
+---
+
 ## Automation — Fully Complete ✅
 
 Everything that can be scripted has been scripted. No further code work needed before lab execution.
@@ -142,6 +232,7 @@ Everything that can be scripted has been scripted. No further code work needed b
 | Phase 5 — RMF Authorize (Templates) | ✅ Templates done / 📋 data pending |
 | Phase 6 — Advanced Automation | ✅ Complete |
 | Phase 7 — Portfolio Finalization | 📋 After Phase 4 |
+| Phase 8 — Zero Trust Extension | ⬜ Design complete / scripts pending |
 
 ---
 

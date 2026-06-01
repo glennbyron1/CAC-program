@@ -94,3 +94,12 @@ Conversation-Export-*.md
 *-Conversation-Export.md
 *transcript*.md
 *.jsonl
+
+# =========================
+#  DISPATCH — LOCAL STAGING ONLY (NEVER COMMIT)
+# =========================
+# Dispatch/ is a local-only staging and review folder. It holds draft files,
+# private gap analyses (Agency), and work-in-progress content that is not
+# ready or appropriate for the public repo. Nothing in this folder should
+# ever be committed or pushed.
+Dispatch/

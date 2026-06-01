@@ -1,0 +1,27 @@
+# Ansible Inventory — CAC/PIV Lab
+# Copy this file to inventory.ini and fill in your real IPs and credentials.
+# inventory.ini is gitignored — never commit real credentials.
+
+[lab_servers]
+dc01       ansible_host=192.168.1.10
+member01   ansible_host=192.168.1.11
+
+[lab_workstations]
+ws01       ansible_host=192.168.1.20
+
+[lab:children]
+lab_servers
+lab_workstations
+
+[lab:vars]
+ansible_user=Administrator
+ansible_password=YOUR_ADMIN_PASSWORD_HERE
+ansible_connection=winrm
+ansible_winrm_transport=basic
+ansible_winrm_port=5985
+ansible_winrm_scheme=http
+# For production — use HTTPS and certificate validation:
+# ansible_winrm_transport=kerberos
+# ansible_winrm_scheme=https
+# ansible_winrm_port=5986
+# ansible_winrm_server_cert_validation=validate

@@ -1,0 +1,48 @@
+name: CodeQL SAST — Static Analysis
+
+# Runs on every push and pull request that touches Python code.
+# Catches common security issues (injection, insecure crypto, path traversal,
+# hardcoded credentials, etc.) before they reach the main branch.
+# Part of the DevSecOps pipeline — shift-left security scanning.
+
+on:
+  push:
+    paths:
+      - '**/*.py'
+      - '.github/workflows/codeql.yml'
+  pull_request:
+    paths:
+      - '**/*.py'
+  schedule:
+    # Weekly full scan every Monday at 06:00 UTC — catches new CVEs in unchanged code
+    - cron: '0 6 * * 1'
+
+jobs:
+  analyze:
+    name: CodeQL — Python SAST
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write   # Required to upload SARIF results to GitHub Security tab
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          # Security-and-quality query suite: broader than default, catches more issues
+          queries: security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:python"
+          # Results appear in GitHub → Security → Code scanning alerts
+          upload: true

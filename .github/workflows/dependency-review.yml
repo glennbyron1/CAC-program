@@ -1,0 +1,38 @@
+name: Dependency Review — CVE Check on PRs
+
+# Blocks pull requests that introduce dependencies with known CVEs.
+# GitHub compares the dependency graph before and after the PR and flags
+# any newly introduced vulnerable packages.
+#
+# Covers: Python (requirements.txt), PowerShell modules (if applicable).
+# Equivalent to the software composition analysis (SCA) step in a
+# DoD DevSecOps pipeline — implements EO 14028 supply chain security requirements.
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+  pull-requests: write   # Allows posting a comment on the PR with findings
+
+jobs:
+  dependency-review:
+    name: Dependency Review — SCA
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          # Fail on HIGH or CRITICAL CVEs in introduced dependencies
+          fail-on-severity: high
+          # Post a summary comment on the PR
+          comment-summary-in-pr: always
+          # Warn on licenses that may conflict with MIT (DoD open source policy)
+          deny-licenses: GPL-3.0, AGPL-3.0

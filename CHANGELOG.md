@@ -8,6 +8,147 @@ This log covers every artifact produced across the life of the project — scrip
 
 ---
 
+## [Portfolio — Session 11] — 2026-05-29
+
+### Resume — NAVAIR ESDP Targeted Version
+
+#### Added
+
+**`Portfolio/Glenn_Byron_Resume_V3_ESDP.docx`**
+Rebuilt resume targeting NAVAIR ESDP (Engineer and Scientist Development Program) at NAS Patuxent River. Key changes from V2: added professional summary connecting 5+ years of sysadmin experience to DoD ICAM/DevSecOps work; expanded technical skills to include CAC/PIV, PKI/AD CS, Ansible, Docker, GitHub Actions, PowerShell, Python, SCAP/XCCDF, and Zero Trust; added new Projects section showcasing the CAC/PIV ICAM lab, DevSecOps pipeline, STIG hardening automation, and SCAP compliance parser; strengthened Agency cybersecurity bullets to remove "foundational knowledge" language; added CySA+ (in progress, Q3 2026) and AZ-500 (in progress, Q4 2026) to certifications; trimmed AutoZone section. Author: Glenn Byron.
+
+---
+
+## [DevSecOps — Session 10] — 2026-05-29
+
+### CySA+ Study Tool
+
+#### Added
+
+**`Study/CySA-Plus-Study-Tool.html`**
+Standalone interactive quiz tool for CySA+ CS0-003 exam preparation. Covers all four exam domains in proportion to their actual weights: Security Operations (33%, 10 questions), Vulnerability Management (30%, 10 questions), Incident Response (20%, 8 questions), and Reporting & Communication (17%, 7 questions). Questions cover topics directly tested on the exam: MITRE ATT&CK, Windows Event IDs, DGA beaconing, CVSS v3 scoring, NIST SP 800-61 incident phases, order of volatility, FAIR risk model, ACAS/Tenable, UEBA, and DoD-specific processes. Fully self-contained single HTML file — no external dependencies, no server required. Features domain filter tabs, live progress bar, per-question explanations, and a scored end screen with pass/near-pass/retry grade (passing threshold ≥83%, matching the real exam). Questions shuffle on each session. Author: Glenn Byron.
+
+---
+
+## [DevSecOps — Session 9] — 2026-05-29
+
+### Career Roadmap Document
+
+#### Added
+
+**`Portfolio/DevSecOps-Career-Roadmap.docx`**
+Comprehensive DevSecOps career roadmap document covering: confirmation that DevSecOps roles exist at NAS Patuxent River (NAVAIR, Lighthouse platform, cATO adoption, contractor presence); honest snapshot of current strengths and gaps; phased roadmap (30 days / 90 days / 6 months / 1 year / 2 years); skills priority table with resources; certifications roadmap (CySA+, AZ-500, CASP+, CDP, CKS, CISSP) with DoD 8140 mapping; projects to build next; DoD-specific knowledge (Platform One, Iron Bank, Navy Lighthouse, cATO, NIST SP 800-218, EO 14028, Cloud SRG); companies at Pax River with notes on clearance sponsorship; resume priorities and interview talking points. Author: Glenn Byron.
+
+---
+
+## [DevSecOps — Session 8] — 2026-05-29
+
+### DevSecOps Pipeline — CI/CD Security Scanning and IaC
+
+#### Added
+
+**`.github/workflows/codeql.yml`**
+CodeQL SAST (Static Application Security Testing) workflow. Analyzes Python code in the repo on every push and pull request that touches `.py` files, plus a weekly scheduled scan to catch newly disclosed CVEs in unchanged code. Uses the `security-and-quality` query suite — broader than the default, catches injection, insecure crypto, path traversal, and hardcoded credentials. Results upload to GitHub Security → Code scanning alerts as SARIF. Author: Glenn Byron.
+
+**`.github/workflows/trivy.yml`**
+Trivy container vulnerability scan workflow. Builds the `scap-summary` Docker image and scans it for CRITICAL and HIGH CVEs on every push that touches `docker/`. Fails the build on unpatched critical/high findings — equivalent to the container gate in a DoD DevSecOps pipeline (Platform One / Iron Bank). Full results including MEDIUM findings upload to GitHub Security tab as SARIF. Includes a daily scheduled scan to catch newly published CVEs in unchanged images. Author: Glenn Byron.
+
+**`.github/workflows/dependency-review.yml`**
+Software Composition Analysis (SCA) workflow. Blocks pull requests that introduce Python dependencies with known HIGH or CRITICAL CVEs. Posts a findings summary comment on the PR. Also flags GPL-3.0 and AGPL-3.0 licenses that may conflict with MIT and DoD open-source policy. Implements EO 14028 supply chain security requirements. Author: Glenn Byron.
+
+**`docker/scap-summary/scap_summary.py`**
+Python tool that parses DISA SCAP SCC XCCDF results files and produces a plain-language CAT I / CAT II / CAT III compliance summary — the same finding triage a DoD IA technician performs after an ACAS scan. Outputs text report (matching DoD IA reporting style) or JSON. Uses `defusedxml` to prevent XXE attacks (CWE-611) when parsing untrusted XML. Author: Glenn Byron.
+
+**`docker/scap-summary/Dockerfile`**
+Multi-stage Dockerfile for the scap-summary tool. Stage 1 (builder) installs dependencies to a separate prefix. Stage 2 (runtime) uses `python:3.12-slim` — minimal attack surface. Runs as a non-root user (UID 1001, no shell) per DISA container STIG requirements. Includes OCI image labels. Scanned by Trivy on every push. Author: Glenn Byron.
+
+**`docker/scap-summary/requirements.txt`**
+Python dependencies for scap-summary. Uses `defusedxml` instead of stdlib `xml.etree.ElementTree` — a deliberate security choice documented in the file with the CWE reference.
+
+**`Lab-Kit/Ansible/windows-stig-hardening.yml`**
+Ansible playbook automating key DISA STIG controls for Windows Server 2022 lab machines. Covers 8 sections: account lockout policy (WN22-AC-000030/040/050), password policy (WN22-AC-000060–100), audit policy (WN22-AU-000030–120 subset), disabling risky services (Print Spooler, SMBv1, LLMNR, NetBIOS), Windows Firewall enforcement on all profiles, Remote Desktop NLA and encryption requirements, legal notice banner (WN22-SO-000070/080), and User Rights Assignment restrictions (WN22-UR-000010/020). Tagged by section so individual areas can be applied independently. Prints an auditable summary at the end of every run. NIST control mapping: AC-2, AC-6, AC-7, AC-8, AC-17, AU-2, AU-12, CM-7, IA-2, IA-5, SC-7. Author: Glenn Byron.
+
+**`Lab-Kit/Ansible/inventory.ini.example`**
+Ansible inventory template with lab machine roles (lab\_servers, lab\_workstations), WinRM connection variables, and comments explaining the lab vs. production security difference (HTTP basic auth in lab, Kerberos + HTTPS in production). The real `inventory.ini` is gitignored — credentials never committed.
+
+**`Lab-Kit/Ansible/README.md`**
+Setup and usage guide for the Ansible playbook: prerequisites (pywinrm, ansible.windows collection), WinRM setup on Windows targets, dry-run and apply commands, tag reference, and lab vs. production caveats.
+
+#### Changed
+
+**`TODO.md`**
+Added DevSecOps section with pipeline and Ansible tasks.
+
+---
+
+## [Physical Lab — Session 7] — 2026-05-29
+
+### Physical Hardware Path — Dell Lab Setup Guide
+
+#### Added
+
+**`Lab-Kit/Physical-Lab-Setup.md`**
+Comprehensive guide for building the CAC/PIV lab on real Dell hardware instead of Hyper-V VMs. Includes four topology options: Option A (all physical); Option B (hybrid — VM DC on laptop + physical machines on switch); Option C (all infrastructure on laptop VMs, physical clients on switch); Option D (everything on laptop VMs — Offline Root CA isolated with a Hyper-V Private vSwitch, file transfer via PowerShell Direct). Includes interviewer talking points for explaining the VM air-gap simulation and VM resource requirements table for Option D. Covers: pre-wipe hardware checklist (service tag lookup, iDRAC version identification, TPM verification, RAM/storage minimums); iDRAC initial configuration (static IP, default password change, firmware update, virtual console and virtual media setup, RACADM CLI overview); recommended machine role assignment (Offline Root CA air-gapped, DC01 + Issuing CA, MEMBER01 test server, WORKSTATION01 for CAC logon testing); managed switch and VLAN layout (Management, Lab-LAN, OT-Sim, Quarantine); Server 2022 vs. Server 2025 comparison; iDRAC STIG compliance notes (V-225472 through V-225496); Dell OpenManage installation; day-one checklist; and a portfolio skills table showing what physical hardware work demonstrates to a DoD hiring manager. Author: Glenn Byron.
+
+#### Changed
+
+**`TODO.md`**
+Added Physical Lab Setup section with hardware checklist items and pointer to the new guide. Updated Last Updated date.
+
+---
+
+## [Phase 8 — Session 6] — 2026-05-29
+
+### Zero Trust Extension — Design & Documentation
+
+#### Added
+
+**`Zero-Trust/Paper-1-Foundations.md`**
+Zero Trust foundations paper — the shift from implicit perimeter trust to "never trust, always verify," the PEP/PDP/subject/resource model, the seven NIST SP 800-207 tenets, and the DoD and CISA pillar frameworks. Written as a plain-language reference for practitioners entering DoD IT environments.
+
+**`Zero-Trust/Paper-2-Technical-Deep-Dive.md`**
+Technical deep dive on the NIST logical components (Policy Engine, Policy Administrator, Policy Enforcement Point), the trust algorithm (criteria-based vs. score-based, singular vs. contextual), deployment models, identity as the new perimeter, microsegmentation and east-west traffic, workload identity (mTLS/SPIFFE), and the CISA maturity stages.
+
+**`Zero-Trust/Paper-3-Implementation-Checklist.md`**
+Actionable implementation checklist organized by the eight ZT areas (Foundation, Identity, Devices, Networks, Applications & Workloads, Data, Visibility & Analytics, Automation, Governance) with items ascending from Initial to Optimal maturity within each section.
+
+**`Zero-Trust/Paper-4-Detailed-Guidance.md`**
+Expanded guidance for each checklist area — why it matters, how to implement it, common pitfalls, and what "good" looks like at each CISA maturity stage.
+
+**`Zero-Trust/References.md`**
+Authoritative sources behind the paper series: NIST SP 800-207, NIST SP 800-53 Rev. 5, NIST CSF 2.0, NIST SP 1800-35, DoD Zero Trust Strategy, DoD ZT Reference Architecture v2.0, DoD ZT Capability Execution Roadmap, CISA ZTMM v2.0, EO 14028, OMB M-22-09, Maryland Chapter 495 (SB 871 / HB 1062), and the Maryland Cybersecurity and Privacy Policy Suite.
+
+**`Zero-Trust/CAC-Program-ZeroTrust-Gap-Analysis.md`**
+Gap analysis of the CAC/PIV program against full Zero Trust requirements. Documents what the program already satisfies (phishing-resistant MFA, air-gapped root CA, SOD enrollment, OCSP/CRL validation, PKI health monitoring, RMF governance) and what to add (authorization/least privilege, device trust, continuous/conditional access, workload identity, microsegmentation, analytics → decisioning). Includes CISA maturity snapshot per pillar and two technical nuances (authentication ≠ authorization; Kerberos ticket persistence).
+
+**`Zero-Trust/diagrams/ZT-Top-Down-Model.svg`**
+SVG diagram illustrating the Zero Trust top-down protection model: Governance → Policy Decision Point → Policy Enforcement Point → Pillars → Data, with authority/policy flowing downward and signals/telemetry flowing upward. Dark-themed, suitable for portfolio and presentation use.
+
+**`Zero-Trust/diagrams/ZT-Breach-Cascade.svg`**
+SVG diagram showing what happens without Zero Trust — the five-step attack cascade (Initial Access → Implicit Trust → Lateral Movement → Privilege Escalation → Impact) with a gradient attack-path chain, a blast-radius section covering six consequence cards (mission disruption, CUI breach, financial loss, regulatory exposure, ATO loss, reputation damage), and a Zero Trust contrast box at the bottom. Dark-themed, portfolio and presentation ready. Author: Glenn Byron.
+
+**`Portfolio/Zero-Trust-Reference.docx`**
+Professional Word document consolidating the Zero Trust paper series and CAC program gap analysis. Covers foundations, technical architecture (PEP/PDP/PE/PA), implementation guidance, gap analysis with CISA maturity snapshot table, and authoritative references. Navy/teal/grey color scheme, Arial font. Suitable for portfolio submission and recruiter review.
+
+**`Lab-Kit/Phase-8-Zero-Trust-Extension.md`**
+Design document for Phase 8 — extends the CAC/PIV lab from strong authentication to end-to-end Zero Trust. Seven sub-phases (8.1–8.7) covering authorization and least privilege, device trust, continuous and conditional access, workload/non-person identity, network segmentation and per-app access, visibility and analytics feeding decisioning, and validation and evidence. Each sub-phase lists the planned scripts in Verb-Noun convention, maps to gaps A–G from the gap analysis, and cites the matching NIST SP 800-53 control families. Scripts are the next build phase pending Phase 4 lab execution.
+
+#### Changed
+
+**`TODO.md`**
+Added Phase 8 section with all 7 sub-phases, all planned scripts as checkboxes, and updated the status table at the bottom to include Phase 8 row.
+
+**`.gitignore`**
+Added `Dispatch/` to gitignore with explanatory comment — the local staging folder is now permanently excluded from all commits and pushes.
+
+**`Dispatch/DISPATCH-LOG.md`** (local only — not in git)
+Created the Dispatch session log. Tracks every file in the Dispatch folder, its status (draft/ready to move/private), and a running session log so future sessions can pick up where they left off.
+
+**`Dispatch/README-DoD-draft.md`** (local only — not in git)
+DoD/Pax River–targeted README draft. Leads with what the project demonstrates for NAVAIR, defense contractor, and DoD IT hiring managers. Includes a "Why this matters for DoD and defense IT" section, expanded NIST control table, commercial vs. federal PIV comparison table, honest Zero Trust maturity table, and Phase 8 roadmap reference.
+
+---
+
 ## [Phase 6 — Session 5] — 2026-05-24
 
 ### Documentation Cleanup & Housekeeping

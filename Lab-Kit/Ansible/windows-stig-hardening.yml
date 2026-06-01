@@ -1,0 +1,334 @@
+---
+# =============================================================================
+# windows-stig-hardening.yml — Windows Server 2022 STIG Automation
+# Author: Glenn Byron
+# Frameworks: DISA STIG WN22-* | NIST SP 800-53 Rev. 5 | DoD RMF
+#
+# Applies a repeatable, auditable STIG baseline to Windows Server lab machines
+# via Ansible. Demonstrates Infrastructure as Code (IaC) and DevSecOps practice:
+# security controls defined as code, version-controlled, and applied consistently.
+#
+# Usage:
+#   ansible-playbook -i inventory.ini windows-stig-hardening.yml --check --diff
+#   ansible-playbook -i inventory.ini windows-stig-hardening.yml
+# =============================================================================
+
+- name: Windows Server 2022 STIG Hardening
+  hosts: lab_servers
+  gather_facts: true
+
+  vars:
+    # Legal banner — replace with your organization's approved AUO notice
+    # STIG WN22-SO-000070: Required logon banner
+    legal_notice_caption: "WARNING — Authorized Use Only"
+    legal_notice_text: >
+      This system is the property of an authorized organization and is for official
+      use only. Unauthorized access is prohibited and may be subject to criminal
+      prosecution. By continuing, you acknowledge that your activities may be
+      monitored and recorded.
+
+    # Account lockout — STIG WN22-AC-000030/040/050
+    lockout_threshold: 3          # Lock after 3 bad attempts (STIG: <= 3)
+    lockout_duration: 15          # Lock for 15 minutes (STIG: >= 15)
+    lockout_reset_counter: 15     # Reset bad-attempt counter after 15 min
+
+    # Password policy — STIG WN22-AC-000060/070/080/090/100
+    password_max_age: 60          # Force change every 60 days (STIG: <= 60)
+    password_min_age: 1           # Prevent immediate re-use cycling (STIG: >= 1)
+    password_min_length: 14       # Minimum 14 characters (STIG: >= 14)
+    password_history: 24          # Remember last 24 passwords (STIG: >= 24)
+
+  tasks:
+
+    # -------------------------------------------------------------------------
+    # SECTION 1 — Account Lockout Policy
+    # STIG: WN22-AC-000030 (threshold), WN22-AC-000040 (duration),
+    #       WN22-AC-000050 (reset counter)
+    # NIST: AC-7 (Unsuccessful Logon Attempts)
+    # -------------------------------------------------------------------------
+    - name: "STIG WN22-AC-000030 | Set account lockout threshold"
+      ansible.windows.win_security_policy:
+        section: System Access
+        key: LockoutBadCount
+        value: "{{ lockout_threshold }}"
+      tags: [account_policy]
+
+    - name: "STIG WN22-AC-000040 | Set account lockout duration (minutes)"
+      ansible.windows.win_security_policy:
+        section: System Access
+        key: LockoutDuration
+        value: "{{ lockout_duration }}"
+      tags: [account_policy]
+
+    - name: "STIG WN22-AC-000050 | Set reset lockout counter after (minutes)"
+      ansible.windows.win_security_policy:
+        section: System Access
+        key: ResetLockoutCount
+        value: "{{ lockout_reset_counter }}"
+      tags: [account_policy]
+
+    # -------------------------------------------------------------------------
+    # SECTION 2 — Password Policy
+    # STIG: WN22-AC-000060/070/080/090/100
+    # NIST: IA-5 (Authenticator Management)
+    # -------------------------------------------------------------------------
+    - name: "STIG WN22-AC-000060 | Set maximum password age"
+      ansible.windows.win_security_policy:
+        section: System Access
+        key: MaximumPasswordAge
+        value: "{{ password_max_age }}"
+      tags: [account_policy]
+
+    - name: "STIG WN22-AC-000070 | Set minimum password age"
+      ansible.windows.win_security_policy:
+        section: System Access
+        key: MinimumPasswordAge
+        value: "{{ password_min_age }}"
+      tags: [account_policy]
+
+    - name: "STIG WN22-AC-000080 | Set minimum password length"
+      ansible.windows.win_security_policy:
+        section: System Access
+        key: MinimumPasswordLength
+        value: "{{ password_min_length }}"
+      tags: [account_policy]
+
+    - name: "STIG WN22-AC-000090 | Enable password complexity"
+      ansible.windows.win_security_policy:
+        section: System Access
+        key: PasswordComplexity
+        value: "1"
+      tags: [account_policy]
+
+    - name: "STIG WN22-AC-000100 | Set password history (enforce uniqueness)"
+      ansible.windows.win_security_policy:
+        section: System Access
+        key: PasswordHistorySize
+        value: "{{ password_history }}"
+      tags: [account_policy]
+
+    # -------------------------------------------------------------------------
+    # SECTION 3 — Audit Policy
+    # STIG: WN22-AU-000030 through WN22-AU-000120 (subset)
+    # NIST: AU-2 (Audit Events), AU-12 (Audit Record Generation)
+    # These are the Event IDs DoD shops watch: 4624/4625, 4648, 4720, 4728, etc.
+    # -------------------------------------------------------------------------
+    - name: "STIG WN22-AU-000030 | Audit Account Logon — Success and Failure"
+      community.windows.win_audit_policy_system:
+        subcategory: Credential Validation
+        audit_type: success, failure
+      tags: [audit_policy]
+
+    - name: "STIG WN22-AU-000040 | Audit Account Management — Success and Failure"
+      community.windows.win_audit_policy_system:
+        subcategory: User Account Management
+        audit_type: success, failure
+      tags: [audit_policy]
+
+    - name: "STIG WN22-AU-000050 | Audit Group Membership — Success"
+      community.windows.win_audit_policy_system:
+        subcategory: Group Membership
+        audit_type: success
+      tags: [audit_policy]
+
+    - name: "STIG WN22-AU-000060 | Audit Logon — Success and Failure"
+      community.windows.win_audit_policy_system:
+        subcategory: Logon
+        audit_type: success, failure
+      tags: [audit_policy]
+
+    - name: "STIG WN22-AU-000070 | Audit Logoff — Success"
+      community.windows.win_audit_policy_system:
+        subcategory: Logoff
+        audit_type: success
+      tags: [audit_policy]
+
+    - name: "STIG WN22-AU-000080 | Audit Object Access — Failure"
+      community.windows.win_audit_policy_system:
+        subcategory: File System
+        audit_type: failure
+      tags: [audit_policy]
+
+    - name: "STIG WN22-AU-000090 | Audit Policy Change — Success and Failure"
+      community.windows.win_audit_policy_system:
+        subcategory: Audit Policy Change
+        audit_type: success, failure
+      tags: [audit_policy]
+
+    - name: "STIG WN22-AU-000100 | Audit Privilege Use — Success and Failure"
+      community.windows.win_audit_policy_system:
+        subcategory: Sensitive Privilege Use
+        audit_type: success, failure
+      tags: [audit_policy]
+
+    - name: "STIG WN22-AU-000110 | Audit Process Creation — Success"
+      community.windows.win_audit_policy_system:
+        subcategory: Process Creation
+        audit_type: success
+      tags: [audit_policy]
+
+    - name: "STIG WN22-AU-000120 | Audit Special Logon — Success"
+      community.windows.win_audit_policy_system:
+        subcategory: Special Logon
+        audit_type: success
+      tags: [audit_policy]
+
+    # -------------------------------------------------------------------------
+    # SECTION 4 — Disable Unnecessary / Risky Services
+    # STIG: WN22-00-000160 (Print Spooler on non-print servers),
+    #       WN22-MS-000020 (SMBv1)
+    # NIST: CM-7 (Least Functionality)
+    # -------------------------------------------------------------------------
+    - name: "STIG WN22-00-000160 | Disable Print Spooler (non-print servers)"
+      ansible.windows.win_service:
+        name: Spooler
+        start_mode: disabled
+        state: stopped
+      tags: [services]
+
+    - name: "STIG WN22-MS-000020 | Disable SMBv1 — registry"
+      ansible.windows.win_regedit:
+        path: HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters
+        name: SMB1
+        data: 0
+        type: dword
+      tags: [services]
+
+    - name: "STIG | Disable LLMNR (Link-Local Multicast Name Resolution)"
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient
+        name: EnableMulticast
+        data: 0
+        type: dword
+      tags: [services]
+
+    - name: "STIG | Disable NetBIOS over TCP/IP via registry"
+      ansible.windows.win_regedit:
+        path: HKLM:\SYSTEM\CurrentControlSet\Services\NetBT\Parameters
+        name: NetbiosOptions
+        data: 2
+        type: dword
+      tags: [services]
+
+    # -------------------------------------------------------------------------
+    # SECTION 5 — Windows Firewall
+    # STIG: WN22-00-000030/040/050 (firewall enabled on all profiles)
+    # NIST: SC-7 (Boundary Protection), CM-7 (Least Functionality)
+    # -------------------------------------------------------------------------
+    - name: "STIG WN22-00-000030 | Enable Windows Firewall — Domain profile"
+      community.windows.win_firewall:
+        profiles: Domain
+        state: enabled
+        inbound_action: block
+        outbound_action: allow
+      tags: [firewall]
+
+    - name: "STIG WN22-00-000040 | Enable Windows Firewall — Private profile"
+      community.windows.win_firewall:
+        profiles: Private
+        state: enabled
+        inbound_action: block
+        outbound_action: allow
+      tags: [firewall]
+
+    - name: "STIG WN22-00-000050 | Enable Windows Firewall — Public profile"
+      community.windows.win_firewall:
+        profiles: Public
+        state: enabled
+        inbound_action: block
+        outbound_action: allow
+      tags: [firewall]
+
+    # -------------------------------------------------------------------------
+    # SECTION 6 — Remote Desktop Security
+    # STIG: WN22-CC-000280 (NLA required), WN22-CC-000290 (encryption level)
+    # NIST: AC-17 (Remote Access), IA-2 (Identification and Authentication)
+    # -------------------------------------------------------------------------
+    - name: "STIG WN22-CC-000280 | Require Network Level Authentication for RDP"
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+        name: UserAuthentication
+        data: 1
+        type: dword
+      tags: [rdp]
+
+    - name: "STIG WN22-CC-000290 | Set RDP encryption level to High"
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+        name: MinEncryptionLevel
+        data: 3
+        type: dword
+      tags: [rdp]
+
+    - name: "STIG | Disable RDP if not needed (member servers)"
+      ansible.windows.win_regedit:
+        path: HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server
+        name: fDenyTSConnections
+        data: 1
+        type: dword
+      when: "'dc01' not in inventory_hostname"
+      tags: [rdp]
+
+    # -------------------------------------------------------------------------
+    # SECTION 7 — Legal Notice / Warning Banner
+    # STIG: WN22-SO-000070 (caption), WN22-SO-000080 (text)
+    # NIST: AC-8 (System Use Notification)
+    # -------------------------------------------------------------------------
+    - name: "STIG WN22-SO-000070 | Set legal notice caption"
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+        name: LegalNoticeCaption
+        data: "{{ legal_notice_caption }}"
+        type: string
+      tags: [legal_banner]
+
+    - name: "STIG WN22-SO-000080 | Set legal notice text"
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+        name: LegalNoticeText
+        data: "{{ legal_notice_text }}"
+        type: string
+      tags: [legal_banner]
+
+    # -------------------------------------------------------------------------
+    # SECTION 8 — User Rights Assignment
+    # STIG: WN22-UR-000* (subset — deny interactive logon to service accounts)
+    # NIST: AC-2 (Account Management), AC-6 (Least Privilege)
+    # -------------------------------------------------------------------------
+    - name: "STIG WN22-UR-000010 | Deny local logon to built-in Guest"
+      ansible.windows.win_user_right:
+        name: SeDenyInteractiveLogonRight
+        users:
+          - Guest
+        action: add
+      tags: [user_rights]
+
+    - name: "STIG WN22-UR-000020 | Deny network logon to built-in Guest"
+      ansible.windows.win_user_right:
+        name: SeDenyNetworkLogonRight
+        users:
+          - Guest
+        action: add
+      tags: [user_rights]
+
+    # -------------------------------------------------------------------------
+    # SECTION 9 — Report
+    # Print a summary of what was applied so the run is auditable
+    # -------------------------------------------------------------------------
+    - name: Print hardening summary
+      ansible.builtin.debug:
+        msg: |
+          ============================================================
+          Windows STIG Hardening — Applied to: {{ inventory_hostname }}
+          Date: {{ ansible_date_time.iso8601 }}
+          Controls applied:
+            Account policy  : lockout={{ lockout_threshold }}, maxpwage={{ password_max_age }}d, minlen={{ password_min_length }}
+            Audit policy    : logon, acct-mgmt, group-member, policy-change, priv-use, proc-create
+            Services        : Print Spooler disabled, SMBv1 off, LLMNR off, NetBIOS off
+            Firewall        : All profiles enabled, inbound default-deny
+            RDP             : NLA required, encryption=High
+            Legal banner    : Set
+            User rights     : Guest denied interactive and network logon
+          STIG refs: WN22-AC-*, WN22-AU-*, WN22-CC-*, WN22-SO-*, WN22-UR-*
+          ============================================================
+      tags: [always]
