@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 860" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#160d12"/>
+      <stop offset="1" stop-color="#0c0a10"/>
+    </linearGradient>
+    <linearGradient id="chain" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f59e0b"/><stop offset="1" stop-color="#ef4444"/>
+    </linearGradient>
+    <radialGradient id="blast" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ef4444" stop-opacity="0.55"/><stop offset="1" stop-color="#ef4444" stop-opacity="0"/>
+    </radialGradient>
+    <style>
+      .lbl{fill:#d59a86;font-size:11px;letter-spacing:3px}
+      .h1{fill:#fbeae6;font-size:33px;font-weight:700;letter-spacing:1px}
+      .sub{fill:#c2998f;font-size:14px}
+      .stepN{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;fill:#fca5a5}
+      .stepH{font-size:13.5px;font-weight:700;fill:#fdeee9;letter-spacing:0.5px}
+      .stepS{font-size:10.5px;fill:#c9a39a}
+      .cardH{font-size:14px;font-weight:700;fill:#fff2ee;letter-spacing:0.5px}
+      .cardS{font-size:11px;fill:#cda79e}
+      .foot{fill:#9a7d76;font-size:12px;letter-spacing:0.5px}
+      .ok{fill:#86efac}
+      .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+    </style>
+  </defs>
+
+  <rect width="1040" height="860" fill="url(#bg2)"/>
+
+  <!-- header -->
+  <text x="60" y="58" class="lbl">WHAT HAPPENS WITHOUT ZERO TRUST</text>
+  <text x="58" y="96" class="h1">One Breach, Unchecked &#8212; the Cascade</text>
+  <text x="60" y="122" class="sub">On a flat, perimeter&#8211;trusted network, a single compromise is free to spread. Implicit trust is the fuel.</text>
+
+  <!-- attack chain -->
+  <text x="60" y="170" class="stepN" fill="#f59e0b" letter-spacing="3px">ATTACK PATH &#8594;</text>
+  <line x1="60" y1="262" x2="980" y2="262" stroke="url(#chain)" stroke-width="3"/>
+
+  <g>
+    <!-- step boxes -->
+    <g>
+      <rect x="60" y="186" width="168" height="84" rx="10" fill="#1f1115" stroke="#f59e0b" stroke-opacity="0.5"/>
+      <text x="76" y="210" class="stepN">01</text>
+      <text x="76" y="232" class="stepH">INITIAL ACCESS</text>
+      <text x="76" y="250" class="stepS">Phished credential or</text>
+      <text x="76" y="263" class="stepS">unpatched vulnerability</text>
+    </g>
+    <g>
+      <rect x="248" y="186" width="168" height="84" rx="10" fill="#21121660" stroke="#f5760b" stroke-opacity="0.5"/>
+      <text x="264" y="210" class="stepN">02</text>
+      <text x="264" y="232" class="stepH">IMPLICIT TRUST</text>
+      <text x="264" y="250" class="stepS">&#8220;Inside = trusted&#8221;</text>
+      <text x="264" y="263" class="stepS">no re&#8211;verification</text>
+    </g>
+    <g>
+      <rect x="436" y="186" width="168" height="84" rx="10" fill="#241015" stroke="#f0590b" stroke-opacity="0.55"/>
+      <text x="452" y="210" class="stepN">03</text>
+      <text x="452" y="232" class="stepH">LATERAL MOVEMENT</text>
+      <text x="452" y="250" class="stepS">East&#8211;west, unsegmented</text>
+      <text x="452" y="263" class="stepS">host&#8211;to&#8211;host hop</text>
+    </g>
+    <g>
+      <rect x="624" y="186" width="168" height="84" rx="10" fill="#280f12" stroke="#ef4444" stroke-opacity="0.6"/>
+      <text x="640" y="210" class="stepN">04</text>
+      <text x="640" y="232" class="stepH">PRIVILEGE ESCALATION</text>
+      <text x="640" y="250" class="stepS">Over&#8211;permissioned</text>
+      <text x="640" y="263" class="stepS">accounts &amp; standing admin</text>
+    </g>
+    <g>
+      <rect x="812" y="182" width="168" height="92" rx="10" fill="#3a0d11" stroke="#ef4444" stroke-width="2"/>
+      <text x="828" y="208" class="stepN" fill="#fecaca">05</text>
+      <text x="828" y="230" class="stepH" fill="#ffe2dd">IMPACT</text>
+      <text x="828" y="248" class="stepS" fill="#f3b4ab">Data exfiltration,</text>
+      <text x="828" y="261" class="stepS" fill="#f3b4ab">ransomware, encryption</text>
+    </g>
+    <!-- connectors -->
+    <g fill="#ef4444">
+      <polygon points="228,228 248,228 238,238"/>
+      <polygon points="416,228 436,228 426,238"/>
+      <polygon points="604,228 624,228 614,238"/>
+      <polygon points="792,228 812,228 802,238"/>
+    </g>
+  </g>
+
+  <!-- rupture -->
+  <ellipse cx="896" cy="300" rx="150" ry="60" fill="url(#blast)"/>
+  <path d="M896 274 L884 300 L900 300 L890 330 L912 296 L898 296 Z" fill="#fde047" stroke="#f59e0b"/>
+  <path d="M520 300 q376 26 0 56" fill="none" stroke="#ef4444" stroke-width="2" stroke-dasharray="4 4" opacity="0.6"/>
+
+  <!-- consequences -->
+  <text x="60" y="372" class="lbl" fill="#fca5a5" letter-spacing="3px">REPERCUSSIONS &#8212; THE BLAST RADIUS</text>
+
+  <g>
+    <!-- row 1 -->
+    <g>
+      <rect x="60" y="392" width="290" height="120" rx="12" fill="#1a1016" stroke="#7f1d1d"/>
+      <rect x="60" y="392" width="6" height="120" rx="3" fill="#ef4444"/>
+      <text x="84" y="424" class="cardH">Mission &amp; operational disruption</text>
+      <text x="84" y="450" class="cardS">Systems offline; programs and</text>
+      <text x="84" y="466" class="cardS">warfighter / resident services stall.</text>
+      <text x="84" y="488" class="cardS mono" fill="#fca5a5">downtime &#183; lost readiness</text>
+    </g>
+    <g>
+      <rect x="375" y="392" width="290" height="120" rx="12" fill="#1a1016" stroke="#7f1d1d"/>
+      <rect x="375" y="392" width="6" height="120" rx="3" fill="#ef4444"/>
+      <text x="399" y="424" class="cardH">Data breach &#8212; CUI / classified</text>
+      <text x="399" y="450" class="cardS">Exposure of sensitive, controlled,</text>
+      <text x="399" y="466" class="cardS">or classified information.</text>
+      <text x="399" y="488" class="cardS mono" fill="#fca5a5">spillage &#183; compromise</text>
+    </g>
+    <g>
+      <rect x="690" y="392" width="290" height="120" rx="12" fill="#1a1016" stroke="#7f1d1d"/>
+      <rect x="690" y="392" width="6" height="120" rx="3" fill="#ef4444"/>
+      <text x="714" y="424" class="cardH">Financial loss</text>
+      <text x="714" y="450" class="cardS">Remediation, ransom, contract</text>
+      <text x="714" y="466" class="cardS">penalties, rising cyber&#8211;insurance.</text>
+      <text x="714" y="488" class="cardS mono" fill="#fca5a5">$$$ direct &amp; indirect</text>
+    </g>
+    <!-- row 2 -->
+    <g>
+      <rect x="60" y="528" width="290" height="120" rx="12" fill="#1a1016" stroke="#7f1d1d"/>
+      <rect x="60" y="528" width="6" height="120" rx="3" fill="#ef4444"/>
+      <text x="84" y="560" class="cardH">Regulatory &amp; legal exposure</text>
+      <text x="84" y="586" class="cardS">Fails the DoD ZT mandate (FY2027)</text>
+      <text x="84" y="602" class="cardS">&amp; MD Ch.495 (water/sewer, 2025).</text>
+      <text x="84" y="624" class="cardS mono" fill="#fca5a5">statutory non&#8211;compliance</text>
+    </g>
+    <g>
+      <rect x="375" y="528" width="290" height="120" rx="12" fill="#1a1016" stroke="#7f1d1d"/>
+      <rect x="375" y="528" width="6" height="120" rx="3" fill="#ef4444"/>
+      <text x="399" y="560" class="cardH">Lost authorization (ATO)</text>
+      <text x="399" y="586" class="cardS">Authorizing Officials revoke or</text>
+      <text x="399" y="602" class="cardS">deny ATO; RMF controls fail.</text>
+      <text x="399" y="624" class="cardS mono" fill="#fca5a5">system shut down</text>
+    </g>
+    <g>
+      <rect x="690" y="528" width="290" height="120" rx="12" fill="#1a1016" stroke="#7f1d1d"/>
+      <rect x="690" y="528" width="6" height="120" rx="3" fill="#ef4444"/>
+      <text x="714" y="560" class="cardH">Reputation &amp; trust</text>
+      <text x="714" y="586" class="cardS">Lost contracts, eroded mission</text>
+      <text x="714" y="602" class="cardS">partner and public confidence.</text>
+      <text x="714" y="624" class="cardS mono" fill="#fca5a5">hard to rebuild</text>
+    </g>
+  </g>
+
+  <!-- contrast footer -->
+  <rect x="60" y="680" width="920" height="92" rx="12" fill="#0c1f17" stroke="#15803d"/>
+  <path d="M92 712 l10 10 18 -22" fill="none" stroke="#34d399" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="132" y="712" class="cardH ok" font-size="15">With Zero Trust, the same intrusion is contained.</text>
+  <text x="132" y="736" class="cardS" fill="#9fd8b6">Microsegmentation stops lateral movement &#183; per&#8211;session verification denies the next hop &#183;</text>
+  <text x="132" y="753" class="cardS" fill="#9fd8b6">least privilege limits damage &#183; analytics + automation revoke access in seconds. Blast radius &#8776; one resource.</text>
+</svg>

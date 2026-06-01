@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 880" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1424"/><stop offset="1" stop-color="#0a101d"/>
+    </linearGradient>
+    <linearGradient id="conZone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c1c2e"/><stop offset="1" stop-color="#0a1626"/></linearGradient>
+    <linearGradient id="isoZone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c241c"/><stop offset="1" stop-color="#0a1c16"/></linearGradient>
+    <style>
+      .lbl{fill:#8da2bd;font-size:11px;letter-spacing:3px}
+      .h1{fill:#f3f7fc;font-size:32px;font-weight:700;letter-spacing:1px}
+      .sub{fill:#7f93ad;font-size:14px}
+      .zoneH{font-size:15px;font-weight:700;letter-spacing:2px}
+      .nodeH{font-size:14px;font-weight:700;fill:#eef4fb;letter-spacing:0.4px}
+      .nodeS{font-size:10.5px;fill:#9fb2cc}
+      .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+      .gap{fill:#f5b748;font-size:15px;letter-spacing:6px;font-weight:700}
+      .chip{font-size:9.5px;fill:#0a101d;font-weight:700;letter-spacing:1px}
+      .foot{fill:#6f86a3;font-size:12px}
+    </style>
+  </defs>
+
+  <rect width="1080" height="880" fill="url(#bg3)"/>
+
+  <!-- header -->
+  <text x="60" y="56" class="lbl">DEFENSE IN DEPTH &#183; ISOLATION TIERS</text>
+  <text x="58" y="94" class="h1">Online vs. Air&#8211;Gapped</text>
+  <text x="60" y="120" class="sub">Zero Trust governs everything that must stay connected. The most sensitive assets get the strongest control of all:</text>
+  <text x="60" y="140" class="sub">no network path at all. An air gap is the ultimate segmentation.</text>
+
+  <!-- ZONE BACKDROPS -->
+  <rect x="48" y="172" width="436" height="540" rx="14" fill="url(#conZone)" stroke="#1d3a57"/>
+  <rect x="596" y="172" width="436" height="540" rx="14" fill="url(#isoZone)" stroke="#1d4a39"/>
+
+  <!-- connected header -->
+  <circle cx="72" cy="198" r="5" fill="#38bdf8"/>
+  <text x="86" y="203" class="zoneH" fill="#7fd2f4">CONNECTED &#8212; ZERO&#8211;TRUST GOVERNED</text>
+  <text x="68" y="224" class="nodeS" fill="#6f93b3">Reachable over the network, but every access is verified per session.</text>
+
+  <!-- isolated header -->
+  <circle cx="620" cy="198" r="5" fill="#34d399"/>
+  <text x="634" y="203" class="zoneH" fill="#7fe9bf">ISOLATED &#8212; OFFLINE / AIR&#8211;GAPPED</text>
+  <text x="616" y="224" class="nodeS" fill="#6fb397">No routine network path. Access requires physical presence &amp; controls.</text>
+
+  <!-- ===== CONNECTED NODES ===== -->
+  <!-- internet/dmz -->
+  <g>
+    <rect x="68" y="238" width="396" height="62" rx="9" fill="#0f2138" stroke="#2a4f73"/>
+    <circle cx="100" cy="269" r="13" fill="none" stroke="#38bdf8" stroke-width="2"/><path d="M87 269 h26 M100 256 q12 13 0 26 q-12 -13 0 -26" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+    <text x="128" y="265" class="nodeH">Internet&#8211;facing / DMZ</text>
+    <text x="128" y="284" class="nodeS">Public services &#183; hardened, heavily monitored, default&#8211;deny inbound</text>
+  </g>
+  <!-- workstations -->
+  <g>
+    <rect x="68" y="310" width="396" height="62" rx="9" fill="#0f2138" stroke="#2a4f73"/>
+    <rect x="89" y="332" width="24" height="16" rx="2" fill="none" stroke="#38bdf8" stroke-width="2"/><line x1="101" y1="348" x2="101" y2="353" stroke="#38bdf8" stroke-width="2"/><line x1="95" y1="354" x2="107" y2="354" stroke="#38bdf8" stroke-width="2"/>
+    <text x="128" y="337" class="nodeH">Workstations (general use)</text>
+    <text x="128" y="356" class="nodeS">Posture&#8211;checked &amp; managed (MDM/EDR) before and during access</text>
+  </g>
+  <!-- app/file servers -->
+  <g>
+    <rect x="68" y="382" width="396" height="62" rx="9" fill="#0f2138" stroke="#2a4f73"/>
+    <rect x="90" y="404" width="22" height="8" rx="2" fill="none" stroke="#38bdf8" stroke-width="2"/><rect x="90" y="414" width="22" height="8" rx="2" fill="none" stroke="#38bdf8" stroke-width="2"/><circle cx="96" cy="408" r="1.4" fill="#38bdf8"/><circle cx="96" cy="418" r="1.4" fill="#38bdf8"/>
+    <text x="128" y="409" class="nodeH">Application &amp; file servers</text>
+    <text x="128" y="428" class="nodeS">mTLS east&#8211;west &#183; workload identity &#183; behind a PEP, microsegmented</text>
+  </g>
+  <!-- domain controllers -->
+  <g>
+    <rect x="68" y="454" width="396" height="62" rx="9" fill="#0f2138" stroke="#2a4f73"/>
+    <path d="M101 476 l11 5 v7 q0 9 -11 13 q-11 -4 -11 -13 v-7 z" fill="none" stroke="#38bdf8" stroke-width="2"/>
+    <text x="128" y="481" class="nodeH">Domain controllers / IdP</text>
+    <text x="128" y="500" class="nodeS">Tier&#8211;0 identity &#8212; admin only from PAWs, never from general workstations</text>
+  </g>
+  <!-- online issuing CA -->
+  <g>
+    <rect x="68" y="526" width="396" height="62" rx="9" fill="#0f2138" stroke="#38bdf8"/>
+    <circle cx="98" cy="557" r="8" fill="none" stroke="#38bdf8" stroke-width="2"/><line x1="98" y1="565" x2="98" y2="575" stroke="#38bdf8" stroke-width="2"/><line x1="94" y1="571" x2="102" y2="571" stroke="#38bdf8" stroke-width="2"/>
+    <text x="128" y="553" class="nodeH">Online Issuing / Subordinate CA</text>
+    <text x="128" y="572" class="nodeS">Issues day&#8211;to&#8211;day certs to users, devices &amp; workloads (CAC, mTLS)</text>
+  </g>
+  <!-- PAW -->
+  <g>
+    <rect x="68" y="598" width="396" height="62" rx="9" fill="#11243b" stroke="#5fb0e0" stroke-dasharray="4 3"/>
+    <rect x="89" y="620" width="24" height="16" rx="2" fill="none" stroke="#7fd2f4" stroke-width="2"/><circle cx="101" cy="628" r="3" fill="none" stroke="#7fd2f4" stroke-width="1.5"/>
+    <text x="128" y="625" class="nodeH" fill="#cfeaf9">Privileged Access Workstation (PAW)</text>
+    <text x="128" y="644" class="nodeS">Hardened, single&#8211;purpose &#183; no email/web &#183; the only path to tier&#8211;0 admin</text>
+  </g>
+
+  <!-- ===== AIR GAP SPINE ===== -->
+  <rect x="498" y="238" width="84" height="422" rx="10" fill="#19130a" stroke="#f5b748" stroke-width="2" stroke-dasharray="6 5"/>
+  <text x="540" y="452" class="gap" transform="rotate(-90 540 452)" text-anchor="middle">A I R   G A P</text>
+  <!-- crossing chips -->
+  <g>
+    <rect x="506" y="262" width="68" height="34" rx="7" fill="#f5b748"/><text x="540" y="277" class="chip" text-anchor="middle">ONE&#8211;WAY</text><text x="540" y="289" class="chip" text-anchor="middle">DATA DIODE</text>
+    <rect x="506" y="586" width="68" height="34" rx="7" fill="#f5b748"/><text x="540" y="601" class="chip" text-anchor="middle">CROSS&#8211;DOMAIN</text><text x="540" y="613" class="chip" text-anchor="middle">SOLUTION</text>
+    <rect x="506" y="624" width="68" height="34" rx="7" fill="#caa45a"/><text x="540" y="639" class="chip" text-anchor="middle">ESCORTED</text><text x="540" y="651" class="chip" text-anchor="middle">MEDIA</text>
+  </g>
+  <text x="540" y="690" class="nodeS" text-anchor="middle" fill="#caa45a" font-size="9.5">controlled crossings only</text>
+
+  <!-- ===== ISOLATED NODES ===== -->
+  <!-- offline root CA + HSM (emphasized) -->
+  <g>
+    <rect x="616" y="238" width="396" height="84" rx="9" fill="#0e2a20" stroke="#34d399" stroke-width="2"/>
+    <circle cx="648" cy="272" r="9" fill="none" stroke="#6ee7b7" stroke-width="2"/><line x1="648" y1="281" x2="648" y2="294" stroke="#6ee7b7" stroke-width="2"/><line x1="643" y1="288" x2="653" y2="288" stroke="#6ee7b7" stroke-width="2"/>
+    <text x="676" y="266" class="nodeH" fill="#d6ffe9">OFFLINE ROOT CA &#43; HSM</text>
+    <text x="676" y="285" class="nodeS" fill="#8fe7c0">Powered off &amp; stored in a safe; brought online only for key ceremonies</text>
+    <text x="676" y="302" class="nodeS" fill="#8fe7c0">to sign subordinate CAs. Root private key never touches the network.</text>
+  </g>
+  <!-- classified enclave -->
+  <g>
+    <rect x="616" y="332" width="396" height="62" rx="9" fill="#0e2a20" stroke="#1f6e52"/>
+    <path d="M649 354 l11 5 v7 q0 9 -11 13 q-11 -4 -11 -13 v-7 z" fill="none" stroke="#34d399" stroke-width="2"/>
+    <text x="676" y="359" class="nodeH">Classified / standalone enclave</text>
+    <text x="676" y="378" class="nodeS">Separate network &#8212; no bridge to the enterprise side</text>
+  </g>
+  <!-- OT/ICS -->
+  <g>
+    <rect x="616" y="404" width="396" height="62" rx="9" fill="#0e2a20" stroke="#1f6e52"/>
+    <circle cx="649" cy="435" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle cx="649" cy="435" r="3" fill="#34d399"/><line x1="649" y1="422" x2="649" y2="426" stroke="#34d399" stroke-width="2"/><line x1="649" y1="444" x2="649" y2="448" stroke="#34d399" stroke-width="2"/><line x1="636" y1="435" x2="640" y2="435" stroke="#34d399" stroke-width="2"/><line x1="658" y1="435" x2="662" y2="435" stroke="#34d399" stroke-width="2"/>
+    <text x="676" y="429" class="nodeH">OT / ICS / SCADA</text>
+    <text x="676" y="448" class="nodeS">Water &amp; wastewater controls (MD Ch.495) &#183; segmented from IT</text>
+  </g>
+  <!-- offline backups -->
+  <g>
+    <rect x="616" y="476" width="396" height="62" rx="9" fill="#0e2a20" stroke="#1f6e52"/>
+    <ellipse cx="649" cy="500" rx="11" ry="4" fill="none" stroke="#34d399" stroke-width="2"/><path d="M638 500 v14 q11 5 22 0 v-14" fill="none" stroke="#34d399" stroke-width="2"/>
+    <text x="676" y="501" class="nodeH">Offline / immutable backups</text>
+    <text x="676" y="520" class="nodeS">Air&#8211;gapped or WORM copies &#8212; survive ransomware &amp; insider tampering</text>
+  </g>
+
+  <!-- why box -->
+  <rect x="616" y="552" width="396" height="108" rx="10" fill="#101b30" stroke="#3a4f70" stroke-dasharray="5 4"/>
+  <text x="636" y="578" class="nodeS" fill="#bcd0ea" letter-spacing="2px" font-weight="700">WHY AIR&#8211;GAP IF WE HAVE ZERO TRUST?</text>
+  <text x="636" y="600" class="nodeS" fill="#9fb2cc">Zero Trust shrinks trust to per&#8211;session checks, but a check can still</text>
+  <text x="636" y="616" class="nodeS" fill="#9fb2cc">be subverted. For crown&#8211;key material (root CA keys), classified data,</text>
+  <text x="636" y="632" class="nodeS" fill="#9fb2cc">and recovery backups, the safest access control is no path at all.</text>
+  <text x="636" y="650" class="nodeS" fill="#7fe9bf">Air gap and Zero Trust are layers of the same defense, not rivals.</text>
+
+  <!-- footer -->
+  <line x1="60" y1="734" x2="1020" y2="734" stroke="#1d2c46"/>
+  <text x="60" y="762" class="foot mono">Rule of thumb: if compromise would be catastrophic and the asset rarely needs the network &#8594; isolate it.</text>
+  <text x="60" y="800" class="foot">Online keeps issuing certs &#183; the Root CA stays offline &#183; classified, OT, and backups stay air&#8211;gapped.</text>
+  <text x="60" y="828" class="foot" fill="#566c8a">Aligns with NIST SP 800&#8211;207 (segmentation), DoD PKI practice (offline root), and OT isolation under MD Ch.495.</text>
+</svg>
