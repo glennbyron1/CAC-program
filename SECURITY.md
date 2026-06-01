@@ -1,61 +1,36 @@
 # Security Policy
 
+**Author:** Glenn Byron
+
+---
+
+## Supported versions
+
+This is a lab and portfolio reference project. There are no "versions" in the production sense — the `main` branch is the current state.
+
+## Reporting a vulnerability
+
+If you find a security issue in the scripts or documentation — for example, a script that handles credentials insecurely, generates weak keys, or could cause harm if run against a real system — please report it responsibly.
+
+**Do not open a public GitHub issue for security vulnerabilities.**
+
+Instead, email: **286100841+glennbyron1@users.noreply.github.com** with the subject line `[CAC-Lab Security]`. Include:
+- What the issue is and where it occurs (script name, line number if possible)
+- What a bad actor could do with it
+- A suggested fix if you have one
+
+I'll respond within 5 business days and credit you in the changelog when the fix is published (unless you prefer to stay anonymous).
+
 ## Scope
 
-This file covers security issues in the contents of this repository — the
-PowerShell scripts, configuration templates, and documentation that compose
-the CAC-style ICAM blueprint. It does **not** cover deployed systems built
-from this blueprint; those are the responsibility of the operating
-organization.
+This project is designed for **isolated Hyper-V lab environments only**. Please do not run these scripts against production systems without thoroughly reviewing and testing them first. Issues arising from running lab scripts against production infrastructure are out of scope for this policy.
 
-## Reporting a Vulnerability
+## What this project does and does not contain
 
-If you discover a security issue in this repository — for example, a script
-that mishandles credentials, a documented procedure that leaks sensitive
-material, or a sanitization gap in `Scrub-Repo.ps1` that could allow real
-organizational identifiers to leak — please report it privately first.
+- **Does not contain** real certificates, private keys, production credentials, or organizational-specific configuration
+- **Does contain** placeholder hostnames (`lab.local`, `Lab-DC01`) and example parameters — substitute your own values
+- The CI workflow includes secret scanning on every push; if a real credential somehow ends up in a PR, it will be flagged before merge
 
-**Preferred channel:** Open a private GitHub security advisory at
-https://github.com/glennbyron1/CAC-program/security/advisories/new
+## Responsible disclosure
 
-If GitHub advisories are not available to you, contact the maintainer via
-the GitHub-provided noreply address shown in the repository README.
-
-Please do **not** open a public issue or pull request for security
-vulnerabilities — they can be addressed faster, and more responsibly, when
-reported privately first.
-
-## What to Include
-
-A useful report typically includes:
-
-- A description of the issue and its potential impact.
-- The file, line numbers, or commit hash where the issue lives.
-- A minimal reproduction or proof-of-concept if applicable.
-- Your assessment of severity.
-
-## Response Expectations
-
-This is a personal portfolio project maintained on a best-effort basis, not
-an enterprise product. The maintainer will acknowledge receipt within seven
-days and aim to provide an initial response within fourteen days. Fixes for
-confirmed issues will be released as repository commits, with a note in the
-commit message and (for material issues) a published security advisory.
-
-## Out of Scope
-
-The following are **not** considered vulnerabilities in this repository:
-
-- Issues in third-party software referenced or invoked by the scripts
-  (Active Directory, AD CS, Windows Server, etc.) — report those to their
-  respective vendors.
-- Misconfiguration of a deployed system built from this blueprint — that is
-  the operator's responsibility.
-- General compliance gaps documented and acknowledged in the README (the
-  Federal Compliance Upgrade Path section enumerates these by design).
-
-## Acknowledgments
-
-Researchers who report valid issues will be credited in the commit message
-that fixes the issue, in the published advisory, and (with permission) in
-the `AUTHORS.md` file.
+I appreciate researchers who follow coordinated disclosure. If you give me reasonable time to fix a confirmed issue before publishing, I will acknowledge your contribution publicly.
