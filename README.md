@@ -132,6 +132,7 @@ Phase 8 extends the lab to full Zero Trust Architecture: least-privilege RBAC, K
 | `Compliance-Reports/` | Before-MFA and After-MFA SCAP SCC scan output with real scores |
 | `Portfolio/` | Plain-language program explainers and manager briefs |
 | `Live-Servers/` | Readiness checker and compliance scripts for production deployments |
+| `.github/workflows/` | PSScriptAnalyzer lint and secret scan CI on every push |
 
 Start at `Lab-Kit/START-HERE.md` → `Lab-Kit/LAB-DAY-CHECKLIST.md`.
 

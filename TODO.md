@@ -41,15 +41,14 @@ Living task list for the CAC/PIV ICAM portfolio project.
 - ✅ Secret & sensitive file scan
 - ✅ PowerShell lint (PSScriptAnalyzer)
 - ✅ CodeQL SAST
-- ✅ Trivy container scan
 - ✅ Dependency review
-- ⬜ Add SBOM generation (Syft or `trivy sbom`) on container build — EO 14028 compliance
 - ⬜ Add Gitleaks workflow for deeper secret detection
 
 ### Container
-- ✅ `docker/scap-summary/` — containerized SCAP XCCDF parser
 - ⬜ Push image to GitHub Container Registry (ghcr.io) on merge to main
 - ⬜ Add Docker content trust / image signing (cosign)
+
+> Note: `docker/scap-summary/` moved to Desktop\Home-Lab — not core CAC lab content.
 
 ### Infrastructure as Code (Ansible)
 - ✅ `Lab-Kit/Ansible/windows-stig-hardening.yml` — automates 8 STIG sections
