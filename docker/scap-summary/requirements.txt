@@ -1,4 +1,0 @@
-# scap-summary dependencies
-# All stdlib except defusedxml — use defusedxml to prevent XML entity expansion attacks
-# (CWE-611 / XXE). This is a security-conscious choice for a tool that parses untrusted XML.
-defusedxml==0.7.1
