@@ -18,11 +18,11 @@ Framework: NIST SP 800-53 Rev. 5 | NIST SP 800-37 Rev. 2 RMF Authorize | FIPS 19
 | System Name | Enterprise CAC/PIV Identity & Access Management (ICAM) System |
 | System Abbreviation | ICAM-01 |
 | Document ID | ARCH-ICAM-006 |
-| System Owner | [FILL IN — Name, Title, Organization] |
+| System Owner | Glenn Byron |
 | Authorizing Official (AO) | [FILL IN — Name, Title] |
-| Information System Security Officer (ISSO) | [FILL IN — Name, Title] |
+| Information System Security Officer (ISSO) | Glenn Byron |
 | Prepared By | Glenn Byron |
-| Date Prepared | [FILL IN] |
+| Date Prepared | June 1, 2026 |
 | Version | 1.0 |
 
 ---
@@ -46,13 +46,13 @@ The ICAM system consists of the following major components:
 
 | Component | Role | Hostname / IP |
 |-----------|------|---------------|
-| Offline Root CA | Trust anchor — standalone, air-gapped, permanently offline | [FILL IN] |
-| Enterprise Issuing CA | Active enrollment engine — domain-joined, running AD CS | [FILL IN] |
-| Domain Controller | Active Directory authentication and Kerberos PKINIT | [FILL IN] |
-| HTTP CRL Server | Certificate revocation list distribution (IIS on port 80) | [FILL IN] |
-| WatchGuard Firebox | IKEv2 VPN gateway with EAP-TLS smart card authentication | [FILL IN] |
-| Admin Workstation | PKI administration, STIG scanning, enrollment operations | [FILL IN] |
-| Enrolled Endpoints | Windows workstations with smart card logon enforced | [FILL IN — range or count] |
+| Offline Root CA | Trust anchor — standalone, air-gapped, permanently offline | LAB-OFFLINEROOOTCA / no network |
+| Enterprise Issuing CA | Active enrollment engine — domain-joined, running AD CS | LAB-DC01 |
+| Domain Controller | Active Directory authentication and Kerberos PKINIT | LAB-DC01 |
+| HTTP CRL Server | Certificate revocation list distribution (IIS on port 80) | Pending — IIS not deployed in current phase |
+| WatchGuard Firebox | IKEv2 VPN gateway with EAP-TLS smart card authentication | Lab environment — Deploy-VPNClient.ps1 |
+| Admin Workstation | PKI administration, STIG scanning, enrollment operations | Hyper-V host (main desktop) |
+| Enrolled Endpoints | Windows workstations with smart card logon enforced | LAB-WORKSTATION01 + physical laptop (pending) |
 
 ### 2.3 System Boundary
 
@@ -118,13 +118,13 @@ Per FIPS 199 and NIST SP 800-60, this system is categorized as follows:
 
 | Role | Responsibilities | Assigned To |
 |------|-----------------|-------------|
-| System Owner | Overall accountability for system security and ATO maintenance | [FILL IN] |
-| Authorizing Official (AO) | Accept residual risk; grant or deny ATO | [FILL IN] |
-| ISSO | Day-to-day security posture monitoring; POA&M tracking; annual reviews | [FILL IN] |
-| PKI Administrator | CA operations, CRL publishing, certificate template management | [FILL IN] |
-| Registration Authority (RA) | Identity verification during token enrollment (NIST AC-5) | [FILL IN] |
-| Card Issuer | Technical token provisioning — separate from RA role (NIST AC-5) | [FILL IN] |
-| System Administrator | AD, GPO, domain controller, and endpoint management | [FILL IN] |
+| System Owner | Overall accountability for system security and ATO maintenance | Glenn Byron |
+| Authorizing Official (AO) | Accept residual risk; grant or deny ATO | [FILL IN — Name, Title] |
+| ISSO | Day-to-day security posture monitoring; POA&M tracking; annual reviews | Glenn Byron |
+| PKI Administrator | CA operations, CRL publishing, certificate template management | Glenn Byron |
+| Registration Authority (RA) | Identity verification during token enrollment (NIST AC-5) | Designated RA account (separate from Issuer) |
+| Card Issuer | Technical token provisioning — separate from RA role (NIST AC-5) | Designated Issuer account (separate from RA) |
+| System Administrator | AD, GPO, domain controller, and endpoint management | Glenn Byron |
 
 ---
 
@@ -207,10 +207,12 @@ from NIST SP 800-53 Rev. 5 at the HIGH baseline, tailored for this system.
 
 | Assessment | Tool | Date | Score / Finding Count |
 |-----------|------|------|-----------------------|
-| Windows Server 2022 STIG (Before MFA) | SCAP SCC | [FILL IN] | [FILL IN] % compliance |
-| Windows Server 2022 STIG (After MFA) | SCAP SCC | [FILL IN] | [FILL IN] % compliance |
-| Nessus Essentials (Before hardening) | Nessus | [FILL IN] | [FILL IN] Critical / [FILL IN] High |
-| Nessus Essentials (After hardening) | Nessus | [FILL IN] | [FILL IN] Critical / [FILL IN] High |
+| Windows Server 2022 STIG — DC01 (Before MFA) | SCAP SCC 5.10.2 | 2026-05-27 | 44.95% compliance · CAT I fail: 9 · CAT II fail: 105 |
+| Windows Server 2022 STIG — WS01 (Before MFA) | SCAP SCC 5.10.2 | 2026-05-27 | 42.20% compliance · CAT I fail: 9 · CAT II fail: 111 |
+| Windows Server 2022 STIG — DC01 (After MFA) | SCAP SCC 5.10.2 | 2026-05-28 | 42.66% compliance · CAT I fail: 9 · CAT II fail: 110 |
+| Windows Server 2022 STIG — WS01 (After MFA) | SCAP SCC 5.10.2 | 2026-05-28 | 42.20% compliance · CAT I fail: 9 · CAT II fail: 111 |
+| Nessus Essentials (Before hardening) | Nessus | Pending | Pending |
+| Nessus Essentials (After hardening) | Nessus | Pending | Pending |
 
 Detailed findings are in the Security Assessment Report (`Architecture/SAR-Template.md`) and
 the Plan of Action & Milestones (`Architecture/POAM-Template.md`).
@@ -234,11 +236,11 @@ accepts residual risk for findings with an accepted risk disposition before the 
 
 | Field | Value |
 |-------|-------|
-| Authorization Decision | [FILL IN — Authorization to Operate / Denial / Interim ATO] |
-| Authorization Date | [FILL IN] |
-| Authorization Expiration | [FILL IN — typically 3 years from authorization date] |
-| Authorizing Official Signature | [FILL IN] |
-| Conditions | [FILL IN — any conditions attached to the ATO, e.g., complete POA&M items by date X] |
+| Authorization Decision | Pending — ATO with conditions recommended (see SAR) |
+| Authorization Date | Pending |
+| Authorization Expiration | Pending — typically 3 years from authorization date |
+| Authorizing Official Signature | Pending |
+| Conditions | Complete Ansible STIG hardening pass (CAT I/II remediation); complete Nessus scan; IIS STIG assessment |
 
 ---
 
@@ -246,8 +248,8 @@ accepts residual risk for findings with an accepted risk disposition before the 
 
 | Version | Date | Author | Change Summary |
 |---------|------|--------|----------------|
-| 0.1 | [FILL IN] | Glenn Byron | Initial draft — template created |
-| 1.0 | [FILL IN] | [FILL IN] | Completed with real scan results — submitted for ATO |
+| 0.1 | May 2026 | Glenn Byron | Initial draft — template created |
+| 1.0 | June 1, 2026 | Glenn Byron | Populated with Before/After-MFA SCAP SCC scan results; ATO pending |
 
 ---
 

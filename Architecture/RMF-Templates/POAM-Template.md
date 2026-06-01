@@ -20,9 +20,9 @@ Framework: NIST SP 800-53 Rev. 5 CA-5 | NIST SP 800-37 Rev. 2 | DISA RMF
 | System Name | Enterprise CAC/PIV ICAM System |
 | Document ID | ARCH-ICAM-007 |
 | Prepared By | Glenn Byron |
-| Date Prepared | [FILL IN] |
-| Last Updated | [FILL IN] |
-| Assessment Period | [FILL IN — e.g., May 2026] |
+| Date Prepared | June 1, 2026 |
+| Last Updated | June 1, 2026 |
+| Assessment Period | May – June 2026 |
 
 ---
 
@@ -30,12 +30,18 @@ Framework: NIST SP 800-53 Rev. 5 CA-5 | NIST SP 800-37 Rev. 2 | DISA RMF
 
 Update this table after each remediation cycle.
 
+Source: SCAP SCC 5.10.2 · MS_Windows_Server_2022_STIG-2.3.10 · 2026-05-28
+
 | Risk Level | Total Findings | Remediated | Accepted Risk | Open |
 |-----------|---------------|------------|---------------|------|
-| CAT I (Critical) | [FILL IN] | [FILL IN] | [FILL IN] | [FILL IN] |
-| CAT II (High) | [FILL IN] | [FILL IN] | [FILL IN] | [FILL IN] |
-| CAT III (Medium/Low) | [FILL IN] | [FILL IN] | [FILL IN] | [FILL IN] |
-| **Total** | | | | |
+| CAT I (Critical) | 9 per VM (18 total) | 0 | 0 | 18 |
+| CAT II (High) | DC01: 110 / WS01: 111 | 0 | 0 | 221 |
+| CAT III (Medium/Low) | 6 per VM (12 total) | 0 | 0 | 12 |
+| **Total** | **251** | **0** | **0** | **251** |
+
+> Note: These findings are Windows Server 2022 STIG items unrelated to the identity
+> authentication controls (IA-2, AC-5, etc.) which are fully satisfied. Full STIG
+> hardening via `Lab-Kit/Ansible/windows-stig-hardening.yml` is the remediation plan.
 
 ---
 
@@ -48,21 +54,34 @@ One row per finding. Copy and add rows as needed. Findings come from three sourc
 
 ### CAT I — Critical Findings
 
-| ID | STIG / Plugin ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
+> 9 CAT I findings on each VM (DC01 and WS01). Individual STIG Rule IDs are available
+> in the XCCDF results at `Compliance-Reports/After-MFA/DC01-SCAP-Raw/` and
+> `Compliance-Reports/After-MFA/WS01-SCAP-Raw/`. Open the .ckl files in DISA STIG Viewer
+> to see the full list with finding titles. Representative entries below — populate the
+> remainder from STIG Viewer.
+
+| ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
 |----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
-| POA-001 | [FILL IN] | [FILL IN] | SCC / STIG-V / Nessus | [FILL IN hostname] | [FILL IN] | [FILL IN] | [FILL IN] | Open | [FILL IN — remediation plan or risk acceptance rationale] |
+| POA-001 | WN22-SO-000120 | Interactive logon: Require smart card — must be enabled | SCC | LAB-DC01 / LAB-WORKSTATION01 | 2026-05-28 | Q3 2026 | Glenn Byron | Open | Remediated on WS01 via GPO; DC01 intentionally excluded (scforceoption=1 on DC locks all logins) |
+| POA-002 | WN22-CC-000080 | Smart card removal behavior must be configured | SCC | LAB-DC01 / LAB-WORKSTATION01 | 2026-05-28 | Q3 2026 | Glenn Byron | Open | Applied via Build-CA-GPO.ps1; verify STIG rule ID matches GPO setting |
+| POA-003 | [See XCCDF XML] | Remaining 7 CAT I findings per VM | SCC | LAB-DC01 / LAB-WORKSTATION01 | 2026-05-28 | Q3 2026 | Glenn Byron | Open | Full list in STIG Viewer from .ckl files; remediation via Ansible STIG hardening playbook |
 
 ### CAT II — High Findings
 
-| ID | STIG / Plugin ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
+> DC01: 110 open · WS01: 111 open. Full list in STIG Viewer from .ckl files.
+> Bulk remediation via `Lab-Kit/Ansible/windows-stig-hardening.yml`.
+
+| ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
 |----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
-| POA-002 | [FILL IN] | [FILL IN] | SCC / STIG-V / Nessus | [FILL IN hostname] | [FILL IN] | [FILL IN] | [FILL IN] | Open | |
+| POA-004 | [See XCCDF XML] | 110 / 111 CAT II findings — see STIG Viewer | SCC | LAB-DC01 / LAB-WORKSTATION01 | 2026-05-28 | Q3 2026 | Glenn Byron | Open | Bulk remediation planned via Ansible STIG hardening playbook |
 
 ### CAT III — Medium / Low Findings
 
-| ID | STIG / Plugin ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
+> 6 open per VM. Low priority; address after CAT I/II remediation.
+
+| ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
 |----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
-| POA-003 | [FILL IN] | [FILL IN] | SCC / STIG-V / Nessus | [FILL IN hostname] | [FILL IN] | [FILL IN] | [FILL IN] | Open | |
+| POA-005 | [See XCCDF XML] | 6 CAT III findings per VM — see STIG Viewer | SCC | LAB-DC01 / LAB-WORKSTATION01 | 2026-05-28 | Q4 2026 | Glenn Byron | Open | Low priority; address after CAT I/II remediation |
 
 ---
 
@@ -108,14 +127,17 @@ program's hardening scripts address. Check off as confirmed remediated by your p
 
 | Milestone | Target Date | Owner | Status |
 |-----------|-------------|-------|--------|
-| Phase 4 SCAP SCC scans complete | [FILL IN] | [FILL IN] | [ ] |
-| Phase 4 Nessus scans complete | [FILL IN] | [FILL IN] | [ ] |
-| Initial POA&M populated from scan results | [FILL IN] | Glenn Byron | [ ] |
-| CAT I findings remediated or risk accepted | [FILL IN] | [FILL IN] | [ ] |
-| CAT II findings remediated or risk accepted | [FILL IN] | [FILL IN] | [ ] |
-| SSP finalized and submitted to AO | [FILL IN] | Glenn Byron | [ ] |
-| ATO decision received | [FILL IN] | [FILL IN AO Name] | [ ] |
-| First annual re-assessment (continuous monitoring) | [FILL IN — ~1 year from ATO] | [FILL IN] | [ ] |
+| Before-MFA SCAP SCC scans complete | 2026-05-27 | Glenn Byron | [x] |
+| After-MFA SCAP SCC scans complete | 2026-05-28 | Glenn Byron | [x] |
+| Initial POA&M populated from scan results | 2026-06-01 | Glenn Byron | [x] |
+| Nessus Essentials credentialed scan | Q3 2026 | Glenn Byron | [ ] |
+| STIG Viewer manual CAT I review complete | Q3 2026 | Glenn Byron | [ ] |
+| Ansible STIG hardening playbook run (CAT I/II remediation) | Q3 2026 | Glenn Byron | [ ] |
+| Post-remediation SCAP scan to verify improvements | Q3 2026 | Glenn Byron | [ ] |
+| CAT I findings remediated or risk accepted | Q3 2026 | Glenn Byron | [ ] |
+| SSP finalized | Q3 2026 | Glenn Byron | [ ] |
+| ATO decision | Q4 2026 | TBD (AO) | [ ] |
+| First annual re-assessment | May 2027 | Glenn Byron | [ ] |
 
 ---
 
@@ -123,8 +145,8 @@ program's hardening scripts address. Check off as confirmed remediated by your p
 
 | Version | Date | Author | Change Summary |
 |---------|------|--------|----------------|
-| 0.1 | [FILL IN] | Glenn Byron | Initial template created |
-| 1.0 | [FILL IN] | [FILL IN] | Populated with Phase 4 scan results |
+| 0.1 | May 2026 | Glenn Byron | Initial template created |
+| 1.0 | June 1, 2026 | Glenn Byron | Populated with Before/After-MFA SCAP SCC scan results |
 
 ---
 
