@@ -1,138 +1,214 @@
-🛡️ Enterprise ICAM: "CAC-Style" Identity & Access Deployment Blueprint
+# CAC/PIV Smart-Card Lab — Enterprise ICAM & Zero Trust Foundation
 
 [![Secret Scan](https://github.com/glennbyron1/CAC-program/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/glennbyron1/CAC-program/actions/workflows/secret-scan.yml)
 [![PowerShell Lint](https://github.com/glennbyron1/CAC-program/actions/workflows/ps-lint.yml/badge.svg)](https://github.com/glennbyron1/CAC-program/actions/workflows/ps-lint.yml)
 
-**Author:** Glenn Byron | **GitHub:** [@glennbyron1](https://github.com/glennbyron1)
+**Author:** Glenn Byron | **GitHub:** [@glennbyron1](https://github.com/glennbyron1) | **License:** MIT
 
-An end-to-end, script-driven blueprint for deploying hardware-backed, certificate-based MFA across an enterprise environment. This project takes the model used by the U.S. DoD Common Access Card (CAC) and Federal PIV programs and adapts it for organizations running Active Directory, AD CS, WatchGuard IKEv2 VPN, and Microsoft 365 (Entra ID).
+---
 
-________________________________________
-🏗️ Architecture Overview
-The blueprint enforces a zero-password interactive logon topology by mapping cryptographic hardware tokens to verified organizational identities. Trust is anchored by an internally managed, two-tier Public Key Infrastructure (PKI).
-                 
+## What this is
 
-                 +-----------------------------------+
-                 |      Microsoft 365 / Entra ID     |
-                 |    (Conditional Access + FIDO2)   |
-                 +-----------------+-----------------+
+A fully scripted, infrastructure-as-code lab that builds a **CAC/PIV smart-card authentication system** from scratch — the same model the U.S. DoD runs across its enterprise. Two-tier PKI, domain controller, smart card–enforced logon, YubiKey PIV provisioning, certificate-based VPN, OCSP, Windows Event Forwarding, and a full SCAP/STIG/Nessus compliance scan workflow. Everything automated. Everything documented with NIST SP 800-53 Rev. 5 control mapping and a complete RMF evidence package.
 
-                                   |
-                           FIDO2 Web AuthN
-                                   |
-                 +-----------------v-----------------+
+**Built for DoD — useful for everyone.** If you're preparing for a role at a DoD program office, a defense contractor, or a federal agency, this is a direct demonstration of the tools and workflows you'll use on the job. If you're outside that world and want to implement hardware-backed, passwordless authentication in an enterprise Windows environment, everything here applies — the PKI model, the scripts, and the compliance framework work the same way regardless of sector.
 
-                 |          USER + TOKEN             |
-                 |     (Smart Card / YubiKey)        |
-                 +---+-------------+-------------+---+
+---
 
-                     |             |             |
-         Smart Card  |   IKEv2 VPN |             | Platform SSO /
-         Kerberos    |   EAP-TLS   |             | MDM Configuration
+## Architecture
 
-                     |             |             |
-     +---------------v--+   +------v-------+   +-v------------+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Hyper-V Host (Windows 10/11 Pro or Server)                      │
+│                                                                  │
+│  ┌──────────────────┐    ┌───────────────────────────────────┐   │
+│  │  Lab-OfflineRootCA│    │  Lab-DC01                         │   │
+│  │  (air-gapped)    │    │  Domain Controller                 │   │
+│  │  4096-bit RSA    │───►│  Enterprise Issuing CA (AD CS)    │   │
+│  │  10-year Root CA │    │  SmartCardLogon cert templates     │   │
+│  │  No network      │    │  GPO: scforceoption=1              │   │
+│  └──────────────────┘    │  OCSP Responder                    │   │
+│                          │  WEF Collector / Audit Policy      │   │
+│                          │  PKI Health Monitor                │   │
+│                          └──────────────────┬─────────────────┘   │
+│                                             │                     │
+│                          ┌──────────────────▼─────────────────┐   │
+│                          │  Lab-Workstation01                  │   │
+│                          │  Smart card enforced logon          │   │
+│                          │  IKEv2 / EAP-TLS VPN client        │   │
+│                          │  SCAP SCC / STIG Viewer            │   │
+│                          └─────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────┘
+```
 
-     | Windows Endpoint |   |  WatchGuard  |   | macOS Client |
-     | (Lock on Removal)|   |   Firewall   |   | (IT Track)   |
-     +-------+----------+   +------+-------+   +--------------+
+Trust flows: **Offline Root CA → Enterprise Issuing CA → User Certificate → Kerberos Ticket.**
+Every link is verified cryptographically at authentication time. No valid chain means no access.
 
-             |                     |
-             +-----------+---------+
-                         |
-              | Local Active Directory      |
-              | (DCs + HTTP CRL Validation) |
-              +-----------+-----------------+
-________________________________________
-🛠️ Repository Structure
+---
 
-The repository is organized so each script and document has exactly one home. Two kits hold everything you run:
+## Why this matters for DoD and defense IT
 
-- `/Lab-Kit` — **Canonical home for every script you run to build and operate the lab**, organized by where you run it: `01-HyperV-Host/` (create the VMs), `02-OfflineRootCA/` (manual air-gapped Root CA build), `03-DomainController/` (DC, CA, GPO, cert templates, token enrollment, OCSP, audit forwarding, PKI health), `04-Workstation/` (smart-card enforcement, VPN client), `05-Compliance/` (stage SCAP reports). Start at `Lab-Kit/START-HERE.md`. `Reference/` links back to the canonical docs in `/Architecture`.
-- `/Tools-Kit` — **Canonical home for the tool-acquisition scripts** that download and stage the free DoD/federal tools (`Get-LabTools.ps1` master downloader plus the three `Download-*-Kit.ps1` scripts). Start at `Tools-Kit/START-HERE.md`.
-- `/Architecture` — System design and compliance documents: PKI Blueprint, STIG Hardening Guide, NIST/CISA regulatory alignment, WatchGuard IKEv2 VPN guide, federal compliance upgrade path, and `RMF-Templates/` (SSP, POA&M, SAR, ATO Letter, STIG Deviation Rationale, Annual STIG Re-Assessment SOP, CSET Assessment Guide).
-- `/Compliance-Reports` — Staging area for SCAP SCC scan output (Before-MFA / After-MFA) and evidence files.
-- `/Portfolio` — Recruiter-facing deliverables: program showcase, sanitized full blueprint, and sample manager brief (`.docx`).
-- Root: `Scrub-Repo.ps1` (sanitizer) and `Package-LabKit.ps1` (zips Lab-Kit + a docs snapshot for USB transfer).
-- `/security` — Repository security policy (`POLICY.md`), secure contribution guide (`CONTRIBUTING.md`), incident-response runbook (`INCIDENT_RESPONSE.md`), and the pre-commit hook (`scripts/pre-commit`) that blocks keys, certs, CA databases, and VM images before they can be committed. Backed by `.github/workflows/secret-scan.yml`, which re-runs the same checks server-side on every push and pull request.
-________________________________________
-🛡️ DevSecOps Controls
-This repository defends against accidental secret exposure in four layers: (1) `.gitignore` excludes sensitive types; (2) the `security/scripts/pre-commit` hook blocks them locally before commit (install once per clone — see `security/CONTRIBUTING.md`); (3) the `secret-scan.yml` GitHub Action re-checks on the server; and (4) `Scrub-Repo.ps1` replaces real identifiers with placeholders before any push. Policy lives in `security/POLICY.md`; vulnerability reporting is in the root `SECURITY.md`.
-________________________________________
-🧰 Repository Automation Utilities
-All scripts are production-quality PowerShell. Each one handles its own error checking, writes to a log, and is safe to re-run.
+**CAC/PIV authentication, end to end.** Not "I've read about it." Built it. The lab runs the same two-tier PKI model the DoD uses: an air-gapped Offline Root CA that signs only the Issuing CA and then goes back in the safe, an Enterprise Issuing CA that issues smart card logon certificates, and a Group Policy that enforces `scforceoption=1` — the domain will not issue a Kerberos ticket without a valid certificate on a physical token. Password is removed from the equation entirely.
 
-**Build-CAC-Lab.ps1** — Lab domain controller builder (Phase B). Installs the AD Domain Services role and promotes a clean Windows Server VM to a domain controller for a fresh lab forest (default `lab.local`) with integrated DNS, then triggers the required reboot. Includes guardrails that refuse to run on an existing domain controller, supports `-WhatIf`, and writes a transcript log. Pairs with `Build-CA-GPO.ps1`, which runs after the reboot. Addresses NIST SP 800-53 IA-2.
+**Separation of duties, by code.** The enrollment ceremony splits into two phases — Registration Authority (identity verification) and Card Issuer (certificate enrollment) — enforced by the script itself. The same account cannot complete both. This directly addresses NIST AC-5 and mirrors how DoD issuance desks actually operate.
 
-**Stage-Reports.ps1** — SCAP report harvester. Finds the most recent SCAP Compliance Checker output folder, copies the .xml and .html results into the Before-MFA or After-MFA tracking directories, and keeps the folder structure consistent for portfolio review.
+**RMF artifacts, not just scripts.** The repo includes a System Security Plan, SAR, and POA&M mapped to SP 800-53 Rev. 5, a SCAP SCC scan workflow with real Before/After-MFA evidence, STIG Viewer checklist workflow for Windows Server 2022 / AD DS / AD CS / IIS, and a Nessus Essentials credentialed scan workflow. These aren't templates downloaded from the internet — they're wired to the lab's actual controls.
 
-**Download-OfflineCA-Kit.ps1** — Builds a self-contained USB transfer kit for the Offline Root CA. Downloads SysInternals, OpenSSL, and PSPKI to a staging folder, generates CAPolicy.inf and the CRL publication scripts, and creates a SHA-256 manifest so you can verify the kit on the air-gapped host.
+**DoD Zero Trust alignment.** The DoD Zero Trust Strategy (Oct 2022) requires Target Level activities across all seven pillars by FY2027. This lab implements the **Identity pillar — authentication leg** at an Advanced/Optimal level. The roadmap to the remaining pillars is documented in `Architecture/Roadmap/`.
 
-**Download-IssuingCA-Kit.ps1** — Stages all prerequisites for the domain-joined Enterprise Issuing CA. Installs the AD CS Windows features, downloads PSPKI, and generates an Initialize-IssuingCA.ps1 with the full sub-CA provisioning workflow. Optionally configures IIS for HTTP CRL/AIA publishing.
+**DevSecOps habits.** CI pipeline (GitHub Actions) runs PSScriptAnalyzer lint and secret scanning on every push. All scripts are idempotent, logged, and support `-WhatIf`. `Scrub-Repo.ps1` ensures no real credentials or organizational identifiers enter git history.
 
-**Download-FedCompliance-Kit.ps1** — Downloads and organizes all federal compliance tools in one run: DISA STIG Viewer, DISA STIG content packs, SCAP 1.3 benchmarks, Microsoft Security Compliance Toolkit, Nessus Essentials, SysInternals, and OpenSSL. Generates a TOOL-INDEX.md with RMF phase mapping.
+---
 
-**Deploy-VPNClient.ps1** — Deploys the IKEv2 VPN client profile to Windows endpoints. Creates the connection, applies FIPS-compliant IPsec crypto (AES-256-GCM / SHA-256 / ECP384), builds the EAP-TLS XML to force smart card authentication, and validates the config. Optionally runs a live test. Paired with Architecture/WatchGuard-IKEv2-VPN-Guide.md.
+## SCAP Compliance Scan Results
 
-**New-TokenEnrollment.ps1** — Smart card enrollment ceremony manager. Enforces NIST AC-5 separation of duties by splitting the process into two distinct, audited phases. The Registration Authority phase documents in-person ID verification and sets a signed authorization flag in Active Directory. The Card Issuer phase reads that flag, hard-blocks the same person from issuing their own card, runs the pre-issuance checklist, and guides the technician through certificate enrollment and PIN setup. Every ceremony step is written to a log file and the Windows Application Event Log (EventID 4200). Addresses NIST SP 800-53 AC-5, IA-2, IA-5.
+Tool: SCAP Compliance Checker (SCC) 5.10.2 · Benchmark: MS_Windows_Server_2022_STIG v2.3.10
 
-**Monitor-PKIHealth.ps1** — PKI infrastructure health monitor. Fetches each CRL URL, parses the Next Update timestamp via certutil, and raises CRIT or WARN alerts before the window closes. Also checks OCSP endpoint reachability, Issuing CA certificate expiry, VPN gateway certificate expiry, and enrolled user smart card certificate expiry against configurable thresholds. Outputs a color-coded summary dashboard to the console and optionally sends an alert email. Designed to run as a scheduled task. Addresses NIST SP 800-53 CA-7, SC-17.
+| VM | Stage | Score | CAT I Fail | CAT II Fail |
+|----|-------|-------|-----------|------------|
+| Lab-DC01 | Before-MFA (baseline) | 44.95% | 9 | 105 |
+| Lab-DC01 | After-MFA (smart card enforced) | 42.66% | 9 | 110 |
+| Lab-Workstation01 | Before-MFA (baseline) | 42.20% | 9 | 111 |
+| Lab-Workstation01 | After-MFA (smart card enforced) | 42.20% | 9 | 111 |
 
-**Set-AuditLogForwarding.ps1** — Audit policy and Windows Event Forwarding configurator. Runs in Collector mode (on the SIEM-side server) or Source mode (on each monitored host). Applies Advanced Audit Policy via auditpol for all smart card and Kerberos subcategories, sets the AD CS audit filter to log all certificate operations, and configures WEF subscriptions that pull the complete set of authentication and PKI event IDs (4624, 4625, 4768, 4769, 4776, 4886–4890, 4896, 4898) into the forwarded events channel. Addresses NIST SP 800-53 AU-2, AU-9, AU-12.
+The Before/After-MFA scans establish the STIG compliance baseline. The smart card phase addressed the Identity authentication pillar — not a full STIG hardening pass. A full STIG hardening pass using `Lab-Kit/Ansible/windows-stig-hardening.yml` is the next compliance phase and would move these scores significantly. Full scan evidence is in `Compliance-Reports/`.
 
-**New-CertificateTemplates.ps1** — AD CS certificate template builder. Creates two smart card templates on the Enterprise Issuing CA using the PSPKI module: a standard user logon template (RSA 2048, auto-issue) and a privileged admin logon template (CA Manager approval required, restricted enrollment group). Includes a full nine-step manual fallback guide printed to the console if PSPKI is unavailable. Publishes both templates to the CA after creation. Addresses NIST SP 800-53 SC-17, IA-5.
+---
 
-**Set-OCSPResponder.ps1** — Online Certificate Status Protocol (OCSP) setup script. Installs the Windows Online Responder role, requests an OCSP Response Signing certificate from the Issuing CA, and adds the OCSP URL to the CA's Authority Information Access (AIA) extension so all newly issued certificates carry the endpoint. Provides detailed MMC walkthrough instructions for the revocation configuration step and runs a live endpoint reachability test. Addresses NIST SP 800-53 SC-17, IA-5(2).
-________________________________________
-🚀 Commercial Enterprise Baseline vs. Federal PIV Target State
-This blueprint covers two tiers. The commercial baseline is what's implemented here — solid protection for most organizations. The federal upgrade path documents the specific changes needed to meet full FISMA/FedRAMP requirements.
+## NIST SP 800-53 Rev. 5 Controls Addressed
 
-**1. Token Procurement**
-- Commercial (As Implemented): CardLogix GIDS smart cards for staff, HIRSCH uTrust FIDO2 NFC+ keys for management. Standard commercial procurement.
-- Federal Upgrade: All tokens, readers, and middleware must come from the GSA FIPS 201 Approved Product List (APL).
+| Control | Name | Implementation |
+|---------|------|---------------|
+| IA-2 | Identification and Authentication | Hardware-backed PIV certificate required for all interactive logon and VPN |
+| IA-2(11) | Remote Access — Hardware Tokens | Smart card required for all remote sessions; no password alternative |
+| IA-5 | Authenticator Management | Two-person enrollment ceremony; certificate lifecycle through AD CS |
+| IA-5(2) | PKI-Based Authentication | OCSP responder with AIA extension on all issued certificates |
+| AC-5 | Separation of Duties | RA and Card Issuer phases enforced by script; same account blocked from both |
+| AC-11 | Session Lock | GPO forces immediate lock within 2 seconds of card removal |
+| AC-17 | Remote Access | IKEv2 / EAP-TLS VPN — certificate-based, no password tunnel |
+| SC-8 | Transmission Confidentiality | AES-256-GCM / SHA-256 / ECP384 FIPS-compliant IPsec policy |
+| SC-17 | PKI Certificates | Two-tier PKI with offline root, OCSP, CRL publication, template management |
+| AU-2 | Event Logging | Advanced Audit Policy for all Kerberos, logon, and AD CS subcategories |
+| AU-9 | Protection of Audit Information | Windows Event Forwarding to central collector |
+| CA-7 | Continuous Monitoring | PKI health dashboard: CRL validity, OCSP reachability, cert expiry alerts |
 
-**2. CA Key Storage**
-- Commercial (As Implemented): Root CA and Issuing CA private keys stored in a software Key Storage Provider (KSP) on the host OS.
-- Federal Upgrade: Software key storage is not allowed. Keys must be generated inside and permanently bound to a FIPS 140-3 Level 3 Hardware Security Module (HSM).
+Full mapping in `Architecture/RMF-Templates/SSP-Template.md`.
 
-**3. Trust Anchor**
-- Commercial (As Implemented): Two-tier internal PKI rooted in the organization's Active Directory NTAuth store.
-- Federal Upgrade: The Issuing CA must cross-certify to the Federal Common Policy Certificate Authority (FBCA) for cross-agency trust under NIST SP 800-217.
+---
 
-**4. Derived Credential Issuance**
-- Commercial (As Implemented): Secondary tokens (YubiKeys) provisioned at an admin issuance desk after in-person Registration Authority photo-ID verification.
-- Federal Upgrade: Per NIST SP 800-157, derived credentials must be issued via automated kiosk using the primary PIV card as the cryptographic voucher.
-________________________________________
-📊 NIST SP 800-53 Control Mapping
-This architecture directly addresses and satisfies the following security controls within the NIST SP 800-53 Rev. 5 framework:
+## Zero Trust Maturity
 
-| Control ID  | Control Name                       | Deployment Implementation                                                                                              |
-|---|------------------------------------|------------------------------------------------------------------------------------------------------------------------|
-| IA-2  | Identification and Authentication (Organizational Users)  | Enforces hardware-backed cryptographic MFA via smart card / FIDO2 across all endpoints, VPN tunnels, and cloud ecosystems (pp. 6, 13). |
-| IA-2(11)  | Workstation Access Using Hardware Tokens | Leverages Windows native endpoint smart-card configuration to block standard password logins globally (pp. 6, 42).     |
-|  AC-11 |       Session Lock                             | Deploys a Group Policy Object forcing an immediate interactive session lock within 2 seconds of physical token removal. |
-|  AC-5 |      Separation of Duties                              | Implements strict gatekeeping separating the Registration Authority (Identity Verification) from the Card Issuer (Technical Provisioning) (p. 8). |
-| AC-17 | Remote Access | WatchGuard IKEv2 Mobile VPN enforces certificate-based EAP-TLS authentication for all remote access sessions; no password-based tunnels permitted. |
-| SC-8 | Transmission Confidentiality and Integrity | IKEv2 tunnel encrypts all VPN traffic with AES-256-GCM; Phase 1 and Phase 2 crypto policies configured to FIPS-approved algorithms only. |
-________________________________________
-🎬 Lab Demonstration Walkthrough
+Per the DoD Zero Trust Strategy and CISA ZTMM v2.0:
 
-The full end-to-end demo guide lives in **`Demo-Walkthrough.md`** (DEMO-ICAM-001) at the repo root. It covers seven steps — lock screen with no password option, smart card PIN entry with certificate subject visible, Event 4768 Pre-Auth Type 16 in Event Viewer, session lock on card removal under two seconds, VPN connection via EAP-TLS without a password prompt, PKI health monitor green dashboard, and SCAP before/after compliance delta — with screenshot placeholder slots, hiring manager talking points, and a NIST SP 800-53 controls-demonstrated table.
+| Pillar | Current Level |
+|--------|--------------|
+| Identity — authentication | **Advanced / Optimal** ✅ |
+| Identity — authorization / least privilege | Initial · Phase 8 roadmap |
+| Devices | Initial · Phase 8 roadmap |
+| Networks | Initial — cert-based VPN in place |
+| Visibility & Analytics | Initial → Advanced — WEF + PKI health monitor |
+| Automation & Orchestration | Advanced — IaC + CI/CD |
+| Governance | Advanced — RMF artifacts + STIG/SCAP |
 
-Screenshots will be added after Phase 4 lab work is complete.
-________________________________________
-🔒 Security Statement & Sanitization
-This repository is maintained completely separate from any live production environment.
-- No production keys, active certificates, or real credentials are in Git history.
-- All committed code uses generic placeholders — lab.local and agency.gov — in place of real organizational identifiers. The .gitignore blocks private keys, certificates, VM artifacts, and IDE state.
-- **Scrub-Repo.ps1** performs a find-and-replace pass using a local (gitignored) patterns file before every push. Run it with `-WhatIf` first to preview what would be replaced.
-- Pre-push order: (1) copy `.scrub-patterns.example.json` to `.scrub-patterns.local.json` and fill in real identifiers, (2) run `.\Scrub-Repo.ps1` to sanitize, (3) review with `git diff`, then commit and push.
-________________________________________
+Phase 8 extends the lab to full Zero Trust Architecture: least-privilege RBAC, Kerberos Authentication Policy Silos, device certificates and posture checks, conditional/continuous access, microsegmentation, and a SIEM analytics feedback loop. Design documented in `Architecture/Roadmap/CAC_PIV_Phase8_ZeroTrust_Extension.md`.
 
-🏷️ Topics / Tags For GitHub topic tagging on this repository: identity-management, pki, smart-card, fido2, active-directory, certificate-authority, nist-800-53, fips-201, zero-trust, icam, ad-cs, watchguard, entra-id, powershell, nist-csf, cisa-cpg, regulatory-compliance.
-________________________________________
-📜 License
-Released under the MIT License. See LICENSE for full terms.
-________________________________________
-👤 Maintainer
-**Glenn Byron** — [@glennbyron1](https://github.com/glennbyron1). See `AUTHORS.md` for contribution guidance, `SECURITY.md` to report a vulnerability, and `MAINTAINER-SETUP.md` for first-time machine setup (noreply email, SSH signing, scrub patterns).
+---
+
+## What's in the Repo
+
+| Folder | Contents |
+|--------|----------|
+| `Lab-Kit/01-HyperV-Host/` | VM creation, post-config, snapshot manager |
+| `Lab-Kit/02-OfflineRootCA/` | 8-step guided air-gapped Root CA ceremony |
+| `Lab-Kit/03-DomainController/` | AD build, Issuing CA, GPO, cert templates, OCSP, token enrollment, YubiKey, audit forwarding, PKI health monitor |
+| `Lab-Kit/04-Workstation/` | Smart card enforcement GPO, IKEv2/EAP-TLS VPN client |
+| `Lab-Kit/05-Compliance/` | 7-layer pre-scan validator; SCAP SCC Before/After-MFA staging |
+| `Lab-Kit/Ansible/` | `windows-stig-hardening.yml` — automated STIG remediation playbook |
+| `Tools-Kit/` | Downloads SCAP SCC, STIG Viewer, Nessus Essentials, PSPKI |
+| `Architecture/` | PKI Blueprint, STIG Hardening Guide, regulatory alignment, VPN guide |
+| `Architecture/RMF-Templates/` | SSP, SAR, POA&M, ATO Letter, STIG deviation rationale, annual rescan SOP |
+| `Architecture/Zero-Trust-Reference/` | 5-paper Zero Trust series + 4 SVG architecture diagrams |
+| `Architecture/Roadmap/` | Phase 8 (Zero Trust Extension), Phase 9 (Azure Conditional Access VPN), Phase 9B (On-Prem VPN appliance) |
+| `Compliance-Reports/` | Before-MFA and After-MFA SCAP SCC scan output with real scores |
+| `Portfolio/` | Plain-language program explainers and manager briefs |
+| `Live-Servers/` | Readiness checker and compliance scripts for production deployments |
+
+Start at `Lab-Kit/START-HERE.md` → `Lab-Kit/LAB-DAY-CHECKLIST.md`.
+
+---
+
+## Commercial vs. Federal PIV — Honest Scope
+
+This lab uses software key storage and an internal root CA — correct for a lab and for most enterprise environments. Full federal PIV requires:
+
+| Requirement | This Lab | Federal PIV |
+|-------------|----------|-------------|
+| Token on GSA FIPS 201 APL | ⬜ | ✅ required |
+| CA keys in FIPS 140-3 Level 3 HSM | ⬜ | ✅ required |
+| Cross-certification to FBCA | ⬜ | ✅ required (NIST SP 800-217) |
+| Derived credential via PIV kiosk | ⬜ | ✅ required (NIST SP 800-157) |
+
+The architecture, scripts, and RMF documentation are accurate. The gap to full federal PIV is hardware and PKI trust anchor — a procurement decision, not a design problem. `Architecture/Federal-Compliance-Upgrade.md` maps the delta.
+
+---
+
+## What You Need to Run It
+
+- A Windows machine with **Hyper-V** enabled (Win 10/11 Pro/Enterprise or Windows Server)
+- ~80 GB free disk space for the three VMs
+- Windows Server 2022 ISO (free evaluation from Microsoft)
+- A CAC reader + card, or a **YubiKey 5** series (PIV-capable, ~$50) — or use Windows Virtual Smart Card (TPM required, no hardware purchase)
+
+---
+
+## Quick Start
+
+```powershell
+git clone https://github.com/glennbyron1/CAC-program.git
+cd CAC-program
+# Follow Lab-Kit/START-HERE.md
+```
+
+---
+
+## Security & Sanitization
+
+No production keys, certificates, or real credentials are in this repository. All scripts use generic placeholders (`lab.local`, `Lab-DC01`, `agency.gov`). CI runs secret scanning on every push. `Scrub-Repo.ps1` performs a find-and-replace pass before any commit using a local gitignored patterns file. See `SECURITY.md` to report a vulnerability.
+
+---
+
+## Disclaimer
+
+This is a **learning and portfolio lab**, not a production deployment guide and not an accredited system. It has no Authorization to Operate (ATO) and makes no compliance claim beyond demonstrating the architecture and workflows.
+
+- **Not affiliated with the U.S. Department of Defense**, DISA, NIST, or any government agency. DoD CAC, FIPS 201, NIST SP 800-53, and related names are referenced for educational and technical accuracy only.
+- **Synthetic data only.** No real credentials, certificates, CUI, PII, or organizational data are in this repository. All hostnames and identifiers are generic lab placeholders (`lab.local`, `Lab-DC01`, `agency.gov`).
+- **Lab environment only.** Scripts are designed for isolated Hyper-V lab VMs. Review thoroughly before running against any production system — the author accepts no liability for use outside a lab context.
+- **Not a substitute for official training.** This lab demonstrates the skills and tools; it does not replace official DoD IA training, certification programs, or accredited security assessments.
+
+---
+
+## Support & Getting Help
+
+- **Common questions:** `FAQ.md` covers hardware requirements, YubiKey compatibility, middleware, and common errors.
+- **Build issues:** `TROUBLESHOOTING.md` — 300+ lines of real problems encountered during the build with solutions.
+- **Bugs or script errors:** Open a [GitHub Issue](https://github.com/glennbyron1/CAC-program/issues) with the script name, the error message, and your Windows version.
+- **Security concerns:** See `SECURITY.md` — do not open a public issue for vulnerabilities.
+- **Contributing improvements:** See `CONTRIBUTING.md`.
+
+---
+
+## License & Attribution
+
+MIT License — use it, modify it, share it. Keep the copyright notice. See `LICENSE` for full terms.
+
+**Glenn Byron** — [@glennbyron1](https://github.com/glennbyron1)
+
+This project is free and always will be. If it saved you hours of research or helped you land a job, a tip is a nice way to say thanks:
+
+- [GitHub Sponsors](https://github.com/sponsors/glennbyron1)
+- [Ko-fi](https://ko-fi.com/glennbyron1)
+
+Neither is required. The code is yours either way.
+
+See `CONTRIBUTING.md` to contribute, `FAQ.md` for common questions, and `MAINTAINER-SETUP.md` for first-time clone setup.
