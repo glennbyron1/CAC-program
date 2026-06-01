@@ -1,241 +1,234 @@
 # CAC Program — Outstanding Tasks
 
 **Author:** Glenn Byron
-**Last Updated:** May 29, 2026
+**Last Updated:** June 1, 2026
 
-This is the living task list for the CAC/PIV ICAM portfolio project. Items marked ✅ are complete. Items marked ⬜ require hands-on work by Glenn. Items marked 📋 are blocked until Phase 4 lab data exists.
-
----
-
-## Immediate — Before the Next Push
-
-- ⬜ **Commit the Phase 6 session work** — the full commit message is in the last Claude session. Close VS Code or any git GUI first if the index.lock error appears, then run the `git add` and `git commit` commands from PowerShell.
-- ⬜ **Run Scrub-Repo.ps1 before pushing**
-  ```powershell
-  .\Scrub-Repo.ps1 -WhatIf   # preview first
-  .\Scrub-Repo.ps1            # apply
-  git diff                    # review
-  ```
-- ⬜ **Push to GitHub**
-  ```powershell
-  git push
-  ```
-- ⬜ **Confirm GitHub Actions pass** — check the Secret Scan and PowerShell Lint badges turn green after the push.
+Living task list for the CAC/PIV ICAM portfolio project.
+✅ Complete · ⬜ Needs hands-on work · 📋 Blocked on After-MFA scan data
 
 ---
 
-## One-Time Setup (if not already done)
+## Immediate — Do These Now
 
-- ✅ `.scrub-patterns.local.json` created from the example file and filled in with real identifiers
-- ✅ `.idea/` removed from git tracking (`git rm -r --cached .idea/` was run)
-- ⬜ **Add GitHub repo topics** — go to the repo page on GitHub, click the gear icon next to "About", and add:
+- ⬜ **Add GitHub repo topics** — log in as glennbyron1, go to the repo page, click the gear icon next to "About", and add:
   ```
   identity-management  pki  smart-card  fido2  active-directory
   certificate-authority  nist-800-53  fips-201  zero-trust  icam
-  ad-cs  watchguard  entra-id  powershell  nist-csf  cisa-cpg
-  regulatory-compliance
+  ad-cs  powershell  disa-stig  hyper-v  rmf  cac
   ```
+- ⬜ **Tag v1.0 release** — run in PowerShell, then publish via GitHub → Releases:
+  ```powershell
+  git tag v1.0 -m "Before-MFA baseline: two-tier PKI, smart card enrollment, SCAP compliance evidence"
+  git push origin v1.0
+  ```
+
+---
+
+## One-Time Setup
+
+- ✅ `.scrub-patterns.local.json` created with real identifiers (including password)
+- ✅ `.idea/` removed from git tracking
+- ✅ GitHub email privacy enabled (both options)
+- ✅ PowerShell push credentials fixed (Credential Manager + PAT)
+- ✅ Git history rewritten — Gmail removed from all commits, noreply address on all 20 commits
+- ✅ Scrub-Repo.ps1 run and repo verified clean before all pushes
 
 ---
 
 ## DevSecOps — Pipeline and IaC
 
 ### CI/CD Security Pipeline (GitHub Actions)
-- ✅ Secret & sensitive file scan — blocks private keys and cert files
-- ✅ PowerShell lint (PSScriptAnalyzer) — enforces approved verbs, no plaintext passwords
-- ✅ CodeQL SAST — static analysis on Python code, weekly scheduled scan
-- ✅ Trivy container scan — CVE scanning on Docker images, daily scheduled scan
-- ✅ Dependency review — blocks PRs with HIGH/CRITICAL CVEs in new dependencies
+- ✅ Secret & sensitive file scan
+- ✅ PowerShell lint (PSScriptAnalyzer)
+- ✅ CodeQL SAST
+- ✅ Trivy container scan
+- ✅ Dependency review
 - ⬜ Add SBOM generation (Syft or `trivy sbom`) on container build — EO 14028 compliance
-- ⬜ Add Gitleaks workflow for deeper secret detection beyond the current scan
+- ⬜ Add Gitleaks workflow for deeper secret detection
 
 ### Container
-- ✅ `docker/scap-summary/` — containerized SCAP XCCDF parser, multi-stage Dockerfile, non-root
+- ✅ `docker/scap-summary/` — containerized SCAP XCCDF parser
 - ⬜ Push image to GitHub Container Registry (ghcr.io) on merge to main
-- ⬜ Add Docker content trust / image signing (cosign) — supply chain integrity
+- ⬜ Add Docker content trust / image signing (cosign)
 
 ### Infrastructure as Code (Ansible)
-- ✅ `Lab-Kit/Ansible/windows-stig-hardening.yml` — automates 8 STIG sections on Windows Server
-- ⬜ Add Ansible playbook for AD health check (stale accounts, privileged group audit)
+- ✅ `Lab-Kit/Ansible/windows-stig-hardening.yml` — automates 8 STIG sections
+- ⬜ Add Ansible playbook for AD health check
 - ⬜ Add Ansible playbook for certificate expiry reporting
-- ⬜ Run hardening playbook against physical lab machines once they're set up
 
-### Next Learning Targets
-- ⬜ AZ-500 (Azure Security Engineer) — builds on AZ-900, high DoD value
-- ⬜ Certified DevSecOps Professional (CDP) from Practical DevSecOps
-- ⬜ WGU MSSWEDOE — enroll after starting new job, use tuition assistance
-
----
-
-## Physical Lab Setup (Dell Hardware Path)
-
-- ⬜ Pull service tags and verify Server 2022 support for each machine at dell.com/support
-- ⬜ Update iDRAC firmware on all PowerEdge servers (via Lifecycle Controller or manual upload)
-- ⬜ Set static IPs and change default passwords on all iDRAC interfaces
-- ⬜ Configure VLAN segmentation on managed switch (VLAN 10 Lab-LAN, VLAN 1 Management)
-- ⬜ Install Server 2022 on DC01 via iDRAC virtual media or USB
-- ⬜ Install Server 2022 on MEMBER01
-- ⬜ Install Dell OpenManage Server Administrator on each PowerEdge
-- ⬜ Verify TPM 2.0 enabled on all machines (BIOS → Security → TPM)
-- ⬜ Apply iDRAC 9 STIG items (default password, TLS 1.2+, session timeout, audit logging)
-- ⬜ Proceed from `Lab-Kit/02-OfflineRootCA/` — scripts are hardware-agnostic from this point
-
-Full setup guide: `Lab-Kit/Physical-Lab-Setup.md`
+### Certifications / Learning
+- ⬜ CySA+ CS0-003 — lab is being built alongside study (see CySA+ section below)
+- ⬜ AZ-500 (Azure Security Engineer) — high DoD value, pairs with Phase 9
+- ⬜ WGU MSSWEDOE — enroll after starting new job
 
 ---
 
-## Phase 4 — Lab Execution (Requires Running VMs)
+## Physical Home Lab (Dell 3080 Micro Build)
 
-This is the remaining hands-on work. All scripts are written and ready. Follow `Lab-Kit/LAB-DAY-CHECKLIST.md` for the full step-by-step sequence.
+See `Home_Lab_Build_Guide.md` (personal reference, not in repo).
 
-### VM Setup
-- ⬜ Spin up three Hyper-V VMs using `Lab-Kit\01-HyperV-Host\New-LabVMs.ps1`
-- ⬜ Install Windows Server on each VM (use `Lab-Kit\01-HyperV-Host\Unattend-Server.xml` for hands-free install)
-- ⬜ Run `Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1` on each VM after OS install
-- ⬜ Take baseline checkpoint: `New-LabSnapshot.ps1 -Mode Create -Label "00-BaseOS"`
-
-### Offline Root CA
-- ⬜ Transfer `Lab-Kit\02-OfflineRootCA\` to the air-gapped OfflineRootCA VM via PowerShell Direct
-- ⬜ Run `Download-OfflineCA-Kit.ps1` on the VM to stage prerequisites
-- ⬜ Run `Initialize-OfflineRootCA.ps1` — 8-step guided ceremony (installs CA role, configures Root CA, publishes CRL, exports cert+CRL)
-- ⬜ Transfer Root CA cert and CRL back to DC01 via PowerShell Direct
-
-### Domain Controller & PKI
-- ⬜ Run `Build-CAC-Lab.ps1` — promotes DC, reboots
-- ⬜ Run `Build-CA-GPO.ps1` — Issuing CA + smart card GPO (after reboot)
-- ⬜ Run `New-CertificateTemplates.ps1` — creates SmartCardLogon and Admin cert templates
-- ⬜ Run `Set-OCSPResponder.ps1` — OCSP role install and signing cert request
-- ⬜ Run `Set-AuditLogForwarding.ps1` — audit policy and WEF configuration
-- ⬜ Take checkpoint: `New-LabSnapshot.ps1 -Mode Create -Label "02-PKI-Ready"`
-
-### Token Enrollment
-- ⬜ Run `New-TokenEnrollment.ps1` in RA mode (as Registration Authority)
-- ⬜ Run `New-TokenEnrollment.ps1` in Issuer mode (as a different account — confirms SOD block)
-- ⬜ (Optional) Run `New-YubiKeyToken.ps1` if testing YubiKey provisioning
-
-### Workstation
-- ⬜ Domain-join Lab-Workstation01
-- ⬜ Run `Enforce-SmartCard.ps1` on the workstation
-- ⬜ Run `Deploy-VPNClient.ps1` to configure the IKEv2 VPN profile
-
-### SCAP SCC Scans
-- ⬜ Download tools: `Tools-Kit\Get-LabTools.ps1`
-- ⬜ Install SCAP SCC from `C:\FedCompliance-Tools\00-SCAP-SCC\`
-- ⬜ Run **Before-MFA** baseline scan — export HTML + XCCDF XML
-- ⬜ Stage results: `Lab-Kit\05-Compliance\Stage-Reports.ps1` (option 1)
-- ⬜ Apply GPO hardening, reboot
-- ⬜ Run **pre-scan validation**: `Invoke-LabValidation.ps1` — confirm all 7 layers pass
-- ⬜ Run **After-MFA** hardened scan — export HTML + XCCDF XML
-- ⬜ Stage results: `Stage-Reports.ps1` (option 2)
-- ⬜ Note before/after compliance % and CAT I counts for the SAR
-
-### STIG Viewer Checklists
-- ⬜ Install DISA STIG Viewer from `C:\FedCompliance-Tools\01-STIG-Viewer\`
-- ⬜ Complete Windows Server 2022 STIG checklist (.ckl)
-- ⬜ Complete Active Directory Domain Services STIG checklist
-- ⬜ Complete AD CS / PKI STIG checklist
-- ⬜ Complete IIS 10.0 STIG checklist (if using IIS for CRL/AIA)
-- ⬜ Export all .ckl files → `Compliance-Reports\After-MFA\`
-
-### Nessus Essentials
-- ⬜ Activate Nessus Essentials at tenable.com (free, email-gated)
-- ⬜ Run credentialed before-hardening scan → `Compliance-Reports\Before-MFA\Baseline-Vulnerability.pdf`
-- ⬜ Run credentialed after-hardening scan → `Compliance-Reports\After-MFA\Hardened-Vulnerability.pdf`
-
-### Demo Screenshots (for Demo-Walkthrough.md)
-- ⬜ Lock screen showing smart card prompt only — no password field
-- ⬜ PIN entry prompt with cardholder name and certificate subject visible
-- ⬜ Event Viewer showing Event 4768 with Pre-Auth Type 16
-- ⬜ Locked screen immediately after card removal (with timer visible)
-- ⬜ VPN connected status — no password prompt
-- ⬜ `Monitor-PKIHealth.ps1` output showing all green
-- ⬜ SCAP before and after HTML reports side by side
+- ⬜ Confirm RAM in Micro #1 (Hyper-V host) — 32GB min, 64GB ideal
+- ⬜ Micro #2 → install OPNsense (Phase 9B VPN appliance)
+- ⬜ Rack the two micros in the Tecmojo 6U 10-inch rack
+- ⬜ Wire OPNsense between Verizon 5G gateway and the lab switch
+- ⬜ Confirm MacBook and main desktop are NOT domain-joined
+- ⬜ Upgrade to a compact managed switch when VLANs are needed
 
 ---
 
-## Phase 5 — RMF Authorize (Blocked on Phase 4 Data)
+## Lab Execution — After-MFA Scans (Priority 1)
 
-All templates are written. These items need real scan data to complete.
+Before-MFA scans are complete and staged. After-MFA scans are the single most important remaining lab task. Requires the lab VMs to be running.
 
-- 📋 Populate `Architecture/RMF-Templates/SAR-Template.md` with before/after SCAP scores, CAT I/II counts, Nessus finding counts
-- 📋 Populate `Architecture/RMF-Templates/POAM-Template.md` with open findings from the After-MFA scan and remediation schedule
-- 📋 Populate `Architecture/RMF-Templates/SSP-Template.md` with actual compliance score and ATO decision block
-- 📋 Update `Compliance-Reports/README.md` with real SCAP SCC compliance % and Nessus counts
-- 📋 Update `STATUS.md` Phase 4 checkboxes to ✅ and change phase row to Complete
-- 📋 Run CSET assessment and record results in `Architecture/RMF-Templates/CSET-Assessment-Guide.md`
+- ✅ Before-MFA SCAP scan — DC01: **44.95%** (CAT I fail: 9, CAT II: 105, CAT III: 6)
+- ✅ Before-MFA SCAP scan — WS01: **42.20%** (CAT I fail: 9, CAT II: 111, CAT III: 6)
+- ✅ Before-MFA results staged in `Compliance-Reports/Before-MFA/`
+- ✅ Smart card logon confirmed working (Phase 9 Steps 1–5 complete)
+- ⬜ **After-MFA SCAP scan on DC01** — run SCC 5.10.2 with CPE override, transfer via LabTransfer SMB share
+- ⬜ **After-MFA SCAP scan on WS01** — run SCC 5.10.2, pull via `Copy-Item -FromSession`
+- ⬜ Stage After-MFA results: `Stage-Reports.ps1 -Stage After`
+- ⬜ Update `Compliance-Reports/README.md` scoring table with real After-MFA numbers
 
----
-
-## Phase 7 — Portfolio Finalization (After Phase 4)
-
-- 📋 Add real screenshots to `Demo-Walkthrough.md`
-- 📋 Update `Portfolio/` with final versions of recruiter-facing documents
-- 📋 Final pass of `Scrub-Repo.ps1` before public push
-- 📋 Confirm all CI badges are green (Secret Scan + PowerShell Lint)
+### Optional Compliance Evidence
+- ⬜ Nessus Essentials — credentialed scan Before and After hardening (up to 16 IPs, free)
+- ⬜ STIG Viewer — review .ckl files for CAT I open findings, document false positives
+- ⬜ PKI health check baseline — run `Monitor-PKIHealth.ps1` now that lab is fully built
 
 ---
 
-## Phase 8 — Zero Trust Extension (After Phase 4)
+## RMF Templates (Blocked on After-MFA Data)
 
-Design complete. Scripts are the next build phase. Full design in `Lab-Kit/Phase-8-Zero-Trust-Extension.md`.
+All templates written. Need After-MFA scan numbers to fill these in.
 
-### 8.1 — Authorization & Least Privilege
-- ⬜ `Set-TieredAdminModel.ps1` — AD admin tiering (Tier 0/1/2), OUs, groups, deny-logon rules
-- ⬜ `Set-LeastPrivilegeGPO.ps1` — User Rights Assignment hardening, strip broad local-admin
-- ⬜ `New-RBACModel.ps1` — role groups, role → resource mapping, AD delegation
+- 📋 `Architecture/RMF-Templates/SAR-Template.md` — After-MFA SCAP scores, CAT I/II counts, Nessus findings
+- 📋 `Architecture/RMF-Templates/POAM-Template.md` — open findings, remediation owners, target dates
+- 📋 `Architecture/RMF-Templates/SSP-Template.md` — final compliance posture, After-MFA reference
+- 📋 `Architecture/RMF-Templates/Annual-STIG-Rescan-SOP.md` — 2026 baseline scores
+- 📋 `STATUS.md` — update Phase 4 checkboxes to ✅
+
+---
+
+## Portfolio Finalization (After After-MFA Scans)
+
+- 📋 Add real screenshots to `Demo-Walkthrough.md` (smart card prompt, Event 4768, VPN connect, PKI health, SCAP delta)
+- 📋 Update Portfolio/ Word docs with final After-MFA scores
+- 📋 Lead with the Before/After SCAP score delta in README and portfolio docs
+- 📋 Final `Scrub-Repo.ps1 -WhatIf` pass before any push with scan data
+
+---
+
+## Phase 8 — Zero Trust Extension ⬜ Scripts Pending
+
+Design complete — `Architecture/Roadmap/CAC_PIV_Phase8_ZeroTrust_Extension.md`.
+Gap analysis — `Architecture/CAC_PIV_Program_ZeroTrust_Gap_Analysis.md`.
+
+### 8.1 — Authorization & Least Privilege *(closes Gap A · AC-2, AC-3, AC-5, AC-6)*
+- ⬜ `Set-TieredAdminModel.ps1` — AD admin tiering (Tier 0/1/2)
+- ⬜ `Set-LeastPrivilegeGPO.ps1` — User Rights Assignment hardening
+- ⬜ `New-RBACModel.ps1` — role groups, role → resource mapping
 - ⬜ `Set-AuthenticationPolicySilo.ps1` — Kerberos Authentication Policy Silos
-- ⬜ `Deploy-ResourceGateway.ps1` — reverse proxy / app gateway as working PEP demo
+- ⬜ `Deploy-ResourceGateway.ps1` — reverse proxy as working PEP demo
 
-### 8.2 — Device Trust
-- ⬜ `New-DeviceCertTemplate.ps1` — machine-authentication cert template from Issuing CA
+### 8.2 — Device Trust *(closes Gap B · IA-3, CM-6, SC-7)*
+- ⬜ `New-DeviceCertTemplate.ps1` — machine cert template from Issuing CA
 - ⬜ `Enroll-DeviceCertificates.ps1` — device cert autoenrollment
-- ⬜ `Set-DeviceComplianceCheck.ps1` — pre-access posture gate (AV, patch, BitLocker)
-- ⬜ `Update-VPN-DeviceAuth.ps1` — require both user and machine certs on VPN
+- ⬜ `Set-DeviceComplianceCheck.ps1` — posture gate (AV, patch, BitLocker)
+- ⬜ `Update-VPN-DeviceAuth.ps1` — require user + machine certs on VPN
 
-### 8.3 — Continuous & Conditional Access
-- ⬜ `Set-KerberosTicketLifetime.ps1` — shorten TGT/TGS lifetimes via Authentication Policies
-- ⬜ `Deploy-ConditionalAccess.ps1` — PIV federation into Entra ID / AD FS with conditional access
-- ⬜ `New-RiskPolicy.ps1` — step-up and deny conditions, Continuous Access Evaluation
+### 8.3 — Continuous & Conditional Access *(closes Gaps C & D · AC-12, IA-2, AU-6)*
+- ⬜ `Set-KerberosTicketLifetime.ps1` — shorten TGT/TGS lifetimes
+- ⬜ `Deploy-ConditionalAccess.ps1` — PIV federation into Entra ID / AD FS
+- ⬜ `New-RiskPolicy.ps1` — step-up auth and deny conditions
 
-### 8.4 — Workload / Non-Person Identity *(optional)*
-- ⬜ `New-WorkloadCertTemplate.ps1` — short-lived service/machine identity cert template
+### 8.4 — Workload / Non-Person Identity *(optional · Gap E)*
+- ⬜ `New-WorkloadCertTemplate.ps1` — short-lived service identity cert template
 - ⬜ `Set-ServiceAccountHardening.ps1` — convert to gMSA, remove stored secrets
 - ⬜ `Enable-mTLS.ps1` — mutual TLS between two lab services
 
-### 8.5 — Network Segmentation & Per-App Access
+### 8.5 — Network Segmentation *(closes Gap F · SC-7, AC-4)*
 - ⬜ `Set-Microsegmentation.ps1` — default-deny east-west between lab VMs
 - ⬜ `Convert-VPNToPerApp.ps1` — per-resource VPN access (ZTNA-style)
 
-### 8.6 — Visibility, Analytics → Decisioning
+### 8.6 — Visibility → Decisioning *(closes Gap G · AU-6, SI-4, IR-4)*
 - ⬜ `Deploy-SIEM.ps1` — forward WEF stream into Sentinel or Elastic
-- ⬜ `New-DetectionRules.ps1` — anomalous auth, lateral movement, policy violation detections
-- ⬜ `Connect-Analytics-To-Policy.ps1` — risk signal feeds back into conditional access
+- ⬜ `New-DetectionRules.ps1` — anomalous auth, lateral movement detections
+- ⬜ `Connect-Analytics-To-Policy.ps1` — risk signal feeds conditional access
 
 ### 8.7 — Validation & Evidence
 - ⬜ `Invoke-ZeroTrustValidation.ps1` — extend 7-layer validator with ZT checks
 - ⬜ Extend `Stage-Reports.ps1` with Before-ZT / After-ZT delta
 - ⬜ Update SSP control mapping with Phase 8 control families
-- ⬜ Add `Demo-Walkthrough-ZT.md`
+- ⬜ `Demo-Walkthrough-ZT.md`
 
 ---
 
-## Automation — Fully Complete ✅
+## Phase 9 — Cloud Identity & Conditional-Access VPN ⬜ Not Started
 
-Everything that can be scripted has been scripted. No further code work needed before lab execution.
+Design complete — `Architecture/Roadmap/CAC_PIV_Phase9_Azure_VPN_ConditionalAccess.md`.
+Requires: Azure for Students account + free Microsoft 365 Developer tenant.
+
+- ⬜ 9.0 — Cost guardrail + resource group (do this first — never provision without budget alert)
+- ⬜ 9.1 — Entra tenant + synthetic test users + MFA enrollment
+- ⬜ 9.2 — Azure P2S VPN Gateway authenticated by certs from your Issuing CA
+- ⬜ 9.3 — Conditional Access policies (MFA + compliant device)
+- ⬜ 9.4 — Device compliance signal (Entra join + Intune)
+- ⬜ 9.5 — Sign-in logs + detections
+- ⬜ 9.6 — Validation + teardown (`Remove-AzureLabResources.ps1` — run every session)
+
+---
+
+## Phase 9B — On-Prem VPN Appliance ⬜ Not Started
+
+Design complete — `Architecture/Roadmap/CAC_PIV_Phase9B_OnPrem_VPN_Appliance.md`.
+Requires: Dell 3080 Micro #2 set up with OPNsense.
+
+- ⬜ 9B.1 — Hardware + network prep, document the appliance
+- ⬜ 9B.2 — OPNsense base install + baseline hardening
+- ⬜ 9B.3 — PKI integration — issue server + client certs from your Issuing CA
+- ⬜ 9B.4 — VPN profile, client install, cert-auth test + negative (revoked cert) test
+- ⬜ 9B.5 — Syslog forwarding to CySA+ Splunk lab
+- ⬜ 9B.6 — Validation + evidence
+
+---
+
+## CySA+ SOC Analyst Lab ⬜ Not Started (Separate Repo)
+
+Design complete — `CySA_SOC_Analyst_Lab.md` (held locally, not in this repo).
+Will get its own GitHub repo. Runs on Hyper-V to reuse existing host.
+
+- ⬜ Create new GitHub repo: `cysa-soc-lab`
+- ⬜ Phase 1 — Foundation + architecture Blueprint.md
+- ⬜ Phase 2 — Core automation (VMs, Splunk, Sysmon, Nessus, forwarders)
+- ⬜ Phase 3 — Log collection + normalization
+- ⬜ Phase 4 — Detection + threat hunting (Splunk searches, dashboards)
+- ⬜ Phase 5 — Vulnerability management (Nessus credentialed scan)
+- ⬜ Phase 5.5 — Optional: Microsoft Sentinel cloud-SIEM (Azure for Students)
+- ⬜ Phase 6 — Incident response (Atomic Red Team attacks → detect → document)
+- ⬜ Phase 7 — Reporting (incident report, vuln report, MTTD/MTTR dashboard)
+- ⬜ Phase 8 — Validation + CySA+ objectives map
+- ⬜ Phase 9 — Release prep (README, LICENSE, CI, CHANGELOG)
+
+---
+
+## Phase Summary
 
 | Phase | Status |
 |-------|--------|
-| Phase 1 — Foundation & Architecture | ✅ Complete |
-| Phase 2 — Core Automation Scripts | ✅ Complete |
-| Phase 3 — Compliance & Regulatory Docs | ✅ Complete |
-| Phase 4 — RMF Assess (Lab Execution) | ⬜ Pending lab work |
-| Phase 5 — RMF Authorize (Templates) | ✅ Templates done / 📋 data pending |
-| Phase 6 — Advanced Automation | ✅ Complete |
-| Phase 7 — Portfolio Finalization | 📋 After Phase 4 |
-| Phase 8 — Zero Trust Extension | ⬜ Design complete / scripts pending |
+| 1 — Foundation & Architecture | ✅ Complete |
+| 2 — Core Automation Scripts | ✅ Complete |
+| 3 — Compliance & Regulatory Docs | ✅ Complete |
+| 4 — Lab Execution (Before-MFA) | ✅ Scans done · ⬜ After-MFA pending |
+| 5 — RMF Authorize | ✅ Templates done · 📋 data pending |
+| 6 — Advanced Automation | ✅ Complete |
+| 7 — Portfolio Finalization | 📋 After After-MFA scans |
+| 8 — Zero Trust Extension | ⬜ Design done · scripts pending |
+| 9 — Azure Cloud VPN + Conditional Access | ⬜ Design done · not started |
+| 9B — On-Prem VPN Appliance | ⬜ Design done · hardware needed |
+| CySA+ SOC Lab | ⬜ Design done · separate repo |
 
 ---
 
-*Full execution sequence: `Lab-Kit/START-HERE.md` → `Lab-Kit/LAB-DAY-CHECKLIST.md`*
-*RMF template population: `Architecture/RMF-Templates/`*
-*Demo guide: `Demo-Walkthrough.md`*
+*Build sequence: `Lab-Kit/START-HERE.md` → `Lab-Kit/LAB-DAY-CHECKLIST.md`*
+*RMF templates: `Architecture/RMF-Templates/`*
+*Phase 8–9B design: `Architecture/Roadmap/`*
+*Zero Trust reference: `Architecture/Zero-Trust-Reference/`*
