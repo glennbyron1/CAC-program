@@ -8,6 +8,28 @@ This log covers every artifact produced across the life of the project — scrip
 
 ---
 
+## [Lab — Session 12] — 2026-06-01
+
+### Physical Laptop Pre-Flight — Hardware Confirmed + USB Staging Script
+
+#### Added
+
+**`Lab-Kit/06-PhysicalEndpoint/Stage-LaptopUSB.ps1`** (325 lines)
+New PowerShell script that bundles every file the physical laptop needs into a single timestamped staging folder on the Hyper-V host, ready to drag onto a USB drive. Stages five items: (1) SCC 5.10.2 installer from `FedCompliance-Tools\00-SCAP-SCC\`; (2) Windows 11 STIG SCAP content from `FedCompliance-Tools\03-SCAP-Content\` (filters to Windows 11 benchmark files only, ignores Server 2022); (3) Lab Root CA public certificate (optional `-RootCACertPath`, refuses `.pfx`/`.p12` to keep the private key offline); (4) `Add-Physical-Laptop.md` walkthrough; (5) `Deploy-VPNClient.ps1` for the VPN step. Auto-generates a `README.txt` on the USB root that lists contents with [OK]/[MISSING] markers, the Step 0–7 walkthrough order, and Root CA export instructions if the cert was not staged. Optional `-Zip` switch produces a single archive; `-Force` overwrites prior staging folders. Missing items are warnings (not failures) so the operator sees what still needs sourcing. NIST controls supported: CM-7 (least functionality, no private keys exfiltrated), MP-5 (media transport), AC-19 (mobile device access). Author: Glenn Byron.
+
+#### Changed
+
+**`TODO.md`**
+Marked Windows 11 and TPM 2.0 prerequisites complete in the Physical Laptop section. Both boxes confirmed via `winver` (Windows 11 Pro) and `tpm.msc` (TPM 2.0 ready) on the spare laptop. Outstanding laptop tasks: External vSwitch creation, domain-join, smart card GPO application, VSC creation, cert enrollment, smart card logon test (screenshots), Windows 11 STIG SCAP scan, VPN test. Author: Glenn Byron.
+
+**`TODO.md` line 100 + `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md` Step 6**
+Updated SCAP benchmark label from bare `MS_Windows_11_STIG` to versioned form `MS_Windows_11_STIG-<version>` with the note that the current DISA release is V1R7+. This aligns Windows 11 references with the version-suffix convention already used elsewhere in the repo for the Server 2022 benchmark (e.g. `MS_Windows_Server_2022_STIG-2.3.10`). Author: Glenn Byron.
+
+**`Pack-LabKit.ps1`**
+Three fixes after first packaging run leaked IDE config into the distribution zip: (1) re-encoded the file as UTF-8 with BOM and replaced em dashes / box-drawing characters with ASCII equivalents so PowerShell 5.1 parses it correctly without ANSI mis-decoding; (2) restored a truncated final `Write-Host` call (file had ended mid-token with literal `Wri`); (3) added `.idea`, `.vs`, `.vscode`, and `node_modules` to the `$excludeDirs` list so IDE-local folders (already in `.gitignore` but still in the working tree) are excluded from the packaged zip. First clean run packaged 116 files → 3.3 MB zip (78% compression); expected to drop to ~108 files after the IDE exclusion fix. Author: Glenn Byron.
+
+---
+
 ## [Portfolio — Session 11] — 2026-05-29
 
 ### Resume — NAVAIR ESDP Targeted Version

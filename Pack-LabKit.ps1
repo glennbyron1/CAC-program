@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Packs the CAC-Lab-Kit into a distributable zip, ready to unpack over any
@@ -7,7 +7,7 @@
 .DESCRIPTION
     Collects every file in the kit except large binaries (*.iso, *.vhdx) and
     generated/session-specific artifacts (.docx status reports, SCC HTML reports).
-    Scan result zips (Before-MFA, After-MFA) are included — they are evidence.
+    Scan result zips (Before-MFA, After-MFA) are included - they are evidence.
 
     Output zip is date-stamped and placed next to the kit root by default.
 
@@ -24,12 +24,12 @@
     Default: today's date (yyyyMMdd).
 
 .PARAMETER IncludeScanReports
-    Switch — if specified, also includes the large SCC HTML reports
+    Switch - if specified, also includes the large SCC HTML reports
     in Compliance-Reports\Before-MFA\ and Compliance-Reports\After-MFA\.
     Default: excluded (the raw .zip artifacts and XCCDF XML are always included).
 
 .EXAMPLE
-    # Basic — creates CAC-Lab-Kit-20260527.zip next to this folder
+    # Basic - creates CAC-Lab-Kit-20260527.zip next to this folder
     .\Pack-LabKit.ps1
 
 .EXAMPLE
@@ -56,20 +56,20 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# -- Helpers ------------------------------------------------------------------
 function Write-Step  { param([string]$msg) Write-Host "  $msg" -ForegroundColor Cyan }
 function Write-OK    { param([string]$msg) Write-Host "  [OK] $msg" -ForegroundColor Green }
 function Write-Warn  { param([string]$msg) Write-Host "  [!!] $msg" -ForegroundColor Yellow }
 function Write-Fatal { param([string]$msg) Write-Host "`n  [FATAL] $msg`n" -ForegroundColor Red; exit 1 }
 
-# ── Banner ────────────────────────────────────────────────────────────────────
+# -- Banner --------------------------------------------------------------------
 Write-Host ""
-Write-Host "  ╔══════════════════════════════════════════════════════╗" -ForegroundColor DarkCyan
-Write-Host "  ║        CAC Lab Kit — Pack for Distribution           ║" -ForegroundColor DarkCyan
-Write-Host "  ╚══════════════════════════════════════════════════════╝" -ForegroundColor DarkCyan
+Write-Host "  +======================================================+" -ForegroundColor DarkCyan
+Write-Host "  |        CAC Lab Kit - Pack for Distribution           |" -ForegroundColor DarkCyan
+Write-Host "  +======================================================+" -ForegroundColor DarkCyan
 Write-Host ""
 
-# ── Validate kit root ─────────────────────────────────────────────────────────
+# -- Validate kit root ---------------------------------------------------------
 if (-not (Test-Path $KitRoot)) {
     Write-Fatal "KitRoot not found: $KitRoot"
 }
@@ -86,31 +86,31 @@ Write-Step "Kit root   : $KitRoot"
 Write-Step "Output dir : $OutputDir"
 Write-Step "Label      : $Label"
 
-# ── Exclusion rules ───────────────────────────────────────────────────────────
+# -- Exclusion rules -----------------------------------------------------------
 #
 #   Always excluded:
-#     *.iso        — Windows Server ISO, 5.7 GB, not redistributable
-#     *.vhdx       — VM disk images (if any land here)
-#     *.vmdk       — same
-#     .git\        — version control internals
-#     *.docx       — generated status reports (session-specific)
-#     *.pdf        — same
-#     PUT-*-HERE.txt — placeholder files (script downloads replace them)
+#     *.iso        - Windows Server ISO, 5.7 GB, not redistributable
+#     *.vhdx       - VM disk images (if any land here)
+#     *.vmdk       - same
+#     .git\        - version control internals
+#     *.docx       - generated status reports (session-specific)
+#     *.pdf        - same
+#     PUT-*-HERE.txt - placeholder files (script downloads replace them)
 #
 #   Excluded by default (included with -IncludeScanReports):
-#     Compliance-Reports\**\*.html — large SCC HTML reports (~4 MB each)
+#     Compliance-Reports\**\*.html - large SCC HTML reports (~4 MB each)
 #
 #   Always INCLUDED even though they look like binaries:
-#     Compliance-Reports\**\*.zip  — scan result zips (evidence)
-#     Compliance-Reports\**\*.xml  — XCCDF result XML
-#     Compliance-Reports\**\*.ckl  — STIG Viewer checklists
-#     Lab-Kit\05-Compliance\Before-MFA\*.zip — staged raw scan zips
+#     Compliance-Reports\**\*.zip  - scan result zips (evidence)
+#     Compliance-Reports\**\*.xml  - XCCDF result XML
+#     Compliance-Reports\**\*.ckl  - STIG Viewer checklists
+#     Lab-Kit\05-Compliance\Before-MFA\*.zip - staged raw scan zips
 
 $excludeExtensions = @('.iso', '.vhdx', '.vmdk', '.docx', '.pdf')
-$excludeDirs       = @('.git', '.github', '.claude')
+$excludeDirs       = @('.git', '.github', '.claude', '.idea', '.vs', '.vscode', 'node_modules')
 $excludeNames      = @('PUT-SCAP-SCC-INSTALLER-HERE.txt', 'PUT-NESSUS-INSTALLER-HERE.txt')
 
-# ── Collect files ─────────────────────────────────────────────────────────────
+# -- Collect files -------------------------------------------------------------
 Write-Step "Scanning files..."
 
 $allFiles = Get-ChildItem -Path $KitRoot -Recurse -File
@@ -144,7 +144,7 @@ foreach ($file in $allFiles) {
     if (-not $IncludeScanReports) {
         if ($file.Extension -eq '.html' -and
             ($rel -like 'Compliance-Reports\*' -or $rel -like 'Compliance-Reports/*')) {
-            $skipped.Add("HTML $rel  ($([math]::Round($file.Length/1KB,0)) KB — use -IncludeScanReports to include)"); continue
+            $skipped.Add("HTML $rel  ($([math]::Round($file.Length/1KB,0)) KB - use -IncludeScanReports to include)"); continue
         }
     }
 
@@ -163,12 +163,12 @@ if ($skipped.Count -gt 0) {
     Write-Host ""
 }
 
-# ── Build zip ─────────────────────────────────────────────────────────────────
+# -- Build zip -----------------------------------------------------------------
 $zipName = "CAC-Lab-Kit-$Label.zip"
 $zipPath = Join-Path $OutputDir $zipName
 
 if (Test-Path $zipPath) {
-    Write-Warn "Output zip already exists — deleting: $zipPath"
+    Write-Warn "Output zip already exists - deleting: $zipPath"
     Remove-Item $zipPath -Force
 }
 
@@ -178,6 +178,10 @@ if (-not (Test-Path $OutputDir)) {
 
 Write-Step "Building zip: $zipPath"
 
+# Load BOTH compression assemblies - ZipArchive lives in System.IO.Compression,
+# while ZipFile (the higher-level wrapper) lives in System.IO.Compression.FileSystem.
+# PowerShell 5.1 in a fresh session needs both loaded explicitly.
+Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $zipStream   = [System.IO.File]::Create($zipPath)
@@ -208,38 +212,40 @@ foreach ($file in $included) {
 $zipArchive.Dispose()
 $zipStream.Dispose()
 
-# ── Report ────────────────────────────────────────────────────────────────────
+# -- Report --------------------------------------------------------------------
 $zipSize     = (Get-Item $zipPath).Length
 $sourceMB    = [math]::Round($totalBytes / 1MB, 1)
 $zipMB       = [math]::Round($zipSize   / 1MB, 1)
 $ratio       = if ($totalBytes -gt 0) { [math]::Round((1 - $zipSize/$totalBytes) * 100, 0) } else { 0 }
 
 Write-Host ""
-Write-Host "  ┌─────────────────────────────────────────────────────┐" -ForegroundColor Green
-Write-Host "  │  ZIP CREATED SUCCESSFULLY                           │" -ForegroundColor Green
-Write-Host "  ├─────────────────────────────────────────────────────┤" -ForegroundColor Green
-Write-Host ("  │  File     : {0,-37}│" -f $zipName) -ForegroundColor Green
-Write-Host ("  │  Location : {0,-37}│" -f ($OutputDir.Substring([math]::Max(0,$OutputDir.Length-37)))) -ForegroundColor Green
-Write-Host ("  │  Files    : {0,-37}│" -f "$fileCount files packed") -ForegroundColor Green
-Write-Host ("  │  Source   : {0,-37}│" -f "${sourceMB} MB uncompressed") -ForegroundColor Green
-Write-Host ("  │  Zip size : {0,-37}│" -f "${zipMB} MB  (${ratio}% compression)") -ForegroundColor Green
-Write-Host "  └─────────────────────────────────────────────────────┘" -ForegroundColor Green
+Write-Host "  +-----------------------------------------------------+" -ForegroundColor Green
+Write-Host "  |  ZIP CREATED SUCCESSFULLY                           |" -ForegroundColor Green
+Write-Host "  +-----------------------------------------------------+" -ForegroundColor Green
+Write-Host ("  |  File     : {0,-37}|" -f $zipName) -ForegroundColor Green
+Write-Host ("  |  Location : {0,-37}|" -f ($OutputDir.Substring([math]::Max(0,$OutputDir.Length-37)))) -ForegroundColor Green
+Write-Host ("  |  Files    : {0,-37}|" -f "$fileCount files packed") -ForegroundColor Green
+Write-Host ("  |  Source   : {0,-37}|" -f "${sourceMB} MB uncompressed") -ForegroundColor Green
+Write-Host ("  |  Zip size : {0,-37}|" -f "${zipMB} MB  (${ratio}% compression)") -ForegroundColor Green
+Write-Host "  +-----------------------------------------------------+" -ForegroundColor Green
 Write-Host ""
 
-# ── How to use ────────────────────────────────────────────────────────────────
+# -- How to use ----------------------------------------------------------------
 Write-Host "  HOW TO USE THIS ZIP" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "  To update an existing installation — extract and overwrite:" -ForegroundColor White
+Write-Host "  To update an existing installation - extract and overwrite:" -ForegroundColor White
 Write-Host "    Expand-Archive -Path '$zipPath' ``" -ForegroundColor Gray
 Write-Host "                   -DestinationPath 'C:\' -Force" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  This overwrites all scripts and docs in C:\$kitFolderName\" -ForegroundColor DarkGray
 Write-Host "  It does NOT remove files that were deleted from this version." -ForegroundColor DarkGray
-Write-Host "  The Windows Server ISO is NOT included — keep your existing copy." -ForegroundColor DarkGray
+Write-Host "  The Windows Server ISO is NOT included - keep your existing copy." -ForegroundColor DarkGray
 Write-Host ""
 Write-Host "  To do a clean install on a new machine:" -ForegroundColor White
 Write-Host "    1. Copy $zipName to the new machine" -ForegroundColor Gray
 Write-Host "    2. Expand-Archive to C:\ (creates C:\$kitFolderName\)" -ForegroundColor Gray
 Write-Host "    3. Place Server 2025 Standard.iso in C:\$kitFolderName\Lab-Kit\01-HyperV-Host\" -ForegroundColor Gray
 Write-Host "    4. Follow WALKTHROUGH.md" -ForegroundColor Gray
-Wri
+Write-Host ""
+Write-Host "  Done." -ForegroundColor Green
+Write-Host ""

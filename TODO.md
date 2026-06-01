@@ -78,7 +78,7 @@ Living task list for the CAC/PIV ICAM portfolio project.
 
 ### Still Needs Input
 
-- ⬜ **AO name and signature** — Authorizing Official in `SSP-Template.md` § Document Info and `SAR-Template.md` § 11
+- ✅ **AO name and signature** — filled in SSP and SAR (Glenn Byron, System Owner / Lab Program Manager, Self-Assessed Lab)
 - ⬜ **Nessus Essentials scan** — adds vulnerability evidence; results go in SAR § 7 and POAM
 - ⬜ **IIS STIG assessment** — CRL/AIA server; referenced as pending in all four templates
 - ⬜ **STIG Viewer CAT I review** — open .ckl files, document false positives, update POAM rows
@@ -89,15 +89,15 @@ Living task list for the CAC/PIV ICAM portfolio project.
 
 Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 
-- ⬜ Check Windows version (`winver`) — determines STIG benchmark (Win 10 vs Win 11)
-- ⬜ Check TPM — `tpm.msc` must show "TPM is ready for use"
+- ✅ Windows 11 confirmed
+- ✅ TPM 2.0 confirmed — VSC ready
 - ⬜ Create External virtual switch in Hyper-V
 - ⬜ Domain-join laptop to lab.local
 - ⬜ Apply smart card GPO (`gpupdate /force`)
 - ⬜ Create Virtual Smart Card (`tpmvscmgr.exe`)
 - ⬜ Enroll VSC certificate via `New-TokenEnrollment.ps1`
 - ⬜ Test smart card logon on real hardware — **take screenshots here**
-- ⬜ Run SCAP SCC scan with Windows 10/11 STIG benchmark
+- ⬜ Run SCAP SCC scan with Windows 11 STIG benchmark (`MS_Windows_11_STIG-<version>` — current DISA release is V1R7+)
 - ⬜ Test VPN from physical laptop (EAP-TLS, no password)
 
 ---
@@ -205,3 +205,4 @@ Requires: Dell 3080 Micro #2 + OPNsense.
 *RMF templates: `Architecture/RMF-Templates/`*
 *Phase 8–9B design: `Architecture/Roadmap/`*
 *Laptop guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`*
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
