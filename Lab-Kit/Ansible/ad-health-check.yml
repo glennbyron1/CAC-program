@@ -1,0 +1,135 @@
+---
+# AD Health Check — CAC/PIV Lab
+# Audits Active Directory for stale accounts, privileged group membership,
+# and smart card enforcement compliance.
+#
+# Run from the Hyper-V host against Lab-DC01.
+# Requires: WinRM enabled on DC01, inventory.ini.example populated.
+#
+# Usage:
+#   ansible-playbook ad-health-check.yml -i inventory.ini
+#   ansible-playbook ad-health-check.yml -i inventory.ini --tags stale
+#
+# NIST SP 800-53 Rev. 5: AC-2, AC-5, AC-6, IA-4, CA-7
+
+- name: Active Directory Health Check
+  hosts: domain_controllers
+  gather_facts: true
+
+  vars:
+    stale_days: 90          # Accounts inactive longer than this are flagged
+    report_path: "C:\\ADHealthReport-{{ ansible_date_time.date }}.txt"
+
+  tasks:
+
+    # ── Stale Account Detection ──────────────────────────────────────────
+    - name: Find user accounts inactive for more than {{ stale_days }} days
+      ansible.windows.win_shell: |
+        $cutoff = (Get-Date).AddDays(-{{ stale_days }})
+        Get-ADUser -Filter {Enabled -eq $true -and LastLogonDate -lt $cutoff} `
+                   -Properties LastLogonDate, DistinguishedName |
+            Select-Object SamAccountName, LastLogonDate, DistinguishedName |
+            ConvertTo-Json
+      register: stale_users
+      changed_when: false
+      tags: stale
+
+    - name: Report stale user accounts
+      ansible.builtin.debug:
+        msg: "Stale accounts (>{{ stale_days }} days): {{ (stale_users.stdout | from_json | length) }} found"
+      tags: stale
+
+    # ── Privileged Group Audit ───────────────────────────────────────────
+    - name: List members of Domain Admins
+      ansible.windows.win_shell: |
+        Get-ADGroupMember -Identity "Domain Admins" -Recursive |
+            Select-Object SamAccountName, ObjectClass | ConvertTo-Json
+      register: domain_admins
+      changed_when: false
+      tags: privgroups
+
+    - name: List members of Enterprise Admins
+      ansible.windows.win_shell: |
+        Get-ADGroupMember -Identity "Enterprise Admins" -Recursive |
+            Select-Object SamAccountName, ObjectClass | ConvertTo-Json
+      register: enterprise_admins
+      changed_when: false
+      tags: privgroups
+
+    - name: Report privileged group membership
+      ansible.builtin.debug:
+        msg:
+          - "Domain Admins: {{ (domain_admins.stdout | from_json | length) }} members"
+          - "Enterprise Admins: {{ (enterprise_admins.stdout | from_json | length) }} members"
+      tags: privgroups
+
+    # ── Smart Card Enforcement Audit ─────────────────────────────────────
+    - name: Find enabled users WITHOUT smart card required flag
+      ansible.windows.win_shell: |
+        Get-ADUser -Filter {Enabled -eq $true -and SmartcardLogonRequired -eq $false} `
+                   -Properties SmartcardLogonRequired |
+            Select-Object SamAccountName, SmartcardLogonRequired | ConvertTo-Json
+      register: no_smartcard
+      changed_when: false
+      tags: smartcard
+
+    - name: Report users without smart card enforcement
+      ansible.builtin.debug:
+        msg: "Users without SmartcardLogonRequired: {{ (no_smartcard.stdout | from_json | length) }} found"
+      tags: smartcard
+
+    # ── Password Policy Check ────────────────────────────────────────────
+    - name: Check default domain password policy
+      ansible.windows.win_shell: |
+        Get-ADDefaultDomainPasswordPolicy |
+            Select-Object MinPasswordLength, PasswordHistoryCount,
+                          LockoutThreshold, MaxPasswordAge | ConvertTo-Json
+      register: pwd_policy
+      changed_when: false
+      tags: policy
+
+    - name: Report password policy
+      ansible.builtin.debug:
+        msg: "{{ pwd_policy.stdout | from_json }}"
+      tags: policy
+
+    # ── GPO Smart Card Settings ──────────────────────────────────────────
+    - name: Check scforceoption registry value on DC
+      ansible.windows.win_reg_stat:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+        name: scforceoption
+      register: scforce
+      tags: gpo
+
+    - name: Warn if scforceoption is set on Domain Controller
+      ansible.builtin.fail:
+        msg: >
+          CRITICAL: scforceoption=1 is set on the Domain Controller!
+          This locks all password-based login including the Hyper-V console.
+          Remove this GPO setting from DC01 immediately.
+          scforceoption=1 belongs ONLY on workstations, never on a DC.
+      when: scforce.exists and scforce.value == 1
+      tags: gpo
+
+    - name: Confirm scforceoption is NOT set on DC (correct)
+      ansible.builtin.debug:
+        msg: "OK — scforceoption is not set on this DC (correct configuration)"
+      when: not scforce.exists or scforce.value != 1
+      tags: gpo
+
+    # ── Summary Report ───────────────────────────────────────────────────
+    - name: Write summary report
+      ansible.windows.win_shell: |
+        $report = @"
+        AD Health Check Report — {{ ansible_date_time.date }}
+        =====================================================
+        Stale accounts (>{{ stale_days }} days):   {{ (stale_users.stdout | from_json | length) }}
+        Domain Admins members:                      {{ (domain_admins.stdout | from_json | length) }}
+        Enterprise Admins members:                  {{ (enterprise_admins.stdout | from_json | length) }}
+        Users without smart card required:          {{ (no_smartcard.stdout | from_json | length) }}
+        scforceoption on DC:                        {{ scforce.exists | ternary('SET (CRITICAL)', 'Not set (correct)') }}
+        "@
+        $report | Out-File "{{ report_path }}" -Encoding UTF8
+        Write-Host $report
+      changed_when: false
+      tags: always

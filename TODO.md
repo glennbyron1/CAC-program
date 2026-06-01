@@ -1,7 +1,7 @@
 # CAC Program — Outstanding Tasks
 
 **Author:** Glenn Byron
-**Last Updated:** June 1, 2026
+**Last Updated:** June 1, 2026 (evening)
 
 Living task list for the CAC/PIV ICAM portfolio project.
 ✅ Complete · ⬜ Needs hands-on work
@@ -34,13 +34,19 @@ Living task list for the CAC/PIV ICAM portfolio project.
 
 ---
 
-## CI/CD Security Pipeline ✅ Complete
+## CI/CD & Automation ✅ Complete
 
-- ✅ Secret & sensitive file scan (GitHub Actions)
+### GitHub Actions
+- ✅ Secret & sensitive file scan
 - ✅ PowerShell lint (PSScriptAnalyzer)
 - ✅ CodeQL SAST
 - ✅ Dependency review
-- ✅ `Lab-Kit/Ansible/windows-stig-hardening.yml` — STIG remediation playbook
+- ✅ Gitleaks — full git history secret scan (weekly + every push)
+
+### Ansible Playbooks
+- ✅ `Lab-Kit/Ansible/windows-stig-hardening.yml` — STIG remediation (8 sections)
+- ✅ `Lab-Kit/Ansible/ad-health-check.yml` — stale accounts, privileged groups, smart card enforcement, scforceoption guard
+- ✅ `Lab-Kit/Ansible/cert-expiry-report.yml` — Root CA, Issuing CA, user certs, OCSP, CRL expiry
 
 ---
 

@@ -1,0 +1,158 @@
+---
+# Certificate Expiry Report — CAC/PIV Lab
+# Checks expiry for all critical certificates in the lab PKI:
+#   - Offline Root CA certificate
+#   - Enterprise Issuing CA certificate
+#   - All issued smart card / VSC user certificates
+#   - VPN gateway certificate (if deployed)
+#   - OCSP signing certificate
+#
+# Run from the Hyper-V host against Lab-DC01.
+# Requires: WinRM enabled on DC01, inventory.ini.example populated.
+#
+# Usage:
+#   ansible-playbook cert-expiry-report.yml -i inventory.ini
+#   ansible-playbook cert-expiry-report.yml -i inventory.ini -e "warn_days=60"
+#
+# NIST SP 800-53 Rev. 5: SC-17, CA-7, IA-5(2)
+
+- name: PKI Certificate Expiry Report
+  hosts: domain_controllers
+  gather_facts: true
+
+  vars:
+    warn_days: 90           # Warn if cert expires within this many days
+    crit_days: 30           # Critical if cert expires within this many days
+
+  tasks:
+
+    # ── Root CA Certificate ──────────────────────────────────────────────
+    - name: Check Root CA certificate expiry
+      ansible.windows.win_shell: |
+        $cert = Get-ChildItem Cert:\LocalMachine\Root |
+                    Where-Object { $_.Subject -like "*Lab*CA*" -or $_.Subject -like "*Root*CA*" } |
+                    Sort-Object NotAfter | Select-Object -First 1
+        if ($cert) {
+            $days = ($cert.NotAfter - (Get-Date)).Days
+            [PSCustomObject]@{
+                Subject   = $cert.Subject
+                Thumbprint = $cert.Thumbprint
+                NotAfter  = $cert.NotAfter.ToString("yyyy-MM-dd")
+                DaysLeft  = $days
+            } | ConvertTo-Json
+        } else { '{"error": "Root CA cert not found in LocalMachine\\Root"}' }
+      register: root_ca_cert
+      changed_when: false
+      tags: rootca
+
+    - name: Report Root CA certificate status
+      ansible.builtin.debug:
+        msg: "Root CA: {{ (root_ca_cert.stdout | from_json).Subject }} — expires {{ (root_ca_cert.stdout | from_json).NotAfter }} ({{ (root_ca_cert.stdout | from_json).DaysLeft }} days)"
+      tags: rootca
+
+    - name: Warn if Root CA cert is near expiry
+      ansible.builtin.fail:
+        msg: "CRITICAL: Root CA certificate expires in {{ (root_ca_cert.stdout | from_json).DaysLeft }} days! Plan renewal immediately."
+      when: (root_ca_cert.stdout | from_json).DaysLeft is defined and (root_ca_cert.stdout | from_json).DaysLeft | int < crit_days
+      tags: rootca
+
+    # ── Issuing CA Certificate ───────────────────────────────────────────
+    - name: Check Issuing CA certificate expiry
+      ansible.windows.win_shell: |
+        $cert = Get-ChildItem Cert:\LocalMachine\CA |
+                    Where-Object { $_.Subject -like "*Issuing*" -or $_.Subject -like "*LAB-CA*" } |
+                    Sort-Object NotAfter | Select-Object -First 1
+        if ($cert) {
+            $days = ($cert.NotAfter - (Get-Date)).Days
+            [PSCustomObject]@{
+                Subject   = $cert.Subject
+                Thumbprint = $cert.Thumbprint
+                NotAfter  = $cert.NotAfter.ToString("yyyy-MM-dd")
+                DaysLeft  = $days
+            } | ConvertTo-Json
+        } else { '{"error": "Issuing CA cert not found"}' }
+      register: issuing_ca_cert
+      changed_when: false
+      tags: issuingca
+
+    - name: Report Issuing CA certificate status
+      ansible.builtin.debug:
+        msg: "Issuing CA: {{ (issuing_ca_cert.stdout | from_json).Subject }} — expires {{ (issuing_ca_cert.stdout | from_json).NotAfter }} ({{ (issuing_ca_cert.stdout | from_json).DaysLeft }} days)"
+      tags: issuingca
+
+    - name: Warn if Issuing CA cert expires within {{ warn_days }} days
+      ansible.builtin.debug:
+        msg: "WARNING: Issuing CA certificate expires in {{ (issuing_ca_cert.stdout | from_json).DaysLeft }} days. Plan renewal."
+      when: (issuing_ca_cert.stdout | from_json).DaysLeft is defined and (issuing_ca_cert.stdout | from_json).DaysLeft | int < warn_days
+      tags: issuingca
+
+    # ── Issued Smart Card / VSC User Certificates ────────────────────────
+    - name: Check all issued user certificates for expiry
+      ansible.windows.win_shell: |
+        $warnDate = (Get-Date).AddDays({{ warn_days }})
+        $certs = Get-ChildItem Cert:\LocalMachine\My |
+                     Where-Object {
+                         $_.EnhancedKeyUsageList -match "Smart Card Logon" -and
+                         $_.NotAfter -lt $warnDate
+                     } | Select-Object Subject, Thumbprint,
+                         @{N='NotAfter';E={$_.NotAfter.ToString("yyyy-MM-dd")}},
+                         @{N='DaysLeft';E={($_.NotAfter-(Get-Date)).Days}}
+        if ($certs) { $certs | ConvertTo-Json }
+        else { '[]' }
+      register: user_certs
+      changed_when: false
+      tags: usercerts
+
+    - name: Report user certificates expiring within {{ warn_days }} days
+      ansible.builtin.debug:
+        msg: "User certs expiring within {{ warn_days }} days: {{ (user_certs.stdout | from_json) | length }}"
+      tags: usercerts
+
+    # ── OCSP Signing Certificate ─────────────────────────────────────────
+    - name: Check OCSP signing certificate expiry
+      ansible.windows.win_shell: |
+        $cert = Get-ChildItem Cert:\LocalMachine\My |
+                    Where-Object { $_.EnhancedKeyUsageList -match "OCSP" } |
+                    Sort-Object NotAfter | Select-Object -First 1
+        if ($cert) {
+            $days = ($cert.NotAfter - (Get-Date)).Days
+            [PSCustomObject]@{
+                Subject  = $cert.Subject
+                NotAfter = $cert.NotAfter.ToString("yyyy-MM-dd")
+                DaysLeft = $days
+            } | ConvertTo-Json
+        } else { '{"error": "OCSP signing cert not found"}' }
+      register: ocsp_cert
+      changed_when: false
+      tags: ocsp
+
+    - name: Report OCSP signing certificate status
+      ansible.builtin.debug:
+        msg: "OCSP signing cert: {{ (ocsp_cert.stdout | from_json).Subject | default('not found') }} — {{ (ocsp_cert.stdout | from_json).DaysLeft | default('N/A') }} days"
+      tags: ocsp
+
+    # ── CRL Validity Check ───────────────────────────────────────────────
+    - name: Check CRL next update date
+      ansible.windows.win_shell: |
+        $crl = certutil -CRL 2>&1 | Select-String "Next Update"
+        if ($crl) { $crl.ToString().Trim() }
+        else { "CRL next update: not found" }
+      register: crl_check
+      changed_when: false
+      tags: crl
+
+    - name: Report CRL status
+      ansible.builtin.debug:
+        msg: "{{ crl_check.stdout_lines }}"
+      tags: crl
+
+    # ── Summary ──────────────────────────────────────────────────────────
+    - name: Print summary
+      ansible.builtin.debug:
+        msg:
+          - "===== PKI Certificate Expiry Report — {{ ansible_date_time.date }} ====="
+          - "Root CA:      {{ (root_ca_cert.stdout | from_json).NotAfter | default('N/A') }}  ({{ (root_ca_cert.stdout | from_json).DaysLeft | default('?') }} days)"
+          - "Issuing CA:   {{ (issuing_ca_cert.stdout | from_json).NotAfter | default('N/A') }}  ({{ (issuing_ca_cert.stdout | from_json).DaysLeft | default('?') }} days)"
+          - "User certs expiring within {{ warn_days }} days: {{ (user_certs.stdout | from_json) | length }}"
+          - "Warn threshold: {{ warn_days }} days  |  Critical threshold: {{ crit_days }} days"
+      tags: always

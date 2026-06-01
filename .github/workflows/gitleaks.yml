@@ -1,0 +1,35 @@
+name: Gitleaks — Secret Scan (Full History)
+
+# Scans the full git history for secrets, credentials, and sensitive strings
+# using Gitleaks. Complements the existing secret-scan.yml (which checks file
+# types) with pattern-based detection across all commits.
+#
+# Runs on every push and PR, and weekly to catch any newly defined patterns
+# against existing history.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 6 * * 1'   # Weekly Monday 06:00 UTC
+
+jobs:
+  gitleaks:
+    name: Gitleaks — Full History Secret Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Check out repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # Full history — required for Gitleaks to scan all commits
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
