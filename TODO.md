@@ -75,18 +75,16 @@ See `Home_Lab_Build_Guide.md` (personal reference, not in repo).
 
 ---
 
-## Lab Execution — After-MFA Scans (Priority 1)
-
-Before-MFA scans are complete and staged. After-MFA scans are the single most important remaining lab task. Requires the lab VMs to be running.
+## Lab Execution — SCAP Scans ✅ Complete
 
 - ✅ Before-MFA SCAP scan — DC01: **44.95%** (CAT I fail: 9, CAT II: 105, CAT III: 6)
 - ✅ Before-MFA SCAP scan — WS01: **42.20%** (CAT I fail: 9, CAT II: 111, CAT III: 6)
 - ✅ Before-MFA results staged in `Compliance-Reports/Before-MFA/`
-- ✅ Smart card logon confirmed working (Phase 9 Steps 1–5 complete)
-- ⬜ **After-MFA SCAP scan on DC01** — run SCC 5.10.2 with CPE override, transfer via LabTransfer SMB share
-- ⬜ **After-MFA SCAP scan on WS01** — run SCC 5.10.2, pull via `Copy-Item -FromSession`
-- ⬜ Stage After-MFA results: `Stage-Reports.ps1 -Stage After`
-- ⬜ Update `Compliance-Reports/README.md` scoring table with real After-MFA numbers
+- ✅ Smart card logon confirmed working
+- ✅ After-MFA SCAP scan — DC01: **42.66%** (CAT I fail: 9, CAT II: 110, CAT III: 6)
+- ✅ After-MFA SCAP scan — WS01: **42.20%** (CAT I fail: 9, CAT II: 111, CAT III: 6)
+- ✅ After-MFA results staged in `Compliance-Reports/After-MFA/`
+- ✅ `Compliance-Reports/README.md` scoring table updated with real numbers
 
 ### Optional Compliance Evidence
 - ⬜ Nessus Essentials — credentialed scan Before and After hardening (up to 16 IPs, free)
@@ -95,15 +93,14 @@ Before-MFA scans are complete and staged. After-MFA scans are the single most im
 
 ---
 
-## RMF Templates (Blocked on After-MFA Data)
+## RMF Templates — Now Unblocked ⬜
 
-All templates written. Need After-MFA scan numbers to fill these in.
+Scan data is in. Fill these in now.
 
-- 📋 `Architecture/RMF-Templates/SAR-Template.md` — After-MFA SCAP scores, CAT I/II counts, Nessus findings
-- 📋 `Architecture/RMF-Templates/POAM-Template.md` — open findings, remediation owners, target dates
-- 📋 `Architecture/RMF-Templates/SSP-Template.md` — final compliance posture, After-MFA reference
-- 📋 `Architecture/RMF-Templates/Annual-STIG-Rescan-SOP.md` — 2026 baseline scores
-- 📋 `STATUS.md` — update Phase 4 checkboxes to ✅
+- ⬜ `Architecture/RMF-Templates/SAR-Template.md` — enter DC01/WS01 After-MFA scores (42.66% / 42.20%), CAT I/II counts, assessment date
+- ⬜ `Architecture/RMF-Templates/POAM-Template.md` — document open CAT I findings (9 per VM), remediation owners, target dates
+- ⬜ `Architecture/RMF-Templates/SSP-Template.md` — update final compliance posture with After-MFA scores
+- ⬜ `Architecture/RMF-Templates/Annual-STIG-Rescan-SOP.md` — fill in 2026 baseline row with real scores
 
 ---
 

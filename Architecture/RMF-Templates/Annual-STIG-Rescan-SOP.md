@@ -47,9 +47,9 @@ against the system boundary in the SSP (`Architecture/SSP-Template.md §2.3`).
 
 | System | Hostname | OS | Last Scan Date | STIG Version (Last) |
 |--------|----------|----|----------------|---------------------|
-| Domain Controller / Issuing CA | [FILL IN] | Windows Server 2022 | [FILL IN] | [FILL IN] |
-| HTTP CRL Server | [FILL IN] | Windows Server 2022 | [FILL IN] | [FILL IN] |
-| Admin Workstation | [FILL IN] | Windows 11 | [FILL IN] | [FILL IN] |
+| Domain Controller / Issuing CA | LAB-DC01 | Windows Server 2022 | 2026-05-28 | MS_Windows_Server_2022_STIG-2.3.10 |
+| HTTP CRL Server | Pending | Windows Server 2022 / IIS 10.0 | Pending | IIS not deployed in current phase |
+| Test Workstation | LAB-WORKSTATION01 | Windows Server 2022 | 2026-05-28 | MS_Windows_Server_2022_STIG-2.3.10 |
 
 ### 1.3 Confirm Hardening Scripts Are Current
 
@@ -93,13 +93,14 @@ Pull the previous year's XCCDF XML from `Compliance-Reports\After-MFA\` and comp
 finding counts. The goal is to show no regression — the post-hardening score should
 be equal to or better than the prior year.
 
-| Metric | Prior Year | This Year | Delta | Status |
+| Metric | 2026 Baseline (After-MFA) | Next Year | Delta | Status |
 |--------|-----------|-----------|-------|--------|
-| Windows Server 2022 compliance % | [FILL IN] | [FILL IN] | | |
-| CAT I open findings | [FILL IN] | [FILL IN] | | |
-| CAT II open findings | [FILL IN] | [FILL IN] | | |
-| New findings (not in prior year) | — | [FILL IN] | | Investigate |
-| Remediated since prior year | — | [FILL IN] | | |
+| DC01 Windows Server 2022 compliance % | 42.66% | [FILL IN] | | |
+| WS01 Windows Server 2022 compliance % | 42.20% | [FILL IN] | | |
+| CAT I open findings (per VM) | 9 | [FILL IN] | | |
+| CAT II open findings (DC01 / WS01) | 110 / 111 | [FILL IN] | | |
+| New findings (not in baseline) | — | [FILL IN] | | Investigate |
+| Remediated since baseline | — | [FILL IN] | | |
 
 **If compliance dropped or new CAT I findings appeared:** investigate before proceeding.
 New findings indicate configuration drift, new STIG rules in an updated benchmark, or
@@ -222,7 +223,7 @@ Fill in after each annual cycle.
 
 | Assessment Year | Assessor | Scan Date | WS2022 Score | CAT I Open | Nessus Crit/High | ATO Status |
 |----------------|---------|-----------|-------------|------------|-----------------|------------|
-| 2026 | Glenn Byron | [FILL IN] | [FILL IN]% | [FILL IN] | [FILL IN] | [FILL IN] |
+| 2026 | Glenn Byron | 2026-05-28 | DC01: 42.66% / WS01: 42.20% | 9 per VM | Pending (Nessus not run) | ATO with conditions |
 | 2027 | [FILL IN] | [FILL IN] | [FILL IN]% | [FILL IN] | [FILL IN] | [FILL IN] |
 | 2028 | [FILL IN] | [FILL IN] | [FILL IN]% | [FILL IN] | [FILL IN] | [FILL IN] |
 
