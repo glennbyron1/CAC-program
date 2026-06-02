@@ -1,0 +1,23 @@
+SCC - 5.10.2 on host WO02 running Microsoft Windows 11 Pro 25H2 (Intel64 Family 6 Model 140 Stepping 1)
+
+    Time	 Level	Message
+
+10:45:18	WARN	
+Manual Question Auto-Answer file for Microsoft_Windows_11_STIG, version: 2.3.9 was not found in:
+C:\Program Files\SCAP Compliance Checker 5.10.2\Resources\Content\Manual_Questions\Completed_Files\
+
+	All manual checks will be marked as 'Not Reviewed'.
+
+	* For CSCC Command Line Usage: Manual Question Auto-Answer templates for DISA STIG manual
+	checks can be found in:C:\Program Files\SCAP Compliance Checker 5.10.2\Resources\Content\Manual_Questions\Templates\
+* For SCC GUI Usage:  Manual Question Auto-Answer results for DISA STIG manual checks can
+	be created by clicking on the 'Manual Questions' button in 'Content Details'
+
+	   Target System  :     WO02
+	   Stream Name :        Microsoft_Windows_11_STIG
+	   SCAP Stream:         Microsoft_Windows_11_STIG
+	   Profile ID:          xccdf_mil.disa.stig_profile_MAC-1_Classified
+	   Definition ID:       oval:mil.disa.stig.windows11:def:1
+	   Test ID:             oval:mil.disa.stig.win:tst:10000001
+	   State ID:            oval:mil.disa.stig.win:ste:10000001
+

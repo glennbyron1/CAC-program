@@ -97,7 +97,7 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 - ⬜ Create Virtual Smart Card (`tpmvscmgr.exe`)
 - ⬜ Enroll VSC certificate via `New-TokenEnrollment.ps1`
 - ⬜ Test smart card logon on real hardware — **take screenshots here**
-- ⬜ Run SCAP SCC scan with Windows 11 STIG benchmark (`MS_Windows_11_STIG-<version>` — current DISA release is V1R7+)
+- ✅ Run SCAP SCC scan with Windows 11 STIG benchmark — **DONE 2026-06-02** — WO02 scanned against `Microsoft_Windows_11_STIG-2.3.9` (MAC-1 Classified profile): **37.00%** compliance (13 CAT I open, 122 CAT II, 8 CAT III). Results staged in `Compliance-Reports/Laptop/After-SmartCard/2026-06-02_104513/`
 - ⬜ Test VPN from physical laptop (EAP-TLS, no password)
 
 ---

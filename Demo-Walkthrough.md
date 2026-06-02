@@ -188,7 +188,12 @@ If Phase 4 SCAP scans have been run, open the before/after HTML reports side by 
 > two scans is our evidence package for the Security Assessment Report."
 
 **📸 Pending capture** — Before and after SCAP HTML reports side by side, showing score improvement
-> Real numbers: DC01 44.95% → 42.66%, WS01 42.2% → 42.2%. See `Compliance-Reports/`.
+> Real numbers:
+> - DC01 (Server 2022 STIG): 44.95% → 42.66% (After-MFA)
+> - WS01 (Server 2022 STIG): 42.20% → 42.20% (After-MFA)
+> - **WO02 (Windows 11 STIG, MAC-1 Classified profile): 37.00% After-SmartCard** — 258 rules, 13 CAT I open, 122 CAT II open, 8 CAT III open
+>
+> See `Compliance-Reports/README.md` for the full scoring table and `Compliance-Reports/Laptop/After-SmartCard/2026-06-02_104513/` for the WO02 scan session.
 > See `Screenshots/README.md` for the capture checklist.
 
 ---

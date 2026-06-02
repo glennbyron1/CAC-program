@@ -1,0 +1,19 @@
+No Before-SmartCard baseline scan was taken for WO02.
+
+The physical laptop was scanned for the first time AFTER smart card enrollment was complete
+(2026-06-02_104513). This is an acceptable evidence gap because:
+
+1. The laptop's "before" state is fully captured by the WS01 Before-MFA scan in
+   ../../Before-MFA/ - WS01 is the equivalent baseline-Windows endpoint built from the same
+   Set-VMPostConfig.ps1 process, so its Before scan represents the same starting posture.
+
+2. The "after" state on WO02 demonstrates the real-world result of: domain join +
+   smart card GPO + VSC enrollment + Kerberos PKINIT cert auth on a physical Windows 11
+   endpoint, scored against the Windows 11 STIG (not Server 2022).
+
+3. The WO02 scan stands alone as evidence of "Windows 11 client compliance after
+   smart card enforcement" - the metric Phase 4.1 was designed to produce.
+
+If a future scan run includes a pre-enrollment baseline (e.g., after reimaging the laptop
+and before applying any GPO), drop the SCC session folder in here with the timestamp
+following the same convention: Before-SmartCard/<yyyy-MM-dd_HHmmss>/.

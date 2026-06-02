@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SessionID:2026-06-02_104513,HostName:WO02,FileType:OVAL CPE Results,StreamName:Microsoft_Windows_11_STIG-2.3.9,ErrorCount:0,WarnCount:0 -->
+
+<oval-res:oval_results xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-common-5 https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/oval-common-schema.xsd http://oval.mitre.org/XMLSchema/oval-results-5 https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/oval-results-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5 https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/oval-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#independent https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/independent-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#linux https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/linux-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#windows https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/windows-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/solaris-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#hpux https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/hpux-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#macos https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/macos-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#unix https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/unix-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5 https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/oval-system-characteristics-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#independent https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/independent-system-characteristics-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/windows-system-characteristics-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#linux https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/linux-system-characteristics-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#solaris https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/solaris-system-characteristics-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#hpux https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/hpux-system-characteristics-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#macos https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/macos-system-characteristics-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#unix https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/unix-system-characteristics-schema.xsd http://scap.nist.gov/schema/scap/constructs/1.2 https://csrc.nist.gov/schema/scap/1.2/scap-constructs_1.2.xsd http://scap.nist.gov/schema/asset-reporting-format/1.1 https://csrc.nist.gov/schema/asset-reporting-format/1.1/asset-reporting-format_1.1.0.xsd http://scap.nist.gov/schema/reporting-core/1.1 https://csrc.nist.gov/schema/reporting-core/1.1/reporting-core_1.1.0.xsd" xmlns:oval-res="http://oval.mitre.org/XMLSchema/oval-results-5" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:ind-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" xmlns:ind-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#independent" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:win-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" xmlns:win-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows" xmlns:linux-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" xmlns:linux-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#linux">
+      <oval-res:generator>
+            <oval:product_name>SCAP Compliance Checker</oval:product_name>
+            <oval:product_version>5.10.2</oval:product_version>
+            <oval:schema_version>5.11.2</oval:schema_version>
+            <oval:timestamp>2026-06-02T10:45:17</oval:timestamp>
+      </oval-res:generator>
+      <oval-res:directives>
+            <oval-res:definition_true content="full" reported="true"></oval-res:definition_true>
+            <oval-res:definition_false content="full" reported="true"></oval-res:definition_false>
+            <oval-res:definition_unknown content="full" reported="true"></oval-res:definition_unknown>
+            <oval-res:definition_error content="full" reported="true"></oval-res:definition_error>
+            <oval-res:definition_not_evaluated content="full" reported="true"></oval-res:definition_not_evaluated>
+            <oval-res:definition_not_applicable content="full" reported="true"></oval-res:definition_not_applicable>
+      </oval-res:directives>
+      <oval-def:oval_definitions>
+            <oval-def:generator>
+                  <oval:product_name>Security Content Tool 1.2.0</oval:product_name>
+                  <oval:schema_version>5.11</oval:schema_version>
+                  <oval:timestamp>2025-01-06T03:16:23</oval:timestamp>
+            </oval-def:generator>
+            <oval-def:definitions>
+                  <oval-def:definition class="inventory" id="oval:mil.disa.stig.windows11:def:1" version="2">
+                        <oval-def:metadata>
+                              <oval-def:title>Microsoft Windows 11</oval-def:title>
+                              <oval-def:affected family="windows">
+                                    <oval-def:platform>Microsoft Windows 11</oval-def:platform>
+                              </oval-def:affected>
+                              <oval-def:reference ref_id="cpe:/o:microsoft:windows_11:-:-:~-~-~-~-~" source="CPE"></oval-def:reference>
+                              <oval-def:description>Microsoft Windows 11 is the installed operating system</oval-def:description>
+                        </oval-def:metadata>
+                        <oval-def:criteria applicability_check="false">
+                              <oval-def:criterion applicability_check="false" comment="The installed operating system belongs to the Microsoft Windows family" test_ref="oval:mil.disa.stig.ind:tst:10000000"></oval-def:criterion>
+                              <oval-def:criterion applicability_check="false" comment="The installed operating system is Microsoft Windows 10 or 11" test_ref="oval:mil.disa.stig.win:tst:10000000"></oval-def:criterion>
+                              <oval-def:criterion applicability_check="false" comment="The current build number is 22000 or greater.  This indicates Windows 11 is the operating system." test_ref="oval:mil.disa.stig.win:tst:10000001"></oval-def:criterion>
+                        </oval-def:criteria>
+                  </oval-def:definition>
+            </oval-def:definitions>
+            <oval-def:tests>
+                  <ind-def:family_test check="all" check_existence="at_least_one_exists" comment="The installed operating system belongs to the Microsoft Windows family" id="oval:mil.disa.stig.ind:tst:10000000" state_operator="AND" version="1">
+                        <ind-def:object object_ref="oval:mil.disa.stig.ind:obj:10000000"></ind-def:object>
+                        <ind-def:state state_ref="oval:mil.disa.stig.ind:ste:10000000"></ind-def:state>
+                  </ind-def:family_test>
+                  <win-def:registry_test check="all" check_existence="at_least_one_exists" comment="The installed operating system is Windows 10 or 11" id="oval:mil.disa.stig.win:tst:10000000" state_operator="AND" version="2">
+                        <win-def:object object_ref="oval:mil.disa.stig.win:obj:10000000"></win-def:object>
+                        <win-def:state state_ref="oval:mil.disa.stig.win:ste:10000000"></win-def:state>
+                  </win-def:registry_test>
+                  <win-def:registry_test check="all" check_existence="at_least_one_exists" comment="The current build number is 22000 or greater." id="oval:mil.disa.stig.win:tst:10000001" state_operator="AND" version="2">
+                        <win-def:object object_ref="oval:mil.disa.stig.win:obj:10000001"></win-def:object>
+                        <win-def:state state_ref="oval:mil.disa.stig.win:ste:10000001"></win-def:state>
+                  </win-def:registry_test>
+            </oval-def:tests>
+            <oval-def:objects>
+                  <ind-def:family_object comment="OS family" id="oval:mil.disa.stig.ind:obj:10000000" version="1"></ind-def:family_object>
+                  <win-def:registry_object comment="ProductName registry entry" id="oval:mil.disa.stig.win:obj:10000000" version="1">
+                        <win-def:hive>HKEY_LOCAL_MACHINE</win-def:hive>
+                        <win-def:key>SOFTWARE\Microsoft\Windows NT\CurrentVersion</win-def:key>
+                        <win-def:name>ProductName</win-def:name>
+                  </win-def:registry_object>
+                  <win-def:registry_object comment="CurrentBuildNumber registry entry" id="oval:mil.disa.stig.win:obj:10000001" version="1">
+                        <win-def:hive>HKEY_LOCAL_MACHINE</win-def:hive>
+                        <win-def:key>SOFTWARE\Microsoft\Windows NT\CurrentVersion</win-def:key>
+                        <win-def:name>CurrentBuildNumber</win-def:name>
+                  </win-def:registry_object>
+            </oval-def:objects>
+            <oval-def:states>
+                  <ind-def:family_state comment="Microsoft Windows family" id="oval:mil.disa.stig.ind:ste:10000000" version="1">
+                        <ind-def:family>windows</ind-def:family>
+                  </ind-def:family_state>
+                  <win-def:registry_state comment="Windows 10 or Windows 11" id="oval:mil.disa.stig.win:ste:10000000" version="2">
+                        <win-def:value operation="pattern match">^[Ww][Ii][Nn][Dd][Oo][Ww][Ss] 1[01].*$</win-def:value>
+                  </win-def:registry_state>
+                  <win-def:registry_state id="oval:mil.disa.stig.win:ste:10000001" version="1">
+                        <win-def:value datatype="int" operation="greater than or equal">22000</win-def:value>
+                  </win-def:registry_state>
+            </oval-def:states>
+      </oval-def:oval_definitions>
+      <oval-res:results>
+            <oval-res:system>
+                  <oval-res:definitions>
+                        <oval-res:definition definition_id="oval:mil.disa.stig.windows11:def:1" result="true" version="2">
+                              <oval-res:criteria applicability_check="false" operator="AND" result="true">
+                                    <oval-res:criterion applicability_check="false" result="true" test_ref="oval:mil.disa.stig.ind:tst:10000000" version="1"></oval-res:criterion>
+                                    <oval-res:criterion applicability_check="false" result="true" test_ref="oval:mil.disa.stig.win:tst:10000000" version="2"></oval-res:criterion>
+                                    <oval-res:criterion applicability_check="false" result="true" test_ref="oval:mil.disa.stig.win:tst:10000001" version="2"></oval-res:criterion>
+                              </oval-res:criteria>
+                        </oval-res:definition>
+                  </oval-res:definitions>
+                  <oval-res:tests>
+                        <oval-res:test check="all" check_existence="at_least_one_exists" result="true" state_operator="AND" test_id="oval:mil.disa.stig.ind:tst:10000000" version="1">
+                              <oval-res:tested_item item_id="1" result="true"></oval-res:tested_item>
+                        </oval-res:test>
+                        <oval-res:test check="all" check_existence="at_least_one_exists" result="true" state_operator="AND" test_id="oval:mil.disa.stig.win:tst:10000000" version="2">
+                              <oval-res:tested_item item_id="2" result="true"></oval-res:tested_item>
+                        </oval-res:test>
+                        <oval-res:test check="all" check_existence="at_least_one_exists" result="true" state_operator="AND" test_id="oval:mil.disa.stig.win:tst:10000001" version="2">
+                              <oval-res:tested_item item_id="3" result="true"></oval-res:tested_item>
+                        </oval-res:test>
+                  </oval-res:tests>
+                  <oval-sc:oval_system_characteristics>
+                        <oval-sc:generator>
+                              <oval:product_name>SCAP Compliance Checker</oval:product_name>
+                              <oval:product_version>5.10.2</oval:product_version>
+                              <oval:schema_version>5.11.2</oval:schema_version>
+                              <oval:timestamp>2026-06-02T10:45:17</oval:timestamp>
+                        </oval-sc:generator>
+                        <oval-sc:system_info>
+                              <oval-sc:os_name>Microsoft Windows 11 Pro</oval-sc:os_name>
+                              <oval-sc:os_version>25H2</oval-sc:os_version>
+                              <oval-sc:architecture>Intel64 Family 6 Model 140 Stepping 1</oval-sc:architecture>
+                              <oval-sc:primary_host_name>WO02</oval-sc:primary_host_name>
+                              <oval-sc:interfaces>
+                                    <oval-sc:interface>
+                                          <oval-sc:interface_name>[00000001] Intel(R) Ethernet Connection (13) I219-V</oval-sc:interface_name>
+                                          <oval-sc:ip_address>10.10.20.30</oval-sc:ip_address>
+                                          <oval-sc:mac_address>F4:EE:08:A3:B2:DC</oval-sc:mac_address>
+                                    </oval-sc:interface>
+                              </oval-sc:interfaces>
+                              <con:asset-identification xmlns:con="http://scap.nist.gov/schema/scap/constructs/1.2">
+                                    <arf:object-ref ref-id="SCC_WO02" xmlns:arf="http://scap.nist.gov/schema/asset-reporting-format/1.1" />
+                              </con:asset-identification>
+                        </oval-sc:system_info>
+                        <oval-sc:collected_objects>
+                              <oval-sc:object flag="complete" id="oval:mil.disa.stig.ind:obj:10000000" version="1">
+                                    <oval-sc:reference item_ref="1"></oval-sc:reference>
+                              </oval-sc:object>
+                              <oval-sc:object flag="complete" id="oval:mil.disa.stig.win:obj:10000000" version="1">
+                                    <oval-sc:reference item_ref="2"></oval-sc:reference>
+                              </oval-sc:object>
+                              <oval-sc:object flag="complete" id="oval:mil.disa.stig.win:obj:10000001" version="1">
+                                    <oval-sc:reference item_ref="3"></oval-sc:reference>
+                              </oval-sc:object>
+                        </oval-sc:collected_objects>
+                        <oval-sc:system_data>
+                              <ind-sc:family_item id="1" status="exists">
+                                    <ind-sc:family>windows</ind-sc:family>
+                              </ind-sc:family_item>
+                              <win-sc:registry_item id="2" status="exists">
+                                    <win-sc:hive>HKEY_LOCAL_MACHINE</win-sc:hive>
+                                    <win-sc:key>SOFTWARE\Microsoft\Windows NT\CurrentVersion</win-sc:key>
+                                    <win-sc:name>ProductName</win-sc:name>
+                                    <win-sc:last_write_time datatype="int">134248738390000000</win-sc:last_write_time>
+                                    <win-sc:type>reg_sz</win-sc:type>
+                                    <win-sc:value>Windows 10 Pro</win-sc:value>
+                                    <win-sc:windows_view>64_bit</win-sc:windows_view>
+                              </win-sc:registry_item>
+                              <win-sc:registry_item id="3" status="exists">
+                                    <win-sc:hive>HKEY_LOCAL_MACHINE</win-sc:hive>
+                                    <win-sc:key>SOFTWARE\Microsoft\Windows NT\CurrentVersion</win-sc:key>
+                                    <win-sc:name>CurrentBuildNumber</win-sc:name>
+                                    <win-sc:last_write_time datatype="int">134248738390000000</win-sc:last_write_time>
+                                    <win-sc:type>reg_sz</win-sc:type>
+                                    <win-sc:value>26200</win-sc:value>
+                                    <win-sc:windows_view>64_bit</win-sc:windows_view>
+                              </win-sc:registry_item>
+                        </oval-sc:system_data>
+                  </oval-sc:oval_system_characteristics>
+            </oval-res:system>
+      </oval-res:results>
+</oval-res:oval_results>
