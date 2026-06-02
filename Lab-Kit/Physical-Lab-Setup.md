@@ -342,7 +342,7 @@ Navigate to `https://<iDRAC-IP>` in a browser. Accept the self-signed cert warni
 **iDRAC 9:** iDRAC Settings → Network → IPv4 Settings → set static IP, subnet, gateway.
 **iDRAC 7/8:** iDRAC Settings → Network/Security → Network → uncheck DHCP, set static IP.
 
-Use an IP outside your DHCP range so it never conflicts. Example: if your lab is `192.168.1.x` and DHCP hands out `.100–.200`, put iDRAC on `.20`–`.30`.
+Use an IP outside your DHCP range so it never conflicts. Example: if your lab is `10.10.10.x` and DHCP hands out `.100–.200`, put iDRAC on `.50`–`.60`. (The CAC lab reserves `.10`/`.20` for DC01/WS01 — pick an IP that doesn't collide.)
 
 ### Step 3: Change the Default Password
 
@@ -384,7 +384,7 @@ The server installs as if a physical disc is inserted — no USB drive needed.
 **RACADM** is the command-line interface for iDRAC. DoD sysadmins use it to configure multiple servers from scripts. Example:
 ```powershell
 # SSH to iDRAC and run RACADM commands
-ssh root@192.168.1.20
+ssh root@10.10.10.50            # whatever IP you assigned in Step 2
 racadm get iDRAC.Network
 racadm set iDRAC.Users.2.Password "NewPassword123!"
 ```

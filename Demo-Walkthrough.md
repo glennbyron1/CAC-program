@@ -47,7 +47,8 @@ Boot or lock the workstation (`Win + L`). The Windows logon screen should show
 > to type a password into. This satisfies NIST SP 800-53 IA-2(11): hardware token MFA
 > is enforced, not just offered."
 
-**📸 Screenshot slot — Lock screen showing smart card prompt only, no password field**
+**📸 Pending capture** — Lock screen showing smart card prompt only, no password field
+> See `Screenshots/README.md` for the capture checklist.
 
 ---
 
@@ -61,7 +62,13 @@ subject visible.
 > was issued by our internal Enterprise CA, which chains to the Offline Root CA we built
 > and air-gapped. It's the same two-tier PKI architecture used by every federal agency."
 
-**📸 Screenshot slot — PIN entry prompt showing cardholder name and certificate subject**
+**📸 Captured — PIN entry on Lab-Workstation01 showing user, UPN, and "Security device"**
+
+![PIN entry prompt with certificate subject](Screenshots/02-pin-entry-cert-subject.png)
+
+*Supplementary: PIN validation working (incorrect PIN rejected)*
+
+![Incorrect PIN dialog](Screenshots/02b-incorrect-pin-validation.png)
 
 ---
 
@@ -87,7 +94,8 @@ Event 4768 — Kerberos Authentication Service Ticket Request
 > via the WEF subscription we configured in `Set-AuditLogForwarding.ps1`.
 > This satisfies NIST AU-2 and CA-7 continuous monitoring requirements."
 
-**📸 Screenshot slot — Event Viewer showing Event 4768 with Pre-Auth Type 16**
+**📸 Pending capture** — Event Viewer showing Event 4768 with Pre-Auth Type 16
+> See `Screenshots/README.md` for the capture checklist.
 
 ---
 
@@ -106,7 +114,8 @@ Start a timer visible to the audience before pulling the card.
 > card, an attacker sitting down has a window measured in seconds before the screen locks.
 > Compare this to a password environment where the screen may never lock automatically."
 
-**📸 Screenshot slot — Locked screen immediately after card removal, timer visible**
+**📸 Pending capture** — Locked screen immediately after card removal, timer visible
+> See `Screenshots/README.md` for the capture checklist.
 
 ---
 
@@ -136,7 +145,8 @@ AuthenticationMethod : {Eap}
 > validates the certificate chain against the same Root CA. One token, one identity,
 > two authentication points. This satisfies NIST AC-17, SC-8, and IA-2."
 
-**📸 Screenshot slot — VPN connected status, no password prompt visible**
+**📸 Pending capture** — VPN connected status, no password prompt visible
+> See `Screenshots/README.md` for the capture checklist.
 
 ---
 
@@ -160,7 +170,8 @@ Show the green dashboard with CRL validity windows and OCSP status.
 > approaches failure, it sends an alert email. This is the continuous monitoring posture
 > required by NIST CA-7 and our ATO commitment."
 
-**📸 Screenshot slot — Monitor-PKIHealth.ps1 output showing all green**
+**📸 Pending capture** — `Monitor-PKIHealth.ps1` output showing all green
+> See `Screenshots/README.md` for the capture checklist.
 
 ---
 
@@ -176,7 +187,9 @@ If Phase 4 SCAP scans have been run, open the before/after HTML reports side by 
 > The after score shows the impact of the hardening scripts. The delta between these
 > two scans is our evidence package for the Security Assessment Report."
 
-**📸 Screenshot slot — Before and after SCAP HTML reports side by side, showing score improvement**
+**📸 Pending capture** — Before and after SCAP HTML reports side by side, showing score improvement
+> Real numbers: DC01 44.95% → 42.66%, WS01 42.2% → 42.2%. See `Compliance-Reports/`.
+> See `Screenshots/README.md` for the capture checklist.
 
 ---
 

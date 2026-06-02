@@ -1,5 +1,9 @@
 # CAC Lab Kit — Change Log
 
+> **This file is sanitized for public distribution.**
+> Real lab passwords appear as `<LAB-ADMIN-PASSWORD>`, `<LAB-LABTECH-PASSWORD>`, etc.
+> See `.scrub-patterns.example.json` at the repo root for the full pattern list.
+
 All changes made after the initial commit are recorded here.
 Copy these fixes to your main machine files when syncing.
 
@@ -861,15 +865,67 @@ Set-ADUser : Insufficient access rights to perform the operation
 **Impact:** Non-fatal — ceremony completes, audit entry is written, only this one flag
 is not set.
 
-**Workaround:** Set manually as LAB\Administrator if needed:
+**⚠️ CRITICAL — DO NOT manually set this flag on LAB\Administrator:**
 ```powershell
+# DO NOT RUN THIS ON THE ADMINISTRATOR ACCOUNT
 Set-ADUser -Identity Administrator -SmartcardLogonRequired $true
+# ^ This locks out ALL password-based login for Administrator permanently
 ```
 
+Setting `SmartcardLogonRequired = $true` on the Administrator account is a **per-user
+AD flag** that blocks ALL password-based login for that account — console, PowerShell
+Direct, RDP — regardless of any GPO or registry settings. It cannot be reversed
+without another Domain Admin account or DSRM access.
+
 **Note for this lab:** Leave the Administrator flag unset. The workstation GPO
-(`scforceoption=1`) enforces smart card at the machine level. The AD account flag
-would enforce it domain-wide — including on Lab-DC01 which must retain break-glass
-password access.
+(`scforceoption=1`) enforces smart card at the machine level on Lab-Workstation01
+only. The AD account flag would enforce it for the Administrator account on every
+machine including Lab-DC01, permanently removing break-glass access.
+
+---
+
+### Session 3 — DC01 Lockout Root Cause: SmartcardLogonRequired on Administrator Account
+
+**Date:** 2026-05-28
+
+**Problem:** After Phase 9, LAB\Administrator could not log into Lab-DC01. The login
+screen showed "You must use Windows Hello or a smart card to sign in." Multiple rounds
+of registry editing and GPO SYSVOL cleanup failed to resolve it.
+
+**Root cause:** The `SmartcardLogonRequired` flag was set on the `LAB\Administrator`
+AD account (`userAccountControl` includes `UF_SMARTCARD_REQUIRED = 0x40000`). This
+per-user flag is **completely separate from** the machine-wide `scforceoption=1`
+registry value. Removing `scforceoption` from the registry and disabling/deleting the
+domain GPO had no effect because the enforcement was on the account itself.
+
+**Confirmed:** `LAB\CardIssuer` (same Domain Admins group, no `SmartcardLogonRequired`
+flag) could log into DC01 normally while Administrator was blocked. This is the
+diagnostic: if one domain admin can log in but another cannot, the issue is per-user,
+not machine-wide.
+
+**Fix (run as LAB\CardIssuer):**
+```powershell
+Set-ADUser -Identity Administrator -SmartcardLogonRequired $false
+```
+
+**What the machine-wide lockout troubleshooting DID fix (also needed):**
+- Smart card enforcement GPO was linked at domain root → DC01 was hit by `scforceoption=1`
+- GPO has been relinked to `OU=Workstations,DC=lab,DC=local` only
+- `Lab-Workstation01` computer account moved to Workstations OU
+
+**CardIssuer designated as Break-Glass account:**
+`LAB\CardIssuer` is now the primary break-glass account for Lab-DC01. It is a Domain
+Admin that will never have `SmartcardLogonRequired` set. See WALKTHROUGH.md
+Break-Glass Accounts section for details.
+
+**Lesson learned:** There are TWO independent smart card enforcement mechanisms:
+1. **Machine-wide (GPO/registry):** `scforceoption=1` — applies to all users on the
+   machine. Fix: remove the registry value or unlink/scope the GPO.
+2. **Per-user (AD account flag):** `SmartcardLogonRequired` — applies to that user on
+   every machine. Fix: `Set-ADUser -SmartcardLogonRequired $false`. Survives all GPO
+   and registry changes.
+
+Both can be active simultaneously. Always check both when troubleshooting lockouts.
 
 ---
 
@@ -897,3 +953,256 @@ password access.
 
 **Smart card logon test: ✅ PASS**
 Lock screen (Win+L) → Sign-in options → Smart card tile → PIN `123456` → LAB\Administrator logged in successfully.
+
+---
+
+## 2026-06-01 — Session 4 (Glenn Byron)
+
+### WS01 Domain Rejoin — Computer Name Truncated to 15 Characters
+
+**Problem:** `Get-ADComputer -Filter "Name -eq 'Lab-Workstation01'"` returned no results.
+The computer account had been deleted from AD during the DC01 lockout recovery work.
+
+**Root cause of rejoin failure:** WS01's DNS was pointing to a public server, not DC01.
+`Add-Computer` resolved the domain name via DNS and failed with "The specified domain
+either does not exist or could not be contacted" even though ping to DC01's IP succeeded.
+
+**Fix:**
+```powershell
+$adapter = Get-NetAdapter | Where-Object {$_.Status -eq "Up"} | Select-Object -First 1
+Set-DnsClientServerAddress -InterfaceIndex $adapter.InterfaceIndex -ServerAddresses "10.10.10.10"
+```
+
+**Computer name truncation:** `Lab-Workstation01` (17 chars) exceeds the NetBIOS 15-character
+limit. Windows silently truncated it to `LAB-WORKSTATION` in AD. Always use names ≤ 15 chars.
+
+**Rejoin command used:**
+```powershell
+Add-Computer -DomainName "lab.local" `
+    -Credential (Get-Credential "LAB\Administrator") `
+    -OUPath "OU=Workstations,DC=lab,DC=local" `
+    -Restart -Force
+```
+
+Computer landed in: `CN=LAB-WORKSTATION,OU=Workstations,DC=lab,DC=local` ✅
+
+---
+
+### SmartCard Policy GPO — scforceoption=1 Added
+
+With WS01 confirmed in the Workstations OU, `scforceoption=1` was safely added to the
+SmartCard Policy GPO. All three enforcement values are now set:
+
+```powershell
+Set-GPRegistryValue -Name "SmartCard Policy" `
+    -Key "HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System" `
+    -ValueName "scforceoption" -Type DWord -Value 1
+```
+
+| ValueName | Value | NIST Control |
+|---|---|---|
+| scforceoption | 1 | IA-2(11) — smart card required for interactive logon |
+| ScRemoveOption | 1 | AC-11 — lock workstation on card removal |
+| InactivityTimeoutSecs | 900 | AC-11 — 15-minute idle lock |
+
+**GPO scope:** `OU=Workstations,DC=lab,DC=local` only. DC01 is NOT in this OU and is
+NOT affected. `gpupdate /force` confirmed on both DC01 and LAB-WORKSTATION.
+
+---
+
+### After-MFA SCAP Scans Completed
+
+Both VMs scanned with SCC 5.10.2 after smart card enforcement was active.
+
+**SCC results path (confirmed):** `C:\Users\Administrator\SCC\Sessions\<timestamp>\`
+(NOT `C:\Users\Administrator\SCC\Results\` — that path does not exist)
+
+| VM | Session | Score | Delta vs Before-MFA |
+|---|---|---|---|
+| Lab-DC01 | 2026-05-28_113752 | **42.66% [RED]** | -2.29pp (DC intentionally excludes scforceoption) |
+| LAB-WORKSTATION | 2026-05-28_114956 | **42.2% [RED]** | 0pp (same benchmark, same baseline) |
+
+**Before-MFA reference scores:**
+| VM | Score |
+|---|---|
+| Lab-DC01 | 44.95% [RED] |
+| LAB-WORKSTATION | 42.2% [RED] |
+
+**Note on score:** The STIG benchmark covers hundreds of controls. Smart card enforcement
+addresses IA-2(11) and AC-11. The overall score delta is small. The meaningful result is
+that smart card logon is WORKING — Event 4768 with Pre-Auth Type 16 confirms PKINIT.
+
+---
+
+### CRL Revocation Error on WS01 Login
+
+**Symptom:** WS01 login screen shows "The revocation status of the authentication
+certificate could not be determined."
+
+**Cause:** `scforceoption=1` is active and Windows is trying to validate the certificate
+revocation list. The HTTP CRL Distribution Point is not reachable (IIS not installed on
+DC01). The LDAP CDP should work for domain-joined machines.
+
+**Fix:** Republish CRL on DC01:
+```powershell
+certutil -crl
+```
+
+See TROUBLESHOOTING.md for full entry.
+
+---
+
+### Compliance Reports Staged to Host
+
+Results pulled from DC01 and WS01 VMs to host machine via admin share:
+
+```
+Compliance-Reports\
+  Before-MFA\
+    Before-MFA-DC01-Results.zip   (0.6 MB — session 2026-05-27_084947)
+    Before-MFA-WS01-Results.zip   (0.6 MB — session 2026-05-27_092002)
+  After-MFA\
+    DC01\2026-05-28_113752\       (full SCC session — Results, Logs, HTML viewer)
+    WS01\2026-05-28_114956\       (full SCC session — Results, Logs, HTML viewer)
+```
+
+Export ZIP: `CAC-Lab-Export-20260601.zip` (97.8 MB) — includes all docs + compliance reports.
+
+---
+
+### TROUBLESHOOTING.md Created
+
+New file: `C:\CAC-Lab-Kit-20260526\TROUBLESHOOTING.md`
+
+Running FAQ covering every real problem encountered in the lab:
+- Smart card lockout (two-mechanism root cause)
+- GPO domain-root scope lockout
+- SYSVOL folder missing (GPT.ini fix)
+- DSRM limitations in single-DC lab
+- WS01 domain rejoin (DNS fix, 15-char name limit)
+- SCC results path, After-MFA file vs folder
+- General PowerShell/registry gotchas
+
+---
+
+### Checkpoint: 05-After-Scan
+
+All three VMs checkpointed on 2026-06-01 14:09:
+
+```
+20260601-1409-05-After-Scan
+  Lab-OfflineRootCA  ✅
+  Lab-DC01           ✅  (Production/VSS — VM was running)
+  Lab-Workstation01  ✅
+```
+
+To restore: `.\New-LabSnapshot.ps1 -Mode Restore -Label "05-After-Scan"`
+
+---
+
+### Next Phase: 06-PhysicalEndpoint
+
+Physical laptop domain join, Virtual Smart Card enrollment, Windows 11 STIG SCAP scan,
+and VPN EAP-TLS test. See `Lab-Kit\06-PhysicalEndpoint\Add-Physical-Laptop.md`.
+
+---
+
+## 2026-06-02 — Session 4 Continued (Glenn Byron)
+
+### WO02 Physical Laptop — Domain Join and Smart Card Enrollment Complete
+
+**Machine:** Physical laptop, Windows 11 Pro, TPM 2.0
+**Computer account:** `CN=WO02,OU=Workstations,DC=lab,DC=local`
+**Enrolled user:** `LAB\labtech` / `labtech@lab.local`
+**Card type:** TPM Virtual Smart Card (`ROOT\SMARTCARDREADER\0000`)
+**PIN:** 123456
+**Cert thumbprint:** <LABTECH-CERT-THUMBPRINT>
+**Cert valid:** 6/2/2026 → 6/2/2027
+
+**Smart card logon: ✅ PASS** — tested via RDP (`mstsc /v:10.10.20.30`), PIN prompt appeared, LAB\labtech logged in successfully.
+
+---
+
+### Network Topology Change — External Switch + 10.10.20.x Subnet
+
+Added second NIC to DC01 on External switch to enable physical laptop connectivity
+without disrupting LabInternal (10.10.10.x) VMs.
+
+| Adapter | IP | Purpose |
+|---|---|---|
+| `vEthernet (LabInternal)` | 10.10.10.1 | Host ↔ VM management (unchanged) |
+| `vEthernet (External)` | 10.10.20.1 | Host ↔ physical laptop segment |
+| DC01 NIC1 (LabInternal) | 10.10.10.10 | Domain/DNS/CA (unchanged) |
+| DC01 NIC2 (External) | 10.10.20.10 | Physical laptop access |
+| WO02 (physical) | 10.10.20.30 | Physical endpoint |
+
+**Root cause of IP conflict:** `vEthernet (LabInternal)` already owned 10.10.10.0/24 route. Attempted to set 10.10.10.1 on External — Windows refused. Fix: use 10.10.20.x subnet for External segment.
+
+**netsh fix for IP assignment (name-based command failed):**
+```powershell
+netsh interface ipv4 set address name=23 static 10.10.20.1 255.255.255.0
+```
+
+---
+
+### DC01 — Kerberos Authentication Certificate Enrolled
+
+**Problem:** Smart card logon failed with "Signing in with a security device isn't supported for your account." DC01 had no Kerberos Authentication certificate — required for PKINIT smart card authentication.
+
+**Fix:**
+```powershell
+certreq -enroll -machine KerberosAuthentication
+```
+
+**Root cause:** Default Enterprise Root CA deployment does not auto-enroll DC for KerberosAuthentication template because Domain Controllers group lacked Enroll rights. Fixed by granting Domain Controllers Read+Enroll+AutoEnroll via PSPKI, then requesting directly with certreq.
+
+---
+
+### SmartcardLogon Template — Enroll Permission Fix
+
+**Problem:** labtech cert request denied with `CERTSRV_E_TEMPLATE_DENIED`. PSPKI `Add-CertificateTemplateAcl` with `-AccessMask Read,Enroll` only added Read — Enroll was silently dropped.
+
+**Fix:** Used AD extended rights directly (Certificate Enrollment GUID `0e10c968-78fb-11d2-90d4-00c04f79dc55`) to set Enroll for Authenticated Users on the SmartcardLogon template AD object.
+
+---
+
+### labtech User Created
+
+```powershell
+New-ADUser -Name "labtech" -SamAccountName "labtech" `
+    -UserPrincipalName "labtech@lab.local" `
+    -AccountPassword (ConvertTo-SecureString "<LAB-LABTECH-PASSWORD>" -AsPlainText -Force) `
+    -Enabled $true -PasswordNeverExpires $true `
+    -Path "OU=Workstations,DC=lab,DC=local"
+```
+
+labtech is a standard domain user. Temporary local admin during enrollment only (removed after cert enrolled).
+
+---
+
+### ONBOARDING.md Created
+
+New file: `C:\CAC-Lab-Kit-20260526\ONBOARDING.md`
+
+Complete start-to-finish enrollment guide including:
+- Lab environment map and account table
+- Add a new computer to domain (5 steps)
+- Create a new domain user (all variants)
+- Smart card enrollment — complete guide with both VSC and physical card paths
+- Zero trust notes (temp local admin, removal after enrollment)
+- Checkpoint commands
+
+---
+
+### Lessons Learned — Physical Endpoint Phase
+
+| # | Lesson | Impact |
+|---|---|---|
+| 1 | VSC + cert enrollment MUST happen BEFORE scforceoption=1 | Critical — wrong order locks you out |
+| 2 | certreq MUST run as the TARGET USER, not admin | Critical — cert goes to wrong store |
+| 3 | DC needs KerberosAuthentication cert for PKINIT | Blocks all smart card logon without it |
+| 4 | Use RDP, not VNC, for smart card testing | VNC blocks smart card PIN entry |
+| 5 | Add-CertificateTemplateAcl drops Enroll right | Use AD extended rights GUID directly |
+| 6 | tpmvscmgr DEFAULT admin key, not random | Random key = unrecoverable if PIN blocked |
+| 7 | Smart card services need reboot to initialize cleanly | Restart alone may not be enough |
+| 8 | Standard users need temp local admin for VSC setup | Remove immediately after enrollment |

@@ -104,7 +104,10 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 
 ## Portfolio Finalization
 
-- ⬜ Add real screenshots to `Demo-Walkthrough.md` — from physical laptop (Step 5 of laptop guide)
+- ⏳ Add real screenshots to `Demo-Walkthrough.md` — **1 of 9 captured** (PIN entry on Lab-WS01)
+      Captured: `02-pin-entry-cert-subject.png`, `02b-incorrect-pin-validation.png` (supplement), plus 2 portfolio-evidence shots
+      Still pending: lock screen (slot 1), Event 4768 (slot 3), session lock (slot 4), VPN connected (slot 5), PKI dashboard (slot 6), SCAP delta (slot 7), Win11 STIG result on WO02 (slot 8)
+      See `Screenshots/README.md` for the capture checklist
 - ⬜ Update Portfolio/ Word docs with After-MFA scores (DC01: 42.66% / WS01: 42.20%)
 - ⬜ Run full Ansible STIG hardening pass — improves scores before final portfolio push
 - ⬜ Final `Scrub-Repo.ps1 -WhatIf` pass before any push

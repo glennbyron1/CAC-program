@@ -1,13 +1,18 @@
 # Ansible Inventory — CAC/PIV Lab
 # Copy this file to inventory.ini and fill in your real IPs and credentials.
 # inventory.ini is gitignored — never commit real credentials.
+#
+# Default lab IP plan (see Lab-Kit/Reference/ONBOARDING.md):
+#   10.10.10.0/24 — LabInternal switch (VM↔VM management)
+#   10.10.20.0/24 — External switch    (host↔physical laptop)
 
 [lab_servers]
-dc01       ansible_host=192.168.1.10
-member01   ansible_host=192.168.1.11
+dc01       ansible_host=10.10.10.10
+member01   ansible_host=10.10.10.11
 
 [lab_workstations]
-ws01       ansible_host=192.168.1.20
+ws01       ansible_host=10.10.10.20
+wo02       ansible_host=10.10.20.30   # physical laptop on External subnet
 
 [lab:children]
 lab_servers

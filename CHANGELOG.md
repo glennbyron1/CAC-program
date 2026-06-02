@@ -8,6 +8,46 @@ This log covers every artifact produced across the life of the project — scrip
 
 ---
 
+## [Lab — Session 13] — 2026-06-02
+
+### Sync from Lab-Export, Subnet Drift Fix, First Real Screenshots
+
+**Trigger:** Glenn provided `CAC-Lab-Export-20260602.zip` from the Hyper-V host containing the latest lab state — physical laptop WO02 domain-joined with `LAB\labtech` enrolled (VSC, PIN 123456, cert valid 6/2/26→6/2/27), smart card logon **CONFIRMED PASS** via RDP to 10.10.20.30. Network topology changed during the laptop add: DC01 now dual-NIC (`10.10.10.10` LabInternal + `10.10.20.10` External); WS01 stays on `10.10.10.20`. The After-MFA SCAP scans (May 28) recorded: DC01 42.66% / WS01 42.20%.
+
+#### Added
+
+**`Screenshots/`** (new folder, 5 files)
+First real lab captures committed to the repo. Four PNGs from Glenn's lab work (Lab-WS01 PIN entry, Lab-WS01 incorrect-PIN dialog, enrollment ceremony Issuer-phase success on DC01, pre-Kerberos-cert troubleshooting failure on WO02). One slot in `Demo-Walkthrough.md` (Step 2 PIN entry) now has a real image; the other 8 slots remain pending with explicit "Pending capture - see Screenshots/README.md" markers. `Screenshots/README.md` lists what's captured, what's still pending, capture guidelines (PNG over JPG, sanitize names/hostnames/IPs outside `10.10.10.x`/`10.10.20.x`), and the naming convention (`NN-description.png` matching slot number, `evidence-` prefix for portfolio-only shots, `troubleshoot-` prefix for problem/fix references).
+
+**`Lab-Kit/Reference/ONBOARDING.md`** (21 KB, scrubbed)
+Synced from the lab export. Quick-start guide for new users, new machines, and day-one lab orientation. Covers: VM inventory with dual-NIC IPs, host adapter table, lab accounts (Administrator / CardIssuer / labtech / local), domain join steps, user creation, complete smart card enrollment in 7 parts (one-time prereqs, create user, RA ceremony, machine setup with VSC vs. physical card paths, certificate enrollment as target user, Issuer ceremony as CardIssuer, cleanup and enforcement re-enable, RDP test), zero-trust temporary local-admin pattern, checkpoint commands. Real passwords scrubbed to `<LAB-ADMIN-PASSWORD>` and `<LAB-LABTECH-PASSWORD>`. Cert thumbprint scrubbed to `<LABTECH-CERT-THUMBPRINT>`.
+
+**`Lab-Kit/Reference/TROUBLESHOOTING.md`** (22 KB, scrubbed)
+Synced from the lab export. Running FAQ of every real problem encountered in the lab. Sections: Smart Card / Authentication, Group Policy, Active Directory & Domain, SYSVOL & GPO Infrastructure, Workstation Domain Join, SCAP / Compliance Checker, General Windows / PowerShell, Common Lab Operations, Physical Endpoint / Smart Card Enrollment. Same scrubbing as ONBOARDING.
+
+#### Changed
+
+**`Demo-Walkthrough.md`**
+Replaced the seven `📸 Screenshot slot` placeholders with status markers. Slot 2 (PIN entry) now embeds two real images: `Screenshots/02-pin-entry-cert-subject.png` and `Screenshots/02b-incorrect-pin-validation.png` (supplement proving PIN validation works). Slots 1, 3, 4, 5, 6, 7 show `📸 Pending capture` markers pointing to `Screenshots/README.md` for the capture checklist. Slot 7 (SCAP delta) annotated with the real before/after numbers (DC01 44.95%→42.66%, WS01 42.20%→42.20%).
+
+**`Lab-Kit/LAB-BUILD-CHANGELOG.md`** (37 KB → 50 KB, scrubbed)
+Overwritten with the latest export version. Adds Session 4 (2026-06-01) entries for WS01 domain rejoin with NetBIOS name truncation lesson learned (`Lab-Workstation01` → `LAB-WORKSTATION`), SmartCard Policy GPO with scforceoption=1 added now that WS01 is in Workstations OU, After-MFA SCAP scans completed (DC01 42.66%, WS01 42.2%), and the 05-After-Scan checkpoint. Adds Session 4 continued (2026-06-02) entries for WO02 domain join + smart card enrollment complete, dual-NIC DC01 topology change with 10.10.20.x subnet for External, DC01 KerberosAuthentication cert enrollment fix, SmartcardLogon template Enroll permission fix using AD extended rights GUID directly (PSPKI was silently dropping Enroll), labtech user creation, and 8 lessons learned. Same scrubbing.
+
+**`TODO.md`** — Portfolio Finalization section
+Marked screenshot line as in-progress (⏳): 1 of 9 captured, 8 pending. Lists exactly which slots are filled (Step 2 PIN entry) and which still need capture (lock screen, Event 4768, session lock, VPN, PKI dashboard, SCAP delta, Win11 STIG result on WO02).
+
+**`.scrub-patterns.example.json`**
+Added a second `_README_LAB_SECRETS` comment block explaining the placeholder convention used by the new `Lab-Kit/Reference/` docs. Added three commented-shape example keys (`your-real-lab-admin-password`, `your-real-lab-labtech-password`, `your-real-cert-thumbprint-40-hex-chars`) so users know to put their real values in `.scrub-patterns.local.json` and have them swapped for the placeholders during `Scrub-Repo.ps1` runs.
+
+**Subnet drift fix** — 192.168.1.x → 10.10.10.x / 10.10.20.x across the following files in the CAC-program repo:
+- `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md` — Step 1 New-NetIPAddress, DNS instructions, ping/nslookup verification, troubleshooting note. Added a callout block listing the real LabInternal vs. External subnet split with a pointer to ONBOARDING.md.
+- `Lab-Kit/Ansible/inventory.ini.example` — `dc01` 192.168.1.10→10.10.10.10, `member01` →10.10.10.11, `ws01` →10.10.10.20, added `wo02 ansible_host=10.10.20.30` on the External subnet. Added a comment block explaining the dual-subnet plan.
+- `Lab-Kit/Physical-Lab-Setup.md` — iDRAC IP example (now uses 10.10.10.50 range), SSH example (10.10.10.50).
+
+Author: Glenn Byron.
+
+---
+
 ## [Lab — Session 12] — 2026-06-01
 
 ### Physical Laptop Pre-Flight — Hardware Confirmed + USB Staging Script

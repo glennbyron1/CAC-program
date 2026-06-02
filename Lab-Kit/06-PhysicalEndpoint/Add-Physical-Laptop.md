@@ -81,19 +81,23 @@ New-VMSwitch -Name "Lab-External" -NetAdapterName "Ethernet" -AllowManagementOS 
 # Run inside DC01
 Get-NetAdapter   # find the adapter name
 
-New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 192.168.1.10 `
-                 -PrefixLength 24 -DefaultGateway 192.168.1.1
+New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 10.10.20.10 `
+                 -PrefixLength 24 -DefaultGateway 10.10.20.1
 Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 127.0.0.1
 ```
 
+> **Lab IP plan (current state, see `Lab-Kit/Reference/ONBOARDING.md`):**
+> - `10.10.10.0/24` — LabInternal switch (VM↔VM management): DC01 NIC1 `.10`, WS01 `.20`, host `.1`
+> - `10.10.20.0/24` — External switch (host↔physical laptop): DC01 NIC2 `.10`, WO02 `.30`, host `.1`
+
 **On the laptop** — set DNS to point at DC01:
-- Open Network Settings → IPv4 → DNS: `192.168.1.10`
+- Open Network Settings → IPv4 → DNS: `10.10.20.10`
 
 **Verify connectivity from the laptop:**
 
 ```powershell
-ping 192.168.1.10                        # DC01 should reply
-nslookup lab.local 192.168.1.10          # Should resolve lab.local
+ping 10.10.20.10                          # DC01 External NIC should reply
+nslookup lab.local 10.10.20.10            # Should resolve lab.local
 ```
 
 If ping fails: check Windows Firewall on DC01 allows ICMP, and confirm both are on
@@ -296,7 +300,7 @@ not support Active Directory domain join. Upgrade the license or get a different
 
 **Can't ping DC01 after switching to External:** Check DC01 got a valid IP on the
 physical network (`Get-NetIPAddress` inside DC01). Check Windows Firewall allows ICMP.
-Confirm both machines are on the same subnet (192.168.1.x).
+Confirm both machines are on the same subnet (`10.10.20.x` for External).
 
 **Domain join fails:** `nslookup lab.local` must succeed on the laptop before join will
 work. If it fails, DNS isn't pointing at DC01. Set DNS manually to DC01's IP.
