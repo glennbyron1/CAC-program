@@ -103,3 +103,7 @@ Conversation-Export-*.md
 # ready or appropriate for the public repo. Nothing in this folder should
 # ever be committed or pushed.
 Dispatch/
+
+# History-scrub source-of-truth scripts (contain real patterns)
+scrub_history.ps1
+Run-HistoryScrub.ps1
