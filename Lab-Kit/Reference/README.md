@@ -1,5 +1,21 @@
 # Lab-Kit Reference
 
+## Lab Operations (live in this folder)
+
+These were generated from real lab build experience and are kept here in the kit
+because they describe *operating* the lab, not the architecture behind it. Both
+are sanitized — real lab passwords appear as `<LAB-ADMIN-PASSWORD>` etc., see
+`.scrub-patterns.example.json` at the repo root for the placeholder convention.
+
+| Document | What it covers |
+|---|---|
+| [`ONBOARDING.md`](ONBOARDING.md) | New user / new machine quickstart - account table, domain join steps, complete smart card enrollment ceremony in 7 parts (VSC + physical card paths), checkpoint commands |
+| [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) | Running FAQ of every real problem encountered - smart card lockout (two-mechanism root cause), GPO scope errors, SYSVOL recovery, DSRM limitations, WS01 rejoin, SCC paths, PowerShell gotchas, physical endpoint issues |
+
+---
+
+## Architecture Reference (canonical in `../../Architecture/`)
+
 The reference documents live canonically in [`../../Architecture/`](../../Architecture/)
 so there is a single source of truth (no duplicate copies to drift out of sync).
 Read them there:
