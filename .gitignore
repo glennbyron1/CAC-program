@@ -107,3 +107,7 @@ Dispatch/
 # History-scrub source-of-truth scripts (contain real patterns)
 scrub_history.ps1
 Run-HistoryScrub.ps1
+
+# History-scrub source-of-truth scripts (contain real patterns)
+scrub_history.ps1
+Run-HistoryScrub.ps1
