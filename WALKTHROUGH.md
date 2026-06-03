@@ -669,26 +669,4 @@ Get-WinEvent -LogName Security -FilterXPath "*[System[EventID=4768]]" |
 After smart card logon is confirmed working, repeat SCAP SCC scans on both VMs.
 Stage results to `Lab-Kit\05-Compliance\After-MFA\`.
 
-**Phase 9 status: ✅ COMPLETE** — Token enrolled, ceremony documented, smart card logon verified.
-
----
-
-## IP Reference
-
-| VM | IP | Role |
-|----|----|------|
-| Lab-DC01 | 10.10.10.10 | Domain Controller, DNS, Issuing CA |
-| Lab-Workstation01 | 10.10.10.20 | Test workstation |
-| Lab-OfflineRootCA | No IP | Air-gapped |
-
-## Passwords
-
-| Account | Password |
-|---------|---------|
-| All local Administrator accounts | `<LAB-ADMIN-PASSWORD>` |
-| LAB\Administrator (domain) | `<LAB-ADMIN-PASSWORD>` |
-| DSRM | `<LAB-ADMIN-PASSWORD>` |
-
----
-
-*See CHANGELOG.md for all bugs fixed and why. See START-HERE.md for full phase details.*
+**P

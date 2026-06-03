@@ -850,21 +850,4 @@ assess phase. The key takeaways:
    cannot work. The two-tier CA hierarchy (offline root, online issuing) is the
    DoD standard and should not be shortcut.
 
-2. **STIG compliance is measured, not assumed** — running SCAP SCC before and after
-   control implementation gives you the evidence that controls actually work.
-
-3. **Smart card enforcement belongs on workstations, not DCs** — domain controllers
-   need a password break-glass path. Setting scforceoption on a DC causes complete lockout.
-
-4. **Kerberos time skew is a real failure mode** — keep VM clocks synchronized.
-   5-minute tolerance is not forgiving in an automated environment.
-
-5. **Separation of duties (AC-5) in enrollment is not optional** — the two-person
-   rule for smart card issuance (RA + Issuer phases) is a hard DoD requirement.
-
-6. **Audit policy must be verified, not just configured** — use auditpol and check
-   that events 4768 and 4624 actually appear in the Security log after configuration.
-
----
-
-*Lab completed: 2026-05-27 | Author: Glenn Byron | See CHANGELOG.md for all bugs fixed*
+2. **STIG compliance is measured, not assumed** — running SCAP SCC before and afte

@@ -1,16 +1,17 @@
 {
   "_README": "Copy this file to .scrub-patterns.local.json (which is gitignored) and replace the example values below with your real organizational identifiers. Each KEY is the real string to find; each VALUE is the safe placeholder it will be replaced with. Patterns are matched as literal strings (regex-escaped automatically). Order matters — put more-specific patterns before less-specific ones (e.g. full email before just the domain).",
 
-  "_README_LAB_SECRETS": "The Lab-Kit\\Reference\\ docs use placeholders like <LAB-ADMIN-PASSWORD> for real lab passwords. If you ever paste a real value into a doc by accident, add the real value as a KEY here so Scrub-Repo.ps1 catches it on the next run. Examples below are commented-out shapes only — replace with your real values in .scrub-patterns.local.json.",
+  "_README_CASE_WARNING": "IMPORTANT: PowerShell's ConvertFrom-Json treats object keys as CASE-INSENSITIVE. You cannot have both 'Agency' and 'agency' as separate keys - they collide and parsing will fail with 'duplicated keys'. Workaround: use longer disambiguating substrings - e.g. 'Agency' and 'agency.gov' (different contexts, different lengths) - so you never have two keys that differ only in case.",
+
+  "_README_LAB_SECRETS": "The Lab-Kit\\Reference\\ docs use placeholders like <LAB-ADMIN-PASSWORD> for real lab passwords. If you ever paste a real value into a doc by accident, add the real value as a KEY here so Scrub-Repo.ps1 catches it on the next run. Examples below are commented-out shapes only - replace with your real values in .scrub-patterns.local.json.",
 
   "yourpersonalemail@gmail.com":            "NNNNNNN+yourgithubuser@users.noreply.github.com",
   "yourworkemail@agency.gov":               "candidate@agency.gov",
   "realagencydomain.gov":                   "agency.gov",
+  "RealAgencyName.org":                     "Agency.org",
   "RealAgencyName":                         "Agency",
-  "realagencyname":                         "agency",
   "10.50.11.":                              "10.0.0.",
   "10.50.11":                               "10.0.0",
-  "10.0.":                                 "10.0.",
   "your-windows-shortname":                 "labuser",
   "your-real-server-name":                  "lab-server-01",
 

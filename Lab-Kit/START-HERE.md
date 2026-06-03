@@ -402,10 +402,4 @@ Remove-PSSession $s
 - **Run everything as Administrator** — right-click PowerShell, Run as Administrator
 - **Use `&` to run scripts, not `.`** — dot-sourcing breaks `$PSScriptRoot` and causes errors
 - **Lab-OfflineRootCA has no network** — all file transfers go via PowerShell Direct
-- **Boot order after Build-CAC-Lab.ps1:** it reboots the DC automatically — wait for it to fully come back up before running Build-CA-GPO.ps1
-- **Smart card enrollment uses two accounts** — RA phase and Issuer phase must be different people; the script blocks you if they match (separation of duties)
-- **Checkpoints consume disk space** — run `New-LabSnapshot.ps1 -Mode Cleanup` periodically
-
----
-
-*Author: Glenn Byron — Copyright (c) 2026, MIT License*
+- **Boot order after Build-CAC-Lab.ps1:** it reboots the DC automatically �

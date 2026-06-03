@@ -198,7 +198,7 @@
       <!-- CHANGE THIS before using the file -->
       <UserAccounts>
         <AdministratorPassword>
-          <Value><LAB-ADMIN-PASSWORD></Value>
+          <Value>CHANGE-ME-LAB-PASSWORD</Value>
           <PlainText>true</PlainText>
         </AdministratorPassword>
       </UserAccounts>
@@ -207,7 +207,7 @@
       <!-- Lets you land at the desktop without any prompts -->
       <AutoLogon>
         <Password>
-          <Value><LAB-ADMIN-PASSWORD></Value>
+          <Value>CHANGE-ME-LAB-PASSWORD</Value>
           <PlainText>true</PlainText>
         </Password>
         <Enabled>true</Enabled>
@@ -222,11 +222,4 @@
                processorArchitecture="amd64"
                publicKeyToken="31bf3856ad364e35"
                language="neutral"
-               versionScope="nonSxS"
-               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
-      <DoNotOpenServerManagerAtLogon>true</DoNotOpenServerManagerAtLogon>
-    </component>
-
-  </settings>
-
-</unattend>
+               ve

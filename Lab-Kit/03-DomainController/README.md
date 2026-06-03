@@ -200,11 +200,4 @@ when promotion completes. After reboot log in as **LAB\Administrator**.
 ```powershell
 .\Monitor-PKIHealth.ps1 `
     -CRLUrls @("http://pki.lab.local/crl/RootCA.crl","http://pki.lab.local/crl/IssuingCA.crl") `
-    -OCSPUrl "http://pki.lab.local/ocsp" `
-    -IssuingCAServer "Lab-DC01" `
-    -AlertThresholdDays 60
-```
-
----
-
-*Related: `Lab-Kit/START-HERE.md`, `Lab-Kit/LAB-DAY-CHECKLIST.md`, `Architecture/Blueprint.md`*
+    -OCSPUrl "http://pki
