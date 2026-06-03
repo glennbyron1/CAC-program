@@ -1194,12 +1194,70 @@ Complete start-to-finish enrollment guide including:
 
 ---
 
-### Lessons Learned — Physical Endpoint Phase
+### Event 4768 — PKINIT Smart Card Authentication Confirmed
+
+**Date:** 2026-06-02 08:25
+
+Captured on DC01 Security log — confirms smart card Kerberos pre-authentication (PKINIT)
+at the protocol level. This is the primary NIST IA-2(11) portfolio evidence.
+
+```
+Event ID:              4768 (Kerberos TGT Request)
+Account:               labtech
+Pre-Authentication:    Type 16 (PKINIT — certificate used)
+Client Address:        ::ffff:10.10.20.30  (WO02 physical laptop)
+Certificate Issuer:    LAB-CA
+Certificate Serial:    140000000B8DE8DC400FC57E7F00000000000B
+Certificate Thumbprint: <LABTECH-CERT-THUMBPRINT>
+Result Code:           0x0 (Success)
+```
+
+Contrast: Administrator's simultaneous 4768 shows Pre-Auth Type **2** (password, no cert).
+This confirms the zero trust model — labtech enforced to smart card, Administrator retains
+password break-glass access.
+
+**NIST controls satisfied:**
+- IA-2(11) - Remote access MFA via certificate-based Kerberos (PKINIT)
+- AC-11 - Session lock on card removal (ScRemoveOption=1)
+- AC-5 - Separation of duties enforced in enrollment ceremony
+
+---
+
+### WO02 SCAP Scan - Windows 11 STIG (After-SmartCard)
+
+**Date:** 2026-06-02
+**Score: 37% [RED]**
+**SCC version:** 5.10.2
+**Benchmark:** Windows 11 STIG (DISA STIG SCAP Content - bundled with SCC 5.10.2)
+**Session:** `2026-06-02_104513`
+**Scanned as:** LAB\labtech (smart card enforcement active during scan)
+**Staged at:** `Compliance-Reports\Laptop\After-SmartCard\2026-06-02_104513\`
+
+This is the baseline scan for WO02 after domain join and smart card enrollment.
+No hardening has been applied yet - 37% represents the out-of-box Windows 11 Pro
+state with only smart card GPO active.
+
+---
+
+### Checkpoint: 06-WO02-SmartCard-Working
+
+```
+20260602-0812-06-WO02-SmartCard-Working
+  Lab-OfflineRootCA  [OK]
+  Lab-DC01           [OK]  (Production/VSS)
+  Lab-Workstation01  [OK]  (Production/VSS)
+```
+
+To restore: `.\New-LabSnapshot.ps1 -Mode Restore -Label "06-WO02-SmartCard-Working"`
+
+---
+
+### Lessons Learned - Physical Endpoint Phase
 
 | # | Lesson | Impact |
 |---|---|---|
-| 1 | VSC + cert enrollment MUST happen BEFORE scforceoption=1 | Critical — wrong order locks you out |
-| 2 | certreq MUST run as the TARGET USER, not admin | Critical — cert goes to wrong store |
+| 1 | VSC + cert enrollment MUST happen BEFORE scforceoption=1 | Critical - wrong order locks you out |
+| 2 | certreq MUST run as the TARGET USER, not admin | Critical - cert goes to wrong store |
 | 3 | DC needs KerberosAuthentication cert for PKINIT | Blocks all smart card logon without it |
 | 4 | Use RDP, not VNC, for smart card testing | VNC blocks smart card PIN entry |
 | 5 | Add-CertificateTemplateAcl drops Enroll right | Use AD extended rights GUID directly |
