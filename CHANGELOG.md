@@ -17,6 +17,25 @@ This log covers every artifact produced across the life of the project — scrip
 **`Lab-Kit/05-Compliance/Invoke-SCAPWorkflow.ps1`**
 Automates the complete SCAP before/after compliance scan loop. Runs SCAP SCC headless against the target, stages XCCDF results to Compliance-Reports\Before-MFA\ or After-MFA\, feeds both files through the scap_summary Docker tool, optionally triggers the Ansible STIG hardening playbook via WSL, and generates a side-by-side delta report (Before-Report.txt → SAR-Template.md). Supports -Phase Before/After/Full, -WhatIf, and -SkipHardening. NIST controls: CA-2 (Security Assessments), RA-5 (Vulnerability Monitoring and Scanning). Author: Glenn Byron.
 
+### PKI Health Baseline + Slot 6 Capture
+
+#### Added
+
+**`Screenshots/06-pki-health-dashboard.png`** + **`Compliance-Reports/PKI-Health/2026-06-04/`**
+Real console capture of `Monitor-PKIHealth.ps1` running on Lab-DC01 at 12:18:49 — banner, all five check sections, and the `ALL CHECKS PASSED — PKI environment is healthy.` summary line. Wired into `Demo-Walkthrough.md` Step 6 (slot 6) with honest annotation: rows show `[SKIP]` because optional parameters weren't passed in this baseline run; a follow-up parameterized run is queued for v1.1. Audit-log evidence (`PKIHealth-DC01-AuditLog.txt`) shows seven independent script invocations across the day, all `Critical: False | Warning: False` — immutable CA-7 continuous-monitoring pulse. Folder includes a `README.md` mapping the artifacts to RMF SAR Section 3, POAM baseline-pulse, and SSP Section 7.
+
+### Real-World Deployment Bug Fixes (Phase 8 + PKI Monitor)
+
+**Trigger:** Running `Monitor-PKIHealth.ps1` and `Set-AuthenticationPolicySilo.ps1` on Lab-DC01 surfaced two real PowerShell 5.1 / Active Directory edge cases that didn't show up in -WhatIf testing. Both fixes are battle-tested by actual lab deployment.
+
+#### Changed
+
+**`Lab-Kit/07-ZeroTrust/Set-AuthenticationPolicySilo.ps1`** — `Grant-ADAuthenticationPolicySiloAccess` rejects group objects
+Symptom: `Cannot find an object with identity: 'Tier-0-Admins' under: 'DC=lab,DC=local'`. Root cause: `Grant-ADAuthenticationPolicySiloAccess -Account` only accepts individual user/computer accounts; passing a security group (`Tier-N-Admins`) throws a terminating `ADIdentityNotFoundException` that bypasses `-ErrorAction SilentlyContinue`. Secondary issue: steps 3-4 (grant + bind) executed even when the silo hadn't been created yet in `-WhatIf` mode. Fix: moved `Grant-ADAuthenticationPolicySiloAccess` into a per-member loop, each user/computer account granted individually; added `$siloExists` guard so steps 3-4 skip when the silo is absent (including dry-run); wrapped each AD call in try/catch so the loop continues on per-account failures; added inline note that the script must be re-run after populating admin groups to bind newly added accounts. NIST controls affected: AC-3, AC-3(7), AC-6, IA-2.
+
+**`Lab-Kit/03-DomainController/Monitor-PKIHealth.ps1`** — `Write-HealthSummary` crashes on `.Count` under StrictMode
+Symptom: `The property 'Count' cannot be found on this object. Verify that the property exists.` at line 464. Root cause: in PowerShell 5.1, when a pipeline produces zero output (e.g. `Where-Object` filtering an empty array), the result is `[AutomationNull]` — an internal type that isn't a real array. Under `Set-StrictMode -Version Latest`, accessing `.Count` on `AutomationNull` throws `PropertyNotFoundException` even when the expression is wrapped in `@()`. Fix: replaced the `Where-Object` + `.Count` pattern in `Write-HealthSummary` with a `foreach` loop using plain integer counters (`$critCount`, `$warnCount`) and `[System.Collections.ArrayList]` collectors — integer variables always support `-eq 0` cleanly. Added `if ($script:findings)` null guards in `Write-HealthSummary` and `Send-AlertEmail` to prevent the same class of error if `$script:findings` is ever `$null` rather than `@()`. NIST controls affected: CA-7 (Continuous Monitoring), SC-17 (PKI Certificates).
+
 ---
 
 ## [Lab — Session 13] — 2026-06-02

@@ -136,29 +136,40 @@ foreach ($s in $silos) {
         Write-Skip "Silo exists: $($s.Silo)"
     }
 
-    # 3. Grant the tier admin group access to the silo
-    if (-not $DryRun) {
-        Grant-ADAuthenticationPolicySiloAccess -Identity $s.Silo -Account $s.AdminGroup -ErrorAction SilentlyContinue
-        Write-OK "Granted $($s.AdminGroup) access to silo"
-    }
+    # 3 + 4. Grant each individual member access to the silo and assign policy.
+    #   NOTE: Grant-ADAuthenticationPolicySiloAccess requires an individual user/
+    #   computer account - it does NOT accept group objects.  Granting per-member
+    #   here; run this script again after populating the admin groups to bind any
+    #   accounts added later.
+    $siloExists = Get-ADAuthenticationPolicySilo -Filter "Name -eq '$($s.Silo)'" -ErrorAction SilentlyContinue
+    $members    = Get-ADGroupMember -Identity $s.AdminGroup -ErrorAction SilentlyContinue
 
-    # 4. Assign every member of the tier admin group to the policy
-    $members = Get-ADGroupMember -Identity $s.AdminGroup -ErrorAction SilentlyContinue
-    foreach ($m in $members) {
-        if ($m.objectClass -in @('user','computer')) {
-            if (-not $DryRun) {
-                Set-ADAccountAuthenticationPolicySilo `
-                    -Identity $m.SamAccountName `
-                    -AuthenticationPolicySilo $s.Silo `
-                    -AuthenticationPolicy     $s.Policy `
-                    -ErrorAction SilentlyContinue
+    if ($siloExists -and -not $DryRun) {
+        foreach ($m in $members) {
+            if ($m.objectClass -in @('user','computer')) {
+                try {
+                    Grant-ADAuthenticationPolicySiloAccess `
+                        -Identity $s.Silo `
+                        -Account  $m.SamAccountName
+                } catch {
+                    Write-Warn "Grant failed for $($m.SamAccountName): $_"
+                }
+                try {
+                    Set-ADAccountAuthenticationPolicySilo `
+                        -Identity                 $m.SamAccountName `
+                        -AuthenticationPolicySilo $s.Silo `
+                        -AuthenticationPolicy     $s.Policy
+                } catch {
+                    Write-Warn "Silo bind failed for $($m.SamAccountName): $_"
+                }
             }
         }
     }
+
     if ($members) {
-        Write-OK "Assigned $($members.Count) member(s) of $($s.AdminGroup) to silo $($s.Silo)"
+        Write-OK "Granted + bound $($members.Count) member(s) of $($s.AdminGroup) to silo $($s.Silo)"
     } else {
-        Write-Warn "$($s.AdminGroup) has no members yet - silo bind pending"
+        Write-Warn "$($s.AdminGroup) has no members yet - silo bind pending (re-run after populating group)"
     }
     Write-Host ''
 }

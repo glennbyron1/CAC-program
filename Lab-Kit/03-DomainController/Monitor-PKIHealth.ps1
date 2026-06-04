@@ -305,7 +305,7 @@ function Test-IssuingCACert {
         $output = & certutil -config "$IssuingCAServer" -CA.cert 2>&1 | Out-String
 
         if ($LASTEXITCODE -ne 0) {
-            Write-Warn "Could not connect to CA server '$IssuingCAServer' via certutil — $_"
+            Write-Warn "Could not connect to CA server '$IssuingCAServer' via certutil (exit $LASTEXITCODE)"
             Write-Info "Falling back to local cert store check..."
         }
 
@@ -458,27 +458,38 @@ function Write-HealthSummary {
     Write-Host ("=" * 72) -ForegroundColor DarkCyan
     Write-Host ""
 
-    $critical = $script:findings | Where-Object { $_.Severity -eq 'CRITICAL' }
-    $warnings  = $script:findings | Where-Object { $_.Severity -eq 'WARNING' }
+    # Count via foreach — avoids StrictMode throwing on .Count when Where-Object
+    # returns AutomationNull (PowerShell 5.1 empty-pipeline behaviour).
+    $critCount = 0; $warnCount = 0
+    $critical  = [System.Collections.ArrayList]@()
+    $warnings  = [System.Collections.ArrayList]@()
+    if ($script:findings) {
+        foreach ($f in $script:findings) {
+            if ($f.Severity -eq 'CRITICAL') { [void]$critical.Add($f); $critCount++ }
+            elseif ($f.Severity -eq 'WARNING')  { [void]$warnings.Add($f); $warnCount++ }
+        }
+    }
 
-    if ($critical.Count -eq 0 -and $warnings.Count -eq 0) {
+    if ($critCount -eq 0 -and $warnCount -eq 0) {
         Write-Host "  ALL CHECKS PASSED — PKI environment is healthy." -ForegroundColor Green
         Write-Host ""
         Write-Log "HEALTH-CHECK-PASS | No issues found"
     } else {
-        if ($critical.Count -gt 0) {
-            Write-Host "  CRITICAL: $($critical.Count) issue(s) require immediate action" -ForegroundColor Red
+        if ($critCount -gt 0) {
+            Write-Host "  CRITICAL: $critCount issue(s) require immediate action" -ForegroundColor Red
             $critical | ForEach-Object { Write-Host "    [CRIT] $($_.Check): $($_.Detail)" -ForegroundColor Red }
         }
-        if ($warnings.Count -gt 0) {
+        if ($warnCount -gt 0) {
             Write-Host ""
-            Write-Host "  WARNING: $($warnings.Count) issue(s) require attention" -ForegroundColor Yellow
+            Write-Host "  WARNING: $warnCount issue(s) require attention" -ForegroundColor Yellow
             $warnings | ForEach-Object { Write-Host "    [WARN] $($_.Check): $($_.Detail)" -ForegroundColor Yellow }
         }
 
         Write-Host ""
-        $script:findings | ForEach-Object {
-            Write-Log "HEALTH-CHECK-$($_.Severity) | $($_.Check) | $($_.Detail)"
+        if ($script:findings) {
+            $script:findings | ForEach-Object {
+                Write-Log "HEALTH-CHECK-$($_.Severity) | $($_.Check) | $($_.Detail)"
+            }
         }
     }
 
@@ -493,6 +504,7 @@ function Send-AlertEmail {
         Write-Warn "Email alert enabled but -SmtpServer and -AlertRecipient are required."
         return
     }
+    if ($null -eq $script:findings) { $script:findings = @() }
     if ($script:findings.Count -eq 0) { return }  # No issues — no email
 
     $subject = "PKI Health Alert — $(if ($script:hasCrit) { 'CRITICAL' } else { 'WARNING' }) — $(Get-Date -Format 'yyyy-MM-dd')"

@@ -1264,3 +1264,60 @@ To restore: `.\New-LabSnapshot.ps1 -Mode Restore -Label "06-WO02-SmartCard-Worki
 | 6 | tpmvscmgr DEFAULT admin key, not random | Random key = unrecoverable if PIN blocked |
 | 7 | Smart card services need reboot to initialize cleanly | Restart alone may not be enough |
 | 8 | Standard users need temp local admin for VSC setup | Remove immediately after enrollment |
+
+---
+
+## 2026-06-04 — Session 5 (Glenn Byron)
+
+### PKI Health Monitor Baseline — Lab-DC01
+
+Ran `Monitor-PKIHealth.ps1` 7 times across the day on Lab-DC01 as Administrator. All runs reported `Critical: False | Warning: False`. Final run at 12:18:49 captured a console screenshot for portfolio slot 6 (Demo-Walkthrough Step 6). The 12:07:50 run added the explicit `HEALTH-CHECK-PASS | No issues found` line after the script update below. Baseline cadence established for SAR § 3 / POAM pulse tracking. Artifacts staged at `Compliance-Reports/PKI-Health/2026-06-04/`. NIST controls demonstrated: CA-7 (Continuous Monitoring), SC-17 (PKI Certificates).
+
+### `Lab-Kit\03-DomainController\Monitor-PKIHealth.ps1` — `.Count` Crash on Empty Pipeline Under StrictMode
+
+**Symptom:** Script crashed in `Write-HealthSummary`:
+
+```
+The property 'Count' cannot be found on this object. Verify that the property exists.
+At Monitor-PKIHealth.ps1:464 char:9
++     if ($critical.Count -eq 0 -and $warnings.Count -eq 0) {
+```
+
+**Root cause:** In PowerShell 5.1, when a pipeline produces zero output (e.g. `Where-Object` filtering an empty array), the result is `[AutomationNull]` — an internal type that is not a real array. Under `Set-StrictMode -Version Latest`, accessing `.Count` on `AutomationNull` throws `PropertyNotFoundException` even when the expression is wrapped in `@()`. This is a known PS 5.1 trap that surfaces only when there are no findings (i.e. happy path).
+
+**Fix:**
+- Replaced the `Where-Object` + `.Count` pattern in `Write-HealthSummary` with a `foreach` loop using plain integer counters (`$critCount`, `$warnCount`) and `[System.Collections.ArrayList]` collectors. Integer variables always support `-eq 0` without StrictMode issues.
+- Added `if ($script:findings)` null guards in both `Write-HealthSummary` and `Send-AlertEmail` to prevent the same class of error if `$script:findings` is ever `$null` rather than `@()`.
+
+**Why it didn't surface earlier:** Previous test runs on smaller environments had findings populated; only the all-clear path hits the empty-pipeline case.
+
+### `Lab-Kit\07-ZeroTrust\Set-AuthenticationPolicySilo.ps1` — `Grant-ADAuthenticationPolicySiloAccess` Rejects Group Objects
+
+**Symptom:** Running Phase 8.1.4 against the freshly-tiered AD:
+
+```
+Grant-ADAuthenticationPolicySiloAccess : Cannot find an object with identity:
+  'Tier-0-Admins' under: 'DC=lab,DC=local'.
+```
+
+The error message is misleading — the group exists and is resolvable, but the cmdlet rejected it.
+
+**Root cause:** `Grant-ADAuthenticationPolicySiloAccess -Account` only accepts individual user/computer accounts. Passing a security group (`Tier-N-Admins`) throws a terminating `ADIdentityNotFoundException` that bypasses `-ErrorAction SilentlyContinue`. Microsoft documents this in the cmdlet help but the error message points at the wrong thing.
+
+A secondary issue caused the same crash during `-WhatIf` runs: steps 3-4 (grant + bind) executed even when the silo hadn't been created yet in dry-run mode (the silo object wasn't there to grant against).
+
+**Fix:**
+- Moved `Grant-ADAuthenticationPolicySiloAccess` into a per-member loop — each user/computer account in the admin group is granted individually.
+- Added `$siloExists` guard so steps 3-4 are skipped when the silo is absent (including `-WhatIf` mode).
+- Wrapped each AD call in `try/catch` to allow the loop to continue on per-account failures.
+- Added inline note: re-run this script after populating admin groups to bind newly added accounts.
+
+### Lessons Learned — Session 5
+
+| # | Lesson | Impact |
+|---|---|---|
+| 9 | `Where-Object` + `.Count` is unsafe under StrictMode on the happy path | Empty pipeline returns `AutomationNull`, not `@()`. Use `foreach` + integer counters. |
+| 10 | `Grant-ADAuthenticationPolicySiloAccess` only accepts user/computer accounts, not groups | Loop over `Get-ADGroupMember` and grant each member individually. Cmdlet error message blames the group identity, not the type mismatch. |
+| 11 | Annotated AD ops in `-WhatIf` blocks still need existence guards | Steps that depend on an earlier dry-run-skipped step will crash. Add an `$xExists` check before each dependent step. |
+| 12 | The "happy path" is where StrictMode bugs hide | Bugs only surface when the success branch executes. Test both populated and empty result sets. |
+
