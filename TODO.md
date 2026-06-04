@@ -22,7 +22,7 @@ Living task list for the CAC/PIV ICAM portfolio project.
 
 - ✅ **GitHub repo topics added** — `identity-management`, `pki`, `smart-card`, `fido2`, `active-directory`, `certificate-authority`, `nist-800-53`, `fips-201`, `zero-trust`, `icam`, `ad-cs`, `powershell`, `disa-stig`, `hyper-v`, `rmf`, `cac`
 - ✅ **v1.0 pushed** (2026-06-03) — two-tier PKI + smart card MFA on physical endpoint + SCAP evidence (DC01 42.66% / WS01 42.20% / WO02 37.00%) + Phase 8 Zero Trust extension (8 full scripts + 13 scaffolds + Demo-Walkthrough-ZT.md)
-- ⬜ **Write GitHub release notes** — Releases → Draft new release → pick `v1.0` tag → paste bullet list (PKI, smart card, SCAP, ZT extension, card-blocked items deferred to v1.1)
+- ✅ **GitHub release notes published** (2026-06-04) — v1.0 release notes posted on the `v1.0` tag covering PKI, smart card MFA, SCAP evidence, ZT extension, with card-blocked items called out as deferred to v1.1.
 - ⬜ **v1.1 (when cards arrive)** — slot 1/4/5 screenshots, VPN EAP-TLS test, `Card-Test-Matrix.md` filled in, optional Ansible STIG hardening pass to push compliance % up
 
 ---
@@ -143,50 +143,28 @@ Test buy planned: 2 x YubiKey 5 NFC (~$110) + 1-2 x Hirsch uTrust FIDO2 FIPS Car
 
 ---
 
-## Phase 8 — Zero Trust Extension
+## Phase 8 — Zero Trust Extension ✅ Shipped in v1.0
 
-Design: `Architecture/Roadmap/CAC_PIV_Phase8_ZeroTrust_Extension.md`
-Gap analysis: `Architecture/CAC_PIV_Program_ZeroTrust_Gap_Analysis.md`
-**Location: `Lab-Kit/07-ZeroTrust/`** (own folder, see its README for the full index)
+**Status:** 8 full implementations · 13 scaffolds · 2 docs (21 scripts in `Lab-Kit/07-ZeroTrust/`).
 
-### 8.1 — Authorization & Least Privilege
-- ✅ `Set-TieredAdminModel.ps1` — AD admin tiering (Tier 0/1/2). **FULL** — ready to run.
-- ✅ `Set-LeastPrivilegeGPO.ps1` — User Rights Assignment GPOs per tier with cross-tier deny. **FULL** — ready to run.
-- ⚙ `New-RBACModel.ps1` — role groups + role→resource mapping. **SCAFFOLD** — edit example role array to your real roles.
-- ✅ `Set-AuthenticationPolicySilo.ps1` — Kerberos Auth Policy Silos enforcing tier isolation. **FULL** — ready to run.
-- ⚙ `Deploy-ResourceGateway.ps1` — PEP reverse-proxy demo. **SCAFFOLD** — needs IIS ARR / nginx / Caddy choice.
+- Design: [`Architecture/Roadmap/CAC_PIV_Phase8_ZeroTrust_Extension.md`](Architecture/Roadmap/CAC_PIV_Phase8_ZeroTrust_Extension.md)
+- Scripts + run order: [`Lab-Kit/07-ZeroTrust/README.md`](Lab-Kit/07-ZeroTrust/README.md)
+- Live demo: [`Lab-Kit/07-ZeroTrust/Demo-Walkthrough-ZT.md`](Lab-Kit/07-ZeroTrust/Demo-Walkthrough-ZT.md)
 
-### 8.2 — Device Trust
-- ✅ `New-DeviceCertTemplate.ps1` — `ZT-Device-Authentication` template (RSA 2048, 1yr). **FULL** — ready to run.
-- ✅ `Enroll-DeviceCertificates.ps1` — autoenroll GPO + fleet pulse. **FULL** — ready to run.
-- ⚙ `Set-DeviceComplianceCheck.ps1` — AV/patch/BitLocker/firewall posture → extensionAttribute1. **SCAFFOLD** — wire to your AV.
-- ⚙ `Update-VPN-DeviceAuth.ps1` — two-cert VPN. **SCAFFOLD** — VPN-product-dependent.
+| Subphase | Full | Scaffold | What's Shipped / What's Pending |
+|---|---|---|---|
+| 8.1 — Authorization & Least Privilege | 3 | 2 | Tiered admin model, least-privilege GPO, auth policy silos shipped. RBAC + resource gateway need product choice. |
+| 8.2 — Device Trust | 2 | 2 | Device cert template + autoenroll shipped. Compliance check + two-cert VPN need product wiring. |
+| 8.3 — Continuous & Conditional Access | 1 | 2 | Kerberos lifetimes (4h/10m) shipped. Conditional Access + risk policy overlap Phase 9. |
+| 8.4 — Workload / Non-Person *(optional)* | 0 | 3 | Workload cert template, gMSA hardening, mTLS — all scaffolds. |
+| 8.5 — Network Segmentation | 1 | 1 | Microsegmentation GPO (default-deny east-west) shipped. Per-app VPN needs broker product. |
+| 8.6 — Visibility → Decisioning | 0 | 3 | SIEM, detection rules, analytics→policy loop — pick SIEM first (Splunk Free / Sentinel / Elastic). |
+| 8.7 — Validation & Evidence | 2 | 0 | 7-layer ZT validator + ZT demo walkthrough shipped. |
 
-### 8.3 — Continuous & Conditional Access
-- ✅ `Set-KerberosTicketLifetime.ps1` — TGT 4h / TGS 10m. **FULL** — ready to run.
-- ⚙ `Deploy-ConditionalAccess.ps1` — Entra CA + PIV federation. **SCAFFOLD** — overlaps Phase 9.
-- ⚙ `New-RiskPolicy.ps1` — step-up/deny on risk signal. **SCAFFOLD** — depends on risk source.
+**Pending follow-ons (small):**
 
-### 8.4 — Workload / Non-Person Identity *(optional)*
-- ⚙ `New-WorkloadCertTemplate.ps1` — **SCAFFOLD**
-- ⚙ `Set-ServiceAccountHardening.ps1` — gMSA conversion. **SCAFFOLD**
-- ⚙ `Enable-mTLS.ps1` — mTLS between two lab services. **SCAFFOLD**
-
-### 8.5 — Network Segmentation
-- ✅ `Set-Microsegmentation.ps1` — Windows Firewall GPO, default-deny east-west on Tier 1/2. **FULL** — ready to run (test with `-WhatIf` first!).
-- ⚙ `Convert-VPNToPerApp.ps1` — broker-based ZTNA. **SCAFFOLD** — needs broker product choice.
-
-### 8.6 — Visibility → Decisioning
-- ⚙ `Deploy-SIEM.ps1` — **SCAFFOLD** — Splunk Free vs Sentinel vs Elastic.
-- ⚙ `New-DetectionRules.ps1` — 6 starter rule names listed. **SCAFFOLD**
-- ⚙ `Connect-Analytics-To-Policy.ps1` — closes the loop. **SCAFFOLD**
-
-### 8.7 — Validation & Evidence
-- ✅ `Invoke-ZeroTrustValidation.ps1` — 7-layer ZT validator (L8-L14) with grade. **FULL** — ready to run.
-- ✅ `Demo-Walkthrough-ZT.md` — companion to the Phase 4 demo walkthrough. Live-demo script for the ZT controls.
-- ⬜ Extend `Stage-Reports.ps1` with Before-ZT / After-ZT delta (small follow-on)
-
-**Status:** 8 full implementations + 13 scaffolds + 2 docs. Run order in `Lab-Kit/07-ZeroTrust/README.md`. Scaffolds become turnkey once you pick the product (SIEM, broker, etc.).
+- ⬜ Extend `Stage-Reports.ps1` with Before-ZT / After-ZT delta
+- ⬜ Snapshot + run shipped scripts on Lab-DC01 to move ZT from "designed" to "operational" (8.1.4 already deployment-tested; lessons #10-#11 captured)
 
 ---
 
@@ -252,6 +230,7 @@ Requires: Dell 3080 Micro #2 + OPNsense.
 - ✅ **Lab-export sync — `Live-Servers/` + `Tools-Kit/` imported** — net-new folders from the lab kit (production-deployment readiness/GPO compliance helpers + tool downloaders); both clean of sensitive patterns, no scrubbing needed. README table entries were forward-declared; now backed by actual files.
 - ✅ **Stale top-level `TROUBLESHOOTING.md` removed** — was a strict subset of `Lab-Kit/Reference/TROUBLESHOOTING.md`; README link updated to point at the canonical Reference/ copy.
 - ✅ **WALKTHROUGH.md gap closed** — Step 3b (create Workstations OU + scope `scforceoption=1` GPO to it, BEFORE domain join) merged into Phase 6 from lab export. Closes the silent landmine where readers would link the smart-card GPO at domain root by default and lock out Lab-DC01. Includes built-in safety check that auto-removes accidental domain-root link.
+- ✅ **v1.0 release notes published** (2026-06-04) — closes out v1.0 as a fully-shipped portfolio milestone (tag pushed + history clean + public repo + release notes on the tag).
 
 ---
 
