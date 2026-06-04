@@ -121,7 +121,7 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
     - ⬜ Slot 1 — lock screen smart-card-only (**card-blocked** — v1.1)
     - ⬜ Slot 4 — session lock on card removal w/ stopwatch (**card-blocked** — v1.1)
     - ⬜ Slot 5 — VPN connected EAP-TLS (**card-blocked** — v1.1)
-    - ⬜ *(optional v1.1 polish)* parameterized PKI health run with `-CRLUrls`/`-OCSPUrl`/`-IssuingCAServer` populated → captures all-green `[OK]` rows instead of `[SKIP]`
+    - ✅ *(v1.1 polish — done early)* parameterized PKI health run captured (13:59:25) — real `[OK]` rows for CRL Endpoint (expires 2026-12-05) + Issuing CA cert (expires 2031-05-26). `Screenshots/06-pki-health-dashboard-parameterized.jpg` is the primary slot 6 image; baseline `[SKIP]` run kept as supplementary.
 - ⬜ Run full Ansible STIG hardening pass — pushes scores up before v1.1
 - ⬜ Final `Scrub-Repo.ps1 -WhatIf` pass before any push
 

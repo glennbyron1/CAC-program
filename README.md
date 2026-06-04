@@ -122,8 +122,11 @@ Phase 8 extends the lab to full Zero Trust Architecture: least-privilege RBAC, K
 | `Lab-Kit/02-OfflineRootCA/` | 8-step guided air-gapped Root CA ceremony |
 | `Lab-Kit/03-DomainController/` | AD build, Issuing CA, GPO, cert templates, OCSP, token enrollment, YubiKey, audit forwarding, PKI health monitor |
 | `Lab-Kit/04-Workstation/` | Smart card enforcement GPO, IKEv2/EAP-TLS VPN client |
-| `Lab-Kit/05-Compliance/` | 7-layer pre-scan validator; SCAP SCC Before/After-MFA staging |
-| `Lab-Kit/Ansible/` | `windows-stig-hardening.yml` — automated STIG remediation playbook |
+| `Lab-Kit/05-Compliance/` | 7-layer pre-scan validator; SCAP SCC Before/After-MFA staging; `Invoke-SCAPWorkflow.ps1` automation; SCAP workflow quick reference |
+| `Lab-Kit/06-PhysicalEndpoint/` | Physical laptop onboarding (WO02): domain join, vTPM/VSC creation, smart card cert enrollment, full Add-Physical-Laptop guide |
+| `Lab-Kit/07-ZeroTrust/` | Phase 8 Zero Trust extension: tiered admin model, auth policy silos, device certs, Kerberos lifetime hardening, microsegmentation, ZT validator (8 full + 13 scaffolds + ZT demo walkthrough) |
+| `Lab-Kit/Ansible/` | `windows-stig-hardening.yml` — automated STIG remediation playbook; AD health check; cert expiry report |
+| `Lab-Kit/Reference/` | Sanitized ONBOARDING + TROUBLESHOOTING synced from the lab — lab user accounts, smart card enrollment 7-part walkthrough, two-mechanism scforceoption-vs-SmartcardLogonRequired root-cause table |
 | `Tools-Kit/` | Downloads SCAP SCC, STIG Viewer, Nessus Essentials, PSPKI |
 | `Architecture/` | PKI Blueprint, STIG Hardening Guide, regulatory alignment, VPN guide |
 | `Architecture/RMF-Templates/` | SSP, SAR, POA&M, ATO Letter, STIG deviation rationale, annual rescan SOP |

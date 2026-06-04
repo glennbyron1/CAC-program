@@ -12,13 +12,22 @@
 | File | What It Is |
 |---|---|
 | `PKIHealth-DC01-AuditLog.txt` | Immutable audit trail from the script's built-in logging. Records every run with start/end timestamps and overall pass/fail. |
-| `../../../Screenshots/06-pki-health-dashboard.png` | Console screenshot of the 12:18:49 run showing the `ALL CHECKS PASSED` summary. |
+| `../../../Screenshots/06-pki-health-dashboard-parameterized.jpg` | **Primary capture.** Console screenshot of the 13:59:25 parameterized run — real `[OK]` rows for CRL Endpoint and Issuing CA Certificate Expiry against the lab's actual PKI. Summary: `ALL CHECKS PASSED`. |
+| `../../../Screenshots/06-pki-health-dashboard.png` | **Supplementary baseline.** 12:18:49 run with no optional parameters; every row `[SKIP]` to demonstrate the script's defensive defaults. |
 
-## What the Audit Log Shows
+## What the Captures Show
 
-Seven independent runs across the day (11:50 - 12:07 UTC-4), all reporting `Critical: False | Warning: False`. The 12:07:50 run added the explicit `HEALTH-CHECK-PASS | No issues found` line after a script update.
+**Parameterized run (13:59:25) — real PKI exercise:**
 
-Visually verified at 12:18:49 with the captured screenshot - the same run pattern, summary line `ALL CHECKS PASSED - PKI environment is healthy.`
+- CRL Distribution: `http://pki.lab.local/crl/LAB-CA.crl` reachable, valid, expires 2026-12-05 (184 days out at capture time)
+- Issuing CA Certificate (`LAB-CA`, thumbprint `E7DCA2DB...`): healthy, expires 2031-05-26 (1817 days out at capture time)
+- OCSP / VPN cert / enrolled smart cards: `[SKIP]` — those optional checks aren't part of this run's scope
+
+**Baseline run (12:18:49) — defensive defaults:**
+
+Script invoked with no optional parameters. Every check `[SKIP]`s rather than crashing. Demonstrates that the same script can be used as a smoke test during lab build (when those endpoints might not exist yet) without producing false alarms.
+
+**Audit log:** Seven independent runs across 2026-06-04 (11:50 - 12:07), all reporting `Critical: False | Warning: False`. The 12:07:50 run added the explicit `HEALTH-CHECK-PASS | No issues found` line after a script update.
 
 ## How This Maps to RMF Artifacts
 

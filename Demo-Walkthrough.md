@@ -173,13 +173,21 @@ Show the green dashboard with CRL validity windows and OCSP status.
 > approaches failure, it sends an alert email. This is the continuous monitoring posture
 > required by NIST CA-7 and our ATO commitment."
 
-**📸 Real capture — 2026-06-04 12:18:49 on Lab-DC01:**
+**📸 Real capture — 2026-06-04 13:59:25 on Lab-DC01 (parameterized run):**
 
-![PKI Health Monitor dashboard — ALL CHECKS PASSED](Screenshots/06-pki-health-dashboard.png)
+![PKI Health Monitor dashboard — parameterized run with real CRL + Issuing CA results, ALL CHECKS PASSED](Screenshots/06-pki-health-dashboard-parameterized.jpg)
 
-The summary block at the bottom reads `ALL CHECKS PASSED — PKI environment is healthy.` This is a baseline run invoked without optional parameters, so the individual rows show `[SKIP]` — the script's defensive defaults gracefully skip optional checks rather than fail. A parameterized run (with `-CRLUrls`, `-OCSPUrl`, `-IssuingCAServer`) populates the rows with `[OK]` / `[WARN]` / `[CRIT]` against real expiry windows.
+The dashboard exercises three real-world checks against the lab PKI:
 
-**Supporting audit-trail evidence:** `Compliance-Reports/PKI-Health/2026-06-04/PKIHealth-DC01-AuditLog.txt` shows 7 successful runs across the day — immutable record of CA-7 continuous monitoring in action.
+- **CRL Endpoint Reachability & Validity** — `[OK] CRL valid — http://pki.lab.local/crl/LAB-CA.crl — expires in 184 days (2026-12-05)`
+- **Issuing CA Certificate Expiry** — two `[OK]` rows; CA cert `E7DCA2DB...` expires in 1817 days (2031-05-26)
+- **OCSP / VPN cert / enrolled smart cards** — `[SKIP]` rows (OCSP responder not yet configured; VPN cert + enrolled-user checks scoped for the parameterized scheduled-task variant)
+
+The summary block reads `ALL CHECKS PASSED — PKI environment is healthy.` This is exactly the operational pulse NIST CA-7 requires: scheduled, parameterized, with calendar-time visibility into every cert and CRL the environment depends on.
+
+**Supplementary baseline screenshot** (`Screenshots/06-pki-health-dashboard.png` — 2026-06-04 12:18:49) shows the same script invoked without parameters: every row gracefully `[SKIP]` instead of crashing. The defensive-defaults behaviour matters because the script is also used as a smoke test during lab build; an undeployed environment should produce skips, not noise.
+
+**Supporting audit-trail evidence:** `Compliance-Reports/PKI-Health/2026-06-04/PKIHealth-DC01-AuditLog.txt` records seven successful runs across 2026-06-04 — immutable evidence of CA-7 continuous monitoring in action.
 
 ---
 
