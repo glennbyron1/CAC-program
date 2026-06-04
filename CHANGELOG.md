@@ -24,6 +24,45 @@ Automates the complete SCAP before/after compliance scan loop. Runs SCAP SCC hea
 **`Screenshots/06-pki-health-dashboard.png`** + **`Compliance-Reports/PKI-Health/2026-06-04/`**
 Real console capture of `Monitor-PKIHealth.ps1` running on Lab-DC01 at 12:18:49 — banner, all five check sections, and the `ALL CHECKS PASSED — PKI environment is healthy.` summary line. Wired into `Demo-Walkthrough.md` Step 6 (slot 6) with honest annotation: rows show `[SKIP]` because optional parameters weren't passed in this baseline run; a follow-up parameterized run is queued for v1.1. Audit-log evidence (`PKIHealth-DC01-AuditLog.txt`) shows seven independent script invocations across the day, all `Critical: False | Warning: False` — immutable CA-7 continuous-monitoring pulse. Folder includes a `README.md` mapping the artifacts to RMF SAR Section 3, POAM baseline-pulse, and SSP Section 7.
 
+### PKI Health Monitor — Five Real-World Bug Fixes + Lab HTTP CRL Endpoint Stood Up
+
+**Trigger:** Parameterized run of `Monitor-PKIHealth.ps1` against the real lab PKI (with `-CRLUrls`, `-OCSPUrl`, `-IssuingCAServer` populated) surfaced five distinct bugs and one infrastructure gap. The script had been passing in `[SKIP]`-only baseline runs but produced false alarms and silent failures the moment it touched real endpoints. All five fixes battle-tested against the live lab.
+
+#### Changed
+
+**`Lab-Kit/03-DomainController/Monitor-PKIHealth.ps1`** — five fixes from real-world deployment
+
+**Fix 1 — CA cert store filter false positives.** The old `Where-Object` filter matched any cert with "CA" anywhere in the issuer field, scooping up OS-built-in intermediates (Microsoft, VeriSign) that had been expired since 2002 / 2016 and triggering CRITICAL false alarms on every run. Filter now matches on the first AD domain label derived from `$env:USERDNSDOMAIN`, scoping results to internal PKI certs only.
+
+**Fix 2 — OCSP catch block crashes under StrictMode.** `$_.Exception.Response.StatusCode` throws `PropertyNotFoundException` when `$_.Exception.Response` is `$null` (OCSP endpoint unreachable). Same class of bug as the `AutomationNull` fix earlier in Session 5 — null guard added before property access.
+
+**Fix 3 — CRL binary content corruption.** `Invoke-WebRequest -UseBasicParsing` returns binary `.crl` payloads as a string in PowerShell 5.1; re-encoding with `[Text.Encoding]::ASCII.GetBytes` then corrupted the DER, making `certutil -dump` fail silently and the Next Update regex never match. Replaced with `System.Net.WebClient.DownloadFile` which writes raw bytes directly to disk.
+
+**Fix 4 — CRL Next Update regex didn't match certutil output.** Pattern looked for `"Next Update:"` (space-separated); `certutil -dump` actually emits `"NextUpdate:"` (no space). Silent failure — every run looked clean but never actually validated CRL freshness. Regex updated.
+
+**Fix 5 — `certutil -config` format + invalid `-CA.cert` verb.** Script passed only the hostname to `-config` (needs `Server\CAName` format) and called `-CA.cert` which is not a valid certutil verb — always exited 1 and produced a spurious WARN on every run. Replaced with `certutil -ping` for auto-discovery of the CA name (parses `Server "CAName" ICertRequest2 interface is alive`) and dropped the bad `-CA.cert` call entirely. The cert store fallback already provided accurate results.
+
+**NIST Controls Affected:** CA-7 (Continuous Monitoring), SC-17 (PKI Certificates), AU-12 (Audit Generation — the false alarms were polluting the alert stream).
+
+#### Added — Lab Infrastructure
+
+To exercise the script's CRL check end-to-end, the lab's HTTP CRL distribution point was stood up:
+
+- DNS A record `pki.lab.local` published on Lab-DC01 internal DNS
+- IIS installed on Lab-DC01 (`Install-WindowsFeature Web-Server`)
+- `C:\inetpub\wwwroot\crl\` directory created and populated from the CA's `CertEnroll` share
+- MIME types added: `.crl` → `application/pkix-crl`, `.crt` → `application/pkix-cert`
+- CA CRL validity extended from 1 week to **6 months** (`certutil -setreg CA\CRLPeriodUnits 6` + `CA\CRLPeriod Months`) — appropriate for an internal-issuing CA with low revocation churn
+- CRL republished: `certutil -crl`
+
+**Final state captured in `Screenshots/06-pki-health-dashboard-parameterized.jpg`:**
+- CRL valid at `http://pki.lab.local/crl/LAB-CA.crl` (expires 2026-12-05)
+- Issuing CA cert healthy (`E7DCA2DB...`, expires 2031-05-26)
+- `ALL CHECKS PASSED — PKI environment is healthy.`
+
+**`Lab-Kit/03-DomainController/Bug-Fix-Logs/PKIHealth-2026-06-04-five-fixes.txt`** (new)
+Focused bug-fix log staged as an evidence artifact alongside the script — each fix documented with Problem / Before / After / Root cause. Useful as a portfolio artifact demonstrating the real-world iteration pattern (run against real infrastructure → observe false alarms / silent failures → root-cause → patch → re-verify). Author: Glenn Byron.
+
 ### WALKTHROUGH.md Gap Closed — Step 3b (Workstations OU Pre-Domain-Join Scoping)
 
 #### Changed

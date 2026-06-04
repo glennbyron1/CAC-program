@@ -1344,3 +1344,107 @@ Decision: only Step 3b merged into the repo. Rationale — WALKTHROUGH.md should
 - **Passwords table** not merged — repo intentionally uses `<LAB-ADMIN-PASSWORD>` placeholders inline throughout WALKTHROUGH rather than a credentials table. Adding a table (even placeholder-swapped) would partially undo that convention.
 - **Break-Glass Accounts** not merged — already covered at full depth in `Lab-Kit/Reference/TROUBLESHOOTING.md` ("Smart Card / Authentication" section). The two-mechanism table at lines 108-112 and break-glass accounts table at lines 138-141 already document the `scforceoption=1` (machine-wide GPO) vs `SmartcardLogonRequired` (per-user AD flag) distinction that distinguishes a senior identity engineer from a junior one. Recovery content belongs next to the symptom, not at the end of the build walkthrough.
 
+### HTTP CRL Distribution Point Stood Up on Lab-DC01
+
+To exercise `Monitor-PKIHealth.ps1`'s CRL Endpoint Reachability check end-to-end, the lab's HTTP CRL distribution point was built on Lab-DC01. Until now the CA was publishing to LDAP only; HTTP was the missing piece for any non-domain-joined client (workstations, VPN gateway, future Azure ZTNA broker).
+
+Steps performed:
+
+1. DNS A record `pki.lab.local` published on Lab-DC01 internal DNS, pointing at the CA's web-serving interface.
+2. IIS installed: `Install-WindowsFeature Web-Server -IncludeManagementTools`.
+3. CRL web directory created: `C:\inetpub\wwwroot\crl\`.
+4. IIS MIME types added (Windows ships without them by default):
+   - `.crl` → `application/pkix-crl`
+   - `.crt` → `application/pkix-cert`
+5. CRL files copied from `%windir%\system32\CertSrv\CertEnroll\` to the web directory.
+6. CA CRL validity extended from 1 week to 6 months — appropriate for an internal-issuing CA with low revocation churn, and reduces the chance of a stale-CRL outage if monitoring lapses:
+
+   ```cmd
+   certutil -setreg CA\CRLPeriodUnits 6
+   certutil -setreg CA\CRLPeriod "Months"
+   net stop certsvc & net start certsvc
+   certutil -crl
+   ```
+
+7. Verified live: `http://pki.lab.local/crl/LAB-CA.crl` returns the DER CRL with `Content-Type: application/pkix-crl` and a 6-month `NextUpdate` window.
+
+### `Lab-Kit\03-DomainController\Monitor-PKIHealth.ps1` — Five Bug Fixes from Parameterized Run
+
+The all-`[SKIP]` baseline run on 2026-06-04 12:18:49 was healthy because the optional checks weren't being exercised. The moment the script was invoked with `-CRLUrls`, `-OCSPUrl`, and `-IssuingCAServer` populated against the freshly-built HTTP CRL endpoint, five distinct bugs surfaced. Each was root-caused against real infrastructure, patched, and re-verified.
+
+**Fix 1 — CA cert store filter too broad (false-positive CRITICAL alarms):**
+
+Old filter:
+```powershell
+Where-Object { $_.Subject -like "*$IssuingCAServer*" -or $_.Issuer -like "*CA*" }
+```
+
+Symptom: every run reported `[CRIT] CA cert EXPIRED` for two unrelated Windows-built-in intermediates — VeriSign (expired 2002) and a Microsoft cross-cert (expired 2016) — that have been in `Cert:\LocalMachine\CA` since OS installation. `*CA*` matched any cert with the letters "CA" anywhere in the issuer field, including the word "CA" in "Microsoft Code Signing PCA" etc.
+
+Fix:
+```powershell
+$domainLabel = "DC=" + ($env:USERDNSDOMAIN -split '\.')[0]
+Where-Object { $_.Subject -like "*$domainLabel*" -or $_.Issuer -like "*$domainLabel*" }
+```
+
+Filter now scopes to the first AD domain label only, so OS intermediates are ignored.
+
+**Fix 2 — OCSP catch block crashes under StrictMode:**
+
+Old code:
+```powershell
+if ($_.Exception.Message -like "*405*" -or $_.Exception.Response.StatusCode -eq 405)
+```
+
+When the OCSP endpoint is unreachable, `$_.Exception.Response` is `$null`. Accessing `.StatusCode` on null under `Set-StrictMode -Version Latest` throws `PropertyNotFoundException` instead of cleanly falling through. Same class as Lesson #9 (`AutomationNull`) — null guard required.
+
+Fix:
+```powershell
+$statusCode = if ($null -ne $_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { 0 }
+if ($_.Exception.Message -like "*405*" -or $statusCode -eq 405) { ... }
+```
+
+**Fix 3 — CRL binary corrupted before certutil parse (silent failure):**
+
+`Invoke-WebRequest -UseBasicParsing` returns binary `.crl` payloads as a string in PowerShell 5.1 (UTF-16 default). The old code then re-encoded with `[Text.Encoding]::ASCII.GetBytes` which corrupted the DER. `certutil -dump` failed silently and the regex never matched — so the script reported success while not actually validating CRL freshness.
+
+Fix: replaced with `System.Net.WebClient.DownloadFile` which writes raw bytes directly to disk, bypassing string encoding entirely.
+
+```powershell
+$tempFile = [System.IO.Path]::GetTempFileName() + ".crl"
+$wc = New-Object System.Net.WebClient
+$wc.DownloadFile($url, $tempFile)
+```
+
+**Fix 4 — CRL Next Update regex didn't match actual certutil output (silent failure):**
+
+Pattern looked for `"Next Update:"` (space-separated, as Microsoft's docs show). `certutil -dump` actually emits `"NextUpdate:"` (no space) in current Windows Server. Silent failure — every CRL check appeared clean but never verified anything. Updated regex.
+
+**Fix 5 — `certutil -config` format + invalid `-CA.cert` verb (spurious WARN every run):**
+
+`-config "Lab-DC01"` was missing the required `\CAName` suffix. `-CA.cert` is not a valid certutil verb — always exits 1, always triggers `Write-Warn "Could not connect to CA server"`. Replaced with `certutil -ping` for CA name auto-discovery:
+
+```powershell
+$pingOut = & certutil -config "$IssuingCAServer" -ping 2>&1 | Out-String
+if ($pingOut -match 'Server "([^"]+)" ICertRequest2') {
+    $caConfig = "$IssuingCAServer\$($Matches[1])"
+}
+```
+
+The bad `-CA.cert` call was removed entirely. The cert store fallback already produced accurate results.
+
+**Bug-fix log staged at:** `Lab-Kit\03-DomainController\Bug-Fix-Logs\PKIHealth-2026-06-04-five-fixes.txt` — focused single-purpose record demonstrating the real-world iteration pattern (run against real infrastructure → observe false alarms / silent failures → root-cause → patch → re-verify).
+
+**Verification:** Re-ran parameterized at 13:59:25. CRL valid (`[OK] http://pki.lab.local/crl/LAB-CA.crl — expires in 184 days`), Issuing CA cert healthy (`[OK] CN=LAB-CA — expires in 1817 days`), summary `ALL CHECKS PASSED`. Captured as `Screenshots/06-pki-health-dashboard-parameterized.jpg` — now the primary slot 6 portfolio image.
+
+### Lessons Learned — Session 5 (continued)
+
+| # | Lesson | Impact |
+|---|---|---|
+| 15 | `*CA*` in a Where-Object filter scoops up Microsoft + VeriSign built-in intermediates | False CRITICAL alarms for certs expired since 2002. Scope to the AD domain label derived from `$env:USERDNSDOMAIN` instead. |
+| 16 | `Invoke-WebRequest -UseBasicParsing` returns binary as a string in PS 5.1 | Re-encoding with `ASCII.GetBytes` corrupts DER silently. Use `System.Net.WebClient.DownloadFile` for binary downloads. |
+| 17 | `certutil -dump` output is `NextUpdate:` (no space), not `Next Update:` | Regex written from Microsoft docs vs. actual output drift. Test regex against real command output, not the published format. |
+| 18 | `certutil -config` requires `Server\CAName`, not just `Server` | Use `certutil -ping` to auto-discover the CA name from `Server "CAName" ICertRequest2 interface is alive`. |
+| 19 | `certutil -CA.cert` is not a valid verb | Always exits 1, generates spurious warnings. Remove and fall back to the local cert store. |
+| 20 | A monitoring script that produces false alarms IS broken | Five separate bugs (1-2 false positive, 2 silent failure, 1 spurious warn). All would have shipped silently — the script "worked" until it was actually used. Run against real infrastructure before declaring it operational. |
+

@@ -231,6 +231,8 @@ Requires: Dell 3080 Micro #2 + OPNsense.
 - ✅ **Stale top-level `TROUBLESHOOTING.md` removed** — was a strict subset of `Lab-Kit/Reference/TROUBLESHOOTING.md`; README link updated to point at the canonical Reference/ copy.
 - ✅ **WALKTHROUGH.md gap closed** — Step 3b (create Workstations OU + scope `scforceoption=1` GPO to it, BEFORE domain join) merged into Phase 6 from lab export. Closes the silent landmine where readers would link the smart-card GPO at domain root by default and lock out Lab-DC01. Includes built-in safety check that auto-removes accidental domain-root link.
 - ✅ **v1.0 release notes published** (2026-06-04) — closes out v1.0 as a fully-shipped portfolio milestone (tag pushed + history clean + public repo + release notes on the tag).
+- ✅ **HTTP CRL Distribution Point built on Lab-DC01** (2026-06-04) — DNS A record `pki.lab.local`, IIS + `.crl` MIME type, CRL files staged from CertEnroll, CRL validity extended 1 week → 6 months. Closes the LDAP-only gap; HTTP CRL now reachable for any non-domain-joined client.
+- ✅ **Monitor-PKIHealth.ps1 — 5 additional bug fixes from parameterized real-world run** — CA cert filter false positives (VeriSign + Microsoft built-ins expired since 2002), OCSP null-guard under StrictMode, CRL binary corruption in PS 5.1 `Invoke-WebRequest`, NextUpdate regex drift vs current certutil output, `-CA.cert` invalid verb. All battle-tested. Bug-fix log staged at `Lab-Kit/03-DomainController/Bug-Fix-Logs/`. Lessons #15-20 captured.
 
 ---
 

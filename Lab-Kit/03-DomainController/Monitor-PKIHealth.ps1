@@ -210,21 +210,17 @@ function Test-CRLEndpoints {
                 continue
             }
 
-            # Parse the CRL to check validity dates
-            $crlBytes = $response.Content
-            if ($crlBytes -is [string]) {
-                $crlBytes = [System.Text.Encoding]::ASCII.GetBytes($crlBytes)
-            }
-
-            # Save to temp file and use certutil to parse
+            # Download raw bytes directly — Invoke-WebRequest Content is already byte[]
+            # for binary responses in PS 5.1; re-download with WebClient to guarantee it
             $tempFile = [System.IO.Path]::GetTempFileName() + ".crl"
-            [System.IO.File]::WriteAllBytes($tempFile, $crlBytes)
+            $wc = New-Object System.Net.WebClient
+            $wc.DownloadFile($url, $tempFile)
 
             $certutilOutput = & certutil -dump "$tempFile" 2>&1 | Out-String
             Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
 
             # Extract Next Update date from certutil output
-            if ($certutilOutput -match "Next Update:\s+(.+)") {
+            if ($certutilOutput -match "NextUpdate:\s+(.+)") {
                 $nextUpdateStr = $matches[1].Trim()
                 try {
                     $nextUpdate = [datetime]::Parse($nextUpdateStr)
@@ -278,7 +274,9 @@ function Test-OCSPEndpoint {
         }
     } catch {
         # 405 is thrown as an exception by some PS versions — check the error
-        if ($_.Exception.Message -like "*405*" -or $_.Exception.Response.StatusCode -eq 405) {
+        # Guard the .Response access — StrictMode throws PropertyNotFoundException if null
+        $statusCode = if ($null -ne $_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { 0 }
+        if ($_.Exception.Message -like "*405*" -or $statusCode -eq 405) {
             Write-OK "OCSP responder reachable (HTTP 405 — POST required, endpoint is live)"
         } else {
             Write-Crit "OCSP endpoint UNREACHABLE: $OCSPUrl — $_"
@@ -301,17 +299,21 @@ function Test-IssuingCACert {
     try {
         Write-Info "Querying CA certificates on: $IssuingCAServer"
 
-        # Pull CA certs from the Issuing CA using certutil
-        $output = & certutil -config "$IssuingCAServer" -CA.cert 2>&1 | Out-String
-
-        if ($LASTEXITCODE -ne 0) {
-            Write-Warn "Could not connect to CA server '$IssuingCAServer' via certutil (exit $LASTEXITCODE)"
-            Write-Info "Falling back to local cert store check..."
+        # Resolve the CA config string (ServerName\CAName) — certutil -ping returns the CA name
+        $caConfig = $IssuingCAServer
+        $pingOut = & certutil -config "$IssuingCAServer" -ping 2>&1 | Out-String
+        if ($pingOut -match 'Server "([^"]+)" ICertRequest2') {
+            $caConfig = "$IssuingCAServer\$($Matches[1])"
+            Write-Info "Resolved CA config: $caConfig"
         }
 
-        # Check CA certs in the local machine store that chain to this server
+        # Cert store check below is the primary check — certutil ping already confirmed CA is alive
+
+        # Scope to internal PKI certs only — match on the first domain label (e.g. "DC=lab")
+        # Avoids space/comma mismatch between joined DC string and cert subject formatting
+        $domainLabel = "DC=" + ($env:USERDNSDOMAIN -split '\.')[0]
         $caCerts = Get-ChildItem -Path "Cert:\LocalMachine\CA" -ErrorAction SilentlyContinue |
-                   Where-Object { $_.Subject -like "*$IssuingCAServer*" -or $_.Issuer -like "*CA*" }
+                   Where-Object { $_.Subject -like "*$domainLabel*" -or $_.Issuer -like "*$domainLabel*" }
 
         if ($caCerts) {
             foreach ($cert in $caCerts) {

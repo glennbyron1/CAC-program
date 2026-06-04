@@ -1,0 +1,134 @@
+================================================================================
+  CHANGELOG — Monitor-PKIHealth.ps1
+  Script ID : SCRIPT-ICAM-012
+  Author    : Glenn Byron
+  Date      : 2026-06-04
+================================================================================
+
+FILE CHANGED: Monitor-PKIHealth.ps1
+
+--------------------------------------------------------------------------------
+FIX 1 — CA cert store filter too broad (false positive: expired VeriSign cert)
+--------------------------------------------------------------------------------
+Problem:
+  The Where-Object filter used '$_.Issuer -like "*CA*"' which matched any cert
+  with "CA" anywhere in the issuer field — including old Windows built-in
+  intermediates (VeriSign, Microsoft, etc.) that have been in LocalMachine\CA
+  since OS installation. This caused CRITICAL false positives for certs expired
+  since 2002 and 2016.
+
+Fix:
+  Filter now matches on the first AD domain label (e.g. "DC=lab") derived from
+  $env:USERDNSDOMAIN. This scopes results to internal PKI certs only.
+
+  Before:
+    Where-Object { $_.Subject -like "*$IssuingCAServer*" -or $_.Issuer -like "*CA*" }
+
+  After:
+    $domainLabel = "DC=" + ($env:USERDNSDOMAIN -split '\.')[0]
+    Where-Object { $_.Subject -like "*$domainLabel*" -or $_.Issuer -like "*$domainLabel*" }
+
+--------------------------------------------------------------------------------
+FIX 2 — OCSP check throws PropertyNotFoundException under Set-StrictMode
+--------------------------------------------------------------------------------
+Problem:
+  The catch block accessed $_.Exception.Response.StatusCode directly. When the
+  OCSP endpoint is unreachable, $_.Exception.Response is null. With
+  Set-StrictMode -Version Latest active, accessing a property on a null object
+  throws PropertyNotFoundException instead of falling through to the else branch.
+
+Fix:
+  Added a null guard before accessing StatusCode.
+
+  Before:
+    if ($_.Exception.Message -like "*405*" -or $_.Exception.Response.StatusCode -eq 405)
+
+  After:
+    $statusCode = if ($null -ne $_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { 0 }
+    if ($_.Exception.Message -like "*405*" -or $statusCode -eq 405)
+
+--------------------------------------------------------------------------------
+FIX 3 — CRL binary content corrupted before certutil parse
+--------------------------------------------------------------------------------
+Problem:
+  Invoke-WebRequest with -UseBasicParsing returns binary .crl content as a
+  string in PowerShell 5.1. Re-encoding with ASCII GetBytes corrupted the DER
+  binary, causing certutil -dump to fail silently and the Next Update regex
+  to never match.
+
+Fix:
+  Replaced Invoke-WebRequest content handling with System.Net.WebClient
+  DownloadFile, which writes raw bytes directly to disk.
+
+  Before:
+    $crlBytes = $response.Content
+    if ($crlBytes -is [string]) { $crlBytes = [System.Text.Encoding]::ASCII.GetBytes($crlBytes) }
+    [System.IO.File]::WriteAllBytes($tempFile, $crlBytes)
+
+  After:
+    $tempFile = [System.IO.Path]::GetTempFileName() + ".crl"
+    $wc = New-Object System.Net.WebClient
+    $wc.DownloadFile($url, $tempFile)
+
+--------------------------------------------------------------------------------
+FIX 4 — CRL Next Update regex did not match certutil output format
+--------------------------------------------------------------------------------
+Problem:
+  The regex pattern looked for "Next Update:" (with a space between words) but
+  certutil -dump outputs "NextUpdate:" (no space, with a leading space before
+  the field name).
+
+Fix:
+  Updated regex to match actual certutil output.
+
+  Before:
+    if ($certutilOutput -match "Next Update:\s+(.+)")
+
+  After:
+    if ($certutilOutput -match "NextUpdate:\s+(.+)")
+
+--------------------------------------------------------------------------------
+FIX 5 — certutil -config format and invalid -CA.cert verb
+--------------------------------------------------------------------------------
+Problem:
+  certutil -config expects "ServerName\CAName" format but the script passed
+  only the server hostname. Additionally, -CA.cert is not a valid certutil verb
+  and always exits with code 1, triggering a spurious WARN on every run.
+
+Fix:
+  Added auto-discovery of the CA name using 'certutil -ping', which outputs
+  the CA name in the format: Server "CAName" ICertRequest2 interface is alive.
+  The -CA.cert call was removed entirely since the cert store fallback provides
+  accurate results without it.
+
+  Added:
+    $pingOut = & certutil -config "$IssuingCAServer" -ping 2>&1 | Out-String
+    if ($pingOut -match 'Server "([^"]+)" ICertRequest2') {
+        $caConfig = "$IssuingCAServer\$($Matches[1])"
+    }
+
+  Removed:
+    $output = & certutil -config "$IssuingCAServer" -CA.cert 2>&1 | Out-String
+    (and associated LASTEXITCODE warning)
+
+--------------------------------------------------------------------------------
+INFRASTRUCTURE CHANGES (performed on Lab-DC01)
+--------------------------------------------------------------------------------
+1. DNS A record created: pki.lab.local -> 169.254.3.190 (DC01 IP)
+2. IIS installed: Install-WindowsFeature Web-Server
+3. CRL web directory created: C:\inetpub\wwwroot\crl\
+4. MIME types added to IIS: .crl (application/pkix-crl), .crt (application/pkix-cert)
+5. CRL files copied from CertEnroll to web directory
+6. CA CRL validity extended from 1 week to 6 months:
+     certutil -setreg CA\CRLPeriodUnits 6
+     certutil -setreg CA\CRLPeriod "Months"
+7. CRL republished: certutil -crl
+
+--------------------------------------------------------------------------------
+FINAL STATE
+--------------------------------------------------------------------------------
+  CRL valid      : http://pki.lab.local/crl/LAB-CA.crl — expires 2026-12-05
+  LAB-CA cert    : CN=LAB-CA, DC=lab, DC=local — expires 2031-05-26
+  Health summary : ALL CHECKS PASSED
+
+================================================================================
