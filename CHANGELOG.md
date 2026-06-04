@@ -24,6 +24,15 @@ Automates the complete SCAP before/after compliance scan loop. Runs SCAP SCC hea
 **`Screenshots/06-pki-health-dashboard.png`** + **`Compliance-Reports/PKI-Health/2026-06-04/`**
 Real console capture of `Monitor-PKIHealth.ps1` running on Lab-DC01 at 12:18:49 — banner, all five check sections, and the `ALL CHECKS PASSED — PKI environment is healthy.` summary line. Wired into `Demo-Walkthrough.md` Step 6 (slot 6) with honest annotation: rows show `[SKIP]` because optional parameters weren't passed in this baseline run; a follow-up parameterized run is queued for v1.1. Audit-log evidence (`PKIHealth-DC01-AuditLog.txt`) shows seven independent script invocations across the day, all `Critical: False | Warning: False` — immutable CA-7 continuous-monitoring pulse. Folder includes a `README.md` mapping the artifacts to RMF SAR Section 3, POAM baseline-pulse, and SSP Section 7.
 
+### WALKTHROUGH.md Gap Closed — Step 3b (Workstations OU Pre-Domain-Join Scoping)
+
+#### Changed
+
+**`WALKTHROUGH.md`** — added Phase 6 Step 3b
+Phase 6 (Domain Controller Setup) jumped from Step 3 (Build-CA-GPO) straight to Step 4 (Install PSPKI), silently skipping the critical pre-domain-join action: create the Workstations OU, `redircmp` it as the default computer container, and scope `scforceoption=1` GPO to that OU only. Without this step, the smart card enforcement GPO defaults to the domain root and locks out Lab-DC01 on the next `gpupdate` — the most common catastrophic failure mode in the build. The recovery is documented in `Lab-Kit/Reference/TROUBLESHOOTING.md`; the prevention now lives in WALKTHROUGH at the correct sequence point. Sourced from the 2026-05-26 lab export `CAC-Lab-Kit-20260526-lab-file.zip`. Section includes a built-in safety check that auto-removes any accidental domain-root link before exit.
+
+Other WALKTHROUGH.md sections found only in the lab export — "IP Reference" table, "Passwords" table, "Break-Glass Accounts" reference block — intentionally not merged. The IP Reference is already covered in `Lab-Kit/Reference/ONBOARDING.md` and `Lab-Kit/START-HERE.md`. The Passwords table conflicts with the repo's placeholder-everywhere convention (`<LAB-ADMIN-PASSWORD>` inline rather than a credentials table). The Break-Glass Accounts content lives more naturally in `Lab-Kit/Reference/TROUBLESHOOTING.md` next to the symptom it recovers from — which already documents the per-user (`SmartcardLogonRequired`) vs machine-wide (`scforceoption`) distinction.
+
 ### Live-Servers + Tools-Kit Sync from Lab Export
 
 **Trigger:** Reviewed `CAC-Lab-Kit-20260526-lab-file.zip` (lab snapshot, 105 MB, 182 files) and identified two folders present on the lab DC but missing from the public repo. Both folders are clean of sensitive patterns (audited against every entry in `.scrub-patterns.local.json` — lab passwords, real organizational identifiers, real-world subnets, real email, labtech cert thumbprint — zero hits across all 11 files). Imported as-is, no scrubbing required.

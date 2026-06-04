@@ -248,6 +248,70 @@ Invoke-Command -VMName "Lab-DC01" -Credential $cred -ScriptBlock {
 }
 ```
 
+### Step 3b — Create Workstations OU and scope smart card enforcement ⚠️ DO THIS BEFORE DOMAIN JOIN
+
+> **This step must run before Lab-Workstation01 joins the domain.** It creates the
+> Workstations OU, redirects new computer accounts into it, and creates the
+> `scforceoption=1` GPO scoped to that OU only. Skipping this — or linking the GPO
+> at domain root — will lock out Lab-DC01 every time gpupdate runs. The
+> `Lab-Kit/Reference/TROUBLESHOOTING.md` "Smart Card / Authentication" section
+> documents the recovery, but the prevention is here.
+
+Run on **Lab-DC01** as LAB\Administrator:
+
+```powershell
+Import-Module GroupPolicy, ActiveDirectory
+
+$domainDN = (Get-ADDomain).DistinguishedName
+$ouDN     = "OU=Workstations,$domainDN"
+
+# 1. Create Workstations OU
+New-ADOrganizationalUnit -Name "Workstations" -Path $domainDN -ErrorAction SilentlyContinue
+Write-Host "Workstations OU ready: $ouDN" -ForegroundColor Green
+
+# 2. Redirect default computer container - Workstations OU
+#    Lab-Workstation01 will land here automatically on domain join
+redircmp $ouDN
+Write-Host "New computers will land in Workstations OU automatically" -ForegroundColor Green
+
+# 3. Create smart card enforcement GPO (scforceoption=1)
+$gpoName = "SEC-MFA-SmartCard-Enforcement"
+if (-not (Get-GPO -Name $gpoName -ErrorAction SilentlyContinue)) {
+    New-GPO -Name $gpoName -Comment "IA-2(11), AC-11 - Smart card required. Workstations OU only."
+}
+
+Set-GPRegistryValue -Name $gpoName `
+    -Key "HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System" `
+    -ValueName "scforceoption"       -Type DWord -Value 1
+
+Set-GPRegistryValue -Name $gpoName `
+    -Key "HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System" `
+    -ValueName "ScRemoveOption"      -Type DWord -Value 1
+
+Set-GPRegistryValue -Name $gpoName `
+    -Key "HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System" `
+    -ValueName "InactivityTimeoutSecs" -Type DWord -Value 900
+
+# 4. Link to Workstations OU ONLY - never the domain root
+New-GPLink -Name $gpoName -Target $ouDN -LinkEnabled Yes -ErrorAction SilentlyContinue
+Write-Host "GPO linked to Workstations OU" -ForegroundColor Green
+
+# 5. Safety check - confirm zero domain-root links
+$rootLinks = (Get-GPInheritance -Target $domainDN).GpoLinks
+if ($rootLinks | Where-Object { $_.DisplayName -eq $gpoName }) {
+    Write-Warning "REMOVE domain-root link NOW - this will lock out DC01!"
+    Remove-GPLink -Name $gpoName -Target $domainDN -ErrorAction SilentlyContinue
+}
+
+Write-Host "Done - scforceoption=1 scoped to Workstations OU only." -ForegroundColor Cyan
+```
+
+> **Why this matters:** `scforceoption=1` applied at domain root hits every machine
+> including Lab-DC01, locking out ALL password-based login (console, PowerShell Direct,
+> RDP). By putting it on the Workstations OU only, the DC always retains break-glass
+> password access. The two-mechanism root cause (machine-wide `scforceoption` vs per-user
+> `SmartcardLogonRequired`) and recovery steps are in `Lab-Kit/Reference/TROUBLESHOOTING.md`.
+
 ### Step 4 — Install PSPKI module (required — DC has no internet)
 ```powershell
 Save-Module -Name PSPKI -Path "C:\Temp\PSModules" -Repository PSGallery -Force

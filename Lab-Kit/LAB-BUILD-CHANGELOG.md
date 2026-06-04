@@ -1333,3 +1333,14 @@ Also removed a stale top-level `TROUBLESHOOTING.md` (12.7 KB) that was a strict 
 | 13 | Lab kit zips contain raw lab credentials by design | Lab-side scrub already strips real organizational identifiers (org name, internal subnets, real email). Lab credentials (lab admin password, labtech password) remain raw so the lab is operable. `Scrub-Repo.ps1` swaps those for `<LAB-*>` placeholders at push time — never extract a lab kit zip into the repo without re-running the scrubber. |
 | 14 | Documentation about scrub patterns will be flagged by the scrub scanner | The scanner can't distinguish "this is an audit note listing what we checked for" from "this is an accidental leak." When writing audit narratives in changelogs, refer to patterns by category ("lab admin password", "real internal subnets") rather than by literal value. |
 
+### WALKTHROUGH.md Gap Closed — Step 3b Inserted
+
+Diffed the repo's `WALKTHROUGH.md` (2026-06-03, 27 KB) against the lab export's older version (2026-05-28, 32 KB). Four sections present in the lab export, absent in the repo: Step 3b (Workstations OU pre-domain-join scoping), IP Reference table, Passwords table, and Break-Glass Accounts block.
+
+Decision: only Step 3b merged into the repo. Rationale — WALKTHROUGH.md should be the build sequence (success path), and recovery procedures + reference tables belong in their dedicated docs:
+
+- **Step 3b** is build-sequence content (do-this-before-domain-join). Without it, the walkthrough has a silent landmine: readers will follow the steps, miss creating the Workstations OU, link the smart-card GPO at domain root by default, and lock out Lab-DC01. **Merged into Phase 6 between Step 3 and Step 4.** Includes the built-in safety check that auto-removes any accidental domain-root link before exit. Cross-references `Lab-Kit/Reference/TROUBLESHOOTING.md` for the two-mechanism root cause (machine-wide vs per-user) and the recovery sequence.
+- **IP Reference table** not merged — already covered in `Lab-Kit/Reference/ONBOARDING.md`, `Lab-Kit/START-HERE.md`, repo `LAB-LEARNING-GUIDE.md`, and `TODO.md`. Adding it to WALKTHROUGH would be redundant.
+- **Passwords table** not merged — repo intentionally uses `<LAB-ADMIN-PASSWORD>` placeholders inline throughout WALKTHROUGH rather than a credentials table. Adding a table (even placeholder-swapped) would partially undo that convention.
+- **Break-Glass Accounts** not merged — already covered at full depth in `Lab-Kit/Reference/TROUBLESHOOTING.md` ("Smart Card / Authentication" section). The two-mechanism table at lines 108-112 and break-glass accounts table at lines 138-141 already document the `scforceoption=1` (machine-wide GPO) vs `SmartcardLogonRequired` (per-user AD flag) distinction that distinguishes a senior identity engineer from a junior one. Recovery content belongs next to the symptom, not at the end of the build walkthrough.
+

@@ -251,6 +251,7 @@ Requires: Dell 3080 Micro #2 + OPNsense.
 - ✅ **Real-world deployment hardening** — `Monitor-PKIHealth.ps1` and `Set-AuthenticationPolicySilo.ps1` patched against PS 5.1 `AutomationNull.Count` crash and `Grant-ADAuthenticationPolicySiloAccess` group-object rejection (both found by running on Lab-DC01, not theoretical)
 - ✅ **Lab-export sync — `Live-Servers/` + `Tools-Kit/` imported** — net-new folders from the lab kit (production-deployment readiness/GPO compliance helpers + tool downloaders); both clean of sensitive patterns, no scrubbing needed. README table entries were forward-declared; now backed by actual files.
 - ✅ **Stale top-level `TROUBLESHOOTING.md` removed** — was a strict subset of `Lab-Kit/Reference/TROUBLESHOOTING.md`; README link updated to point at the canonical Reference/ copy.
+- ✅ **WALKTHROUGH.md gap closed** — Step 3b (create Workstations OU + scope `scforceoption=1` GPO to it, BEFORE domain join) merged into Phase 6 from lab export. Closes the silent landmine where readers would link the smart-card GPO at domain root by default and lock out Lab-DC01. Includes built-in safety check that auto-removes accidental domain-root link.
 
 ---
 
