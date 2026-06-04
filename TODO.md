@@ -1,7 +1,7 @@
 # CAC Program — Outstanding Tasks
 
 **Author:** Glenn Byron
-**Last Updated:** June 3, 2026
+**Last Updated:** June 4, 2026
 
 Living task list for the CAC/PIV ICAM portfolio project.
 ✅ Complete · ⬜ Needs hands-on work · ⏳ In progress
@@ -13,23 +13,17 @@ Living task list for the CAC/PIV ICAM portfolio project.
 - ✅ **Repo is public again** (2026-06-03), but the lab admin password is **still treated as sensitive** and gets scrubbed before push.
 - ✅ **Lab admin password is kept stable** (no rotation) — same string used by `Unattend-Server.xml` and all local docs. Real value lives in `.scrub-patterns.local.json` and is replaced with `<LAB-ADMIN-PASSWORD>` at push time by `Scrub-Repo.ps1`.
 - ✅ **Pre-add scan workflow** — `security/scripts/Scan-LocalRepo.ps1` runs against new files before they're committed (catches leaks of real org names, emails, and the lab password before they ship)
-- ⬜ Fix `.scrub-patterns.local.json` so `Scrub-Repo.ps1` can parse it. PowerShell's `ConvertFrom-Json` is case-insensitive, so the lowercase and mixed-case versions of your org name collide. Delete the lowercase-only key (the org-domain key and the mixed-case key together cover every real case). Also delete the dotless `<subnet-without-trailing-dot>` line — it generates false positives by matching inside the safe lab subnet.
+- ✅ `.scrub-patterns.local.json` cleaned up — duplicate-case keys removed (was causing JSON parse error in both `Scrub-Repo.ps1` and the scanner), dotless subnet pattern removed (was generating false positives). Scanner now parses via `ConvertFrom-Json` cleanly.
+- ✅ Scanner shows per-pattern `[CLEAN]`/`[LEAK]` status block so each pattern is visibly checked.
 
 ---
 
-## Immediate — Do These Now (after rotation)
+## Milestones
 
-- ✅ **Add GitHub repo topics** — log in as glennbyron1, repo page → gear icon next to "About":
-  ```
-  identity-management  pki  smart-card  fido2  active-directory
-  certificate-authority  nist-800-53  fips-201  zero-trust  icam
-  ad-cs  powershell  disa-stig  hyper-v  rmf  cac
-  ```
-- ⬜ **Tag v1.0 release** — *do this only after final clean push goes public; tags are immutable*:
-  ```powershell
-  git tag v1.0 -m "Before-MFA baseline: two-tier PKI, smart card enrollment, SCAP compliance evidence"
-  git push origin v1.0
-  ```
+- ✅ **GitHub repo topics added** — `identity-management`, `pki`, `smart-card`, `fido2`, `active-directory`, `certificate-authority`, `nist-800-53`, `fips-201`, `zero-trust`, `icam`, `ad-cs`, `powershell`, `disa-stig`, `hyper-v`, `rmf`, `cac`
+- ✅ **v1.0 pushed** (2026-06-03) — two-tier PKI + smart card MFA on physical endpoint + SCAP evidence (DC01 42.66% / WS01 42.20% / WO02 37.00%) + Phase 8 Zero Trust extension (8 full scripts + 13 scaffolds + Demo-Walkthrough-ZT.md)
+- ⬜ **Write GitHub release notes** — Releases → Draft new release → pick `v1.0` tag → paste bullet list (PKI, smart card, SCAP, ZT extension, card-blocked items deferred to v1.1)
+- ⬜ **v1.1 (when cards arrive)** — slot 1/4/5 screenshots, VPN EAP-TLS test, `Card-Test-Matrix.md` filled in, optional Ansible STIG hardening pass to push compliance % up
 
 ---
 
@@ -115,22 +109,20 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 
 ## Portfolio Finalization
 
-- ⏳ Add real screenshots to `Demo-Walkthrough.md` — **5 of 8 staged (slots 2, 2b, 3, 7, 8)**
-      Staged in `Screenshots/`:
-        - `02-pin-entry-cert-subject.png` (Lab-WS01 PIN prompt) — slot 2 ✅
-        - `02b-incorrect-pin-validation.png` (incorrect PIN dialog) — slot 2 supplement ✅
-        - `03-pkinit-validation-table.png` (Event 4768 annotated) — slot 3 ✅
-        - `07-scap-before-after-side-by-side.png` (DC01 44.95% → 42.66%) — slot 7 ✅
-        - `08-scap-win11-stig-result.png` (SCC Summary Viewer for WO02) — slot 8 ✅
-        - 2 portfolio-evidence shots (enrollment ceremony success + pre-kerberos troubleshoot)
-      Still pending — **CARD-BLOCKED until Amazon order arrives (~1 week):** lock screen (slot 1), session lock with stopwatch (slot 4), VPN connected (slot 5)
-      Still pending — **not blocked, can do anytime:** PKI dashboard (slot 6)
-- ✅ Update Portfolio/ Word docs with all three After-MFA scores (DC01: 42.66% / WS01: 42.20% / WO02: 37.00%) — added "SCAP Compliance Snapshot" section + 4-column results table + interpretation paragraph + source citation to `CAC-Program-Showcase-GlennByron.docx` and `Federal_Upgrade_Path.docx` (2026-06-03)
-- ✅ `SCAP-Workflow-QuickRef.md` promoted from `Dispatch/` (gitignored) to `Lab-Kit/05-Compliance/`. Fixed stale `192.168.1.10` reference → `10.10.10.10`/`Lab-DC01`. Docker `scap-summary` references moved to a bottom "Optional Enhancements" section (deferred until DC hardening pass)
-- ✅ Local scanner enhanced — `security/scripts/Scan-LocalRepo.ps1` now prints per-pattern `[CLEAN]`/`[LEAK]` status block so every pattern shows it was actually checked. `.scrub-patterns.local.json` cleaned up (duplicate-case keys removed, dotless 10.10.11 false-positive pattern removed)
-- ⬜ Run full Ansible STIG hardening pass — improves scores before final portfolio push
+- ✅ Portfolio Word docs updated with all three After-MFA scores (DC01 42.66% / WS01 42.20% / WO02 37.00%) — "SCAP Compliance Snapshot" section + results table + interpretation paragraph + source citation added to `CAC-Program-Showcase-GlennByron.docx` and `Federal_Upgrade_Path.docx` (2026-06-03)
+- ✅ `SCAP-Workflow-QuickRef.md` promoted from `Dispatch/` to `Lab-Kit/05-Compliance/` — stale `192.168.1.10` fixed to `10.10.10.10` / `Lab-DC01`. Docker `scap-summary` moved to "Optional Enhancements" at bottom (deferred until DC hardening pass)
+- ⏳ **Screenshots — 5 of 8 staged**
+    - ✅ Slot 2 — `02-pin-entry-cert-subject.png` (PIN prompt)
+    - ✅ Slot 2b — `02b-incorrect-pin-validation.png` (incorrect PIN dialog)
+    - ✅ Slot 3 — `03-pkinit-validation-table.png` (Event 4768 annotated)
+    - ✅ Slot 7 — `07-scap-before-after-side-by-side.png` (DC01 44.95% → 42.66%)
+    - ✅ Slot 8 — `08-scap-win11-stig-result.png` (SCC Summary Viewer, WO02)
+    - ⬜ Slot 6 — PKI health dashboard (**not blocked**, ~5 min when next at DC01)
+    - ⬜ Slot 1 — lock screen smart-card-only (**card-blocked** — v1.1)
+    - ⬜ Slot 4 — session lock on card removal w/ stopwatch (**card-blocked** — v1.1)
+    - ⬜ Slot 5 — VPN connected EAP-TLS (**card-blocked** — v1.1)
+- ⬜ Run full Ansible STIG hardening pass — pushes scores up before v1.1
 - ⬜ Final `Scrub-Repo.ps1 -WhatIf` pass before any push
-- ⬜ Tag `v1.0` and write GitHub Release notes (lab is at a clean milestone; card-blocked items documented for v1.1)
 
 ---
 
@@ -236,24 +228,24 @@ Requires: Dell 3080 Micro #2 + OPNsense.
 | 4 — Lab Execution (SCAP Scans) | ✅ Complete (DC01 + WS01 + WO02 all scanned) |
 | 5 — RMF Authorize | ✅ Templates populated · AO signature pending |
 | 6 — Advanced Automation | ✅ Complete |
-| 7 — Portfolio Finalization | ⏳ 5 screenshots + VPN test + portfolio docx updates remaining |
-| 8 — Zero Trust Extension | ⬜ Design done · scripts pending |
+| 7 — Portfolio Finalization | ⏳ Portfolio docs ✅ · 5 of 8 screenshots staged · 3 card-blocked → v1.1 |
+| 8 — Zero Trust Extension | ✅ 8 full scripts + 13 scaffolds + Demo-Walkthrough-ZT.md shipped in v1.0 |
 | 9 — Azure Cloud VPN | ⬜ Design done · not started |
 | 9B — On-Prem VPN Appliance | ⬜ Design done · hardware needed |
 | Card Hardware Testing | ⬜ Waiting on Amazon order (YubiKey + Hirsch FIDO2) |
 
 ---
 
-## Recent Wins (2026-06-02 to 06-03)
+## Recent Wins (2026-06-02 to 06-04)
 
-- ✅ WO02 physical laptop end-to-end working — domain join, VSC, smart card logon
-- ✅ Event 4768 Pre-Auth Type 16 PKINIT confirmed at protocol level (primary IA-2(11) evidence)
-- ✅ WO02 Windows 11 STIG scan staged (37% baseline)
-- ✅ Lab-Kit/Reference/ created with sanitized ONBOARDING.md + TROUBLESHOOTING.md
-- ✅ Three new lab lifecycle scripts: `Export-LabVMs.ps1`, `Import-LabVM.ps1`, `Get-LabVMSize.ps1`
+- ✅ WO02 physical laptop end-to-end — domain join, VSC, smart card logon, Event 4768 Type 16 PKINIT captured
+- ✅ WO02 Windows 11 STIG scan staged (37.00% baseline, 13 CAT I / 122 CAT II / 8 CAT III)
+- ✅ Phase 8 Zero Trust shipped — 8 full scripts + 13 scaffolds + `Demo-Walkthrough-ZT.md`
+- ✅ Lab lifecycle scripts: `Export-LabVMs.ps1`, `Import-LabVM.ps1`, `Get-LabVMSize.ps1`
+- ✅ Sanitized `Lab-Kit/Reference/` (ONBOARDING + TROUBLESHOOTING) synced from lab export
 - ✅ Subnet drift fixed across repo (10.10.10.x / 10.10.20.x)
-- ✅ Pack-LabKit.ps1 hardened (BOM, encoding, IDE exclusion, truncation)
-- ✅ History rewrite + force-push to private GitHub (all 4 sensitive patterns purged from history)
+- ✅ Git history rewritten + repo gated by `Scrub-Repo.ps1` + local `Scan-LocalRepo.ps1` with per-pattern `[CLEAN]`/`[LEAK]` block
+- ✅ `v1.0` tagged and pushed to public GitHub (2026-06-03)
 
 ---
 
