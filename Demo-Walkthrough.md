@@ -94,8 +94,11 @@ Event 4768 — Kerberos Authentication Service Ticket Request
 > via the WEF subscription we configured in `Set-AuditLogForwarding.ps1`.
 > This satisfies NIST AU-2 and CA-7 continuous monitoring requirements."
 
-**📸 Pending capture** — Event Viewer showing Event 4768 with Pre-Auth Type 16
-> See `Screenshots/README.md` for the capture checklist.
+**📸 Captured — Event 4768 PKINIT validation table**
+
+![Event 4768 PKINIT validation — labtech, 10.10.20.30 (WO02), LAB-CA, Pre-Auth Type 16, Result 0x0](Screenshots/03-pkinit-validation-table.png)
+
+This is the cryptographic proof. Every field maps to a NIST IA-2(11) requirement.
 
 ---
 
@@ -187,14 +190,22 @@ If Phase 4 SCAP scans have been run, open the before/after HTML reports side by 
 > The after score shows the impact of the hardening scripts. The delta between these
 > two scans is our evidence package for the Security Assessment Report."
 
-**📸 Pending capture** — Before and after SCAP HTML reports side by side, showing score improvement
-> Real numbers:
-> - DC01 (Server 2022 STIG): 44.95% → 42.66% (After-MFA)
-> - WS01 (Server 2022 STIG): 42.20% → 42.20% (After-MFA)
+**📸 Captured — DC01 Before-MFA (44.95%) vs After-MFA (42.66%), side by side**
+
+![SCC All Settings Report - DC01 Before-MFA 44.95% (left) vs After-MFA 42.66% (right), same Windows Server 2022 STIG benchmark, same target LAB-DC01](Screenshots/07-scap-before-after-side-by-side.png)
+
+> Full scoring table for all three hosts:
+> - DC01 (Server 2022 STIG): **44.95% → 42.66%** (shown above)
+> - WS01 (Server 2022 STIG): 42.20% → 42.20% (no delta — same baseline, same benchmark)
 > - **WO02 (Windows 11 STIG, MAC-1 Classified profile): 37.00% After-SmartCard** — 258 rules, 13 CAT I open, 122 CAT II open, 8 CAT III open
 >
-> See `Compliance-Reports/README.md` for the full scoring table and `Compliance-Reports/Laptop/After-SmartCard/2026-06-02_104513/` for the WO02 scan session.
-> See `Screenshots/README.md` for the capture checklist.
+> See `Compliance-Reports/README.md` for the scoring table and `Compliance-Reports/Laptop/After-SmartCard/2026-06-02_104513/` for the WO02 scan session.
+
+**📸 Captured — SCC Summary Viewer for WO02 Windows 11 STIG scan**
+
+![SCC 5.10.2 Summary Viewer - WO02 / Microsoft_Windows_11_STIG / Score 37 / 0 errors / 1 warning](Screenshots/08-scap-win11-stig-result.png)
+
+Session `2026-06-02_104513`, scanned as `LAB\labtech` with smart card enforcement active. Links to All Settings HTML, Non-Compliance HTML, XCCDF XML, OVAL/OCIL XML, and DISA CKL checklist all visible.
 
 ---
 

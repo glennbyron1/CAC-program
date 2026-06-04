@@ -8,6 +8,17 @@ This log covers every artifact produced across the life of the project — scrip
 
 ---
 
+## [Lab — Session 14] — 2026-06-04
+
+### SCAP Workflow Automation
+
+#### Added
+
+**`Lab-Kit/05-Compliance/Invoke-SCAPWorkflow.ps1`**
+Automates the complete SCAP before/after compliance scan loop. Runs SCAP SCC headless against the target, stages XCCDF results to Compliance-Reports\Before-MFA\ or After-MFA\, feeds both files through the scap_summary Docker tool, optionally triggers the Ansible STIG hardening playbook via WSL, and generates a side-by-side delta report (Before-Report.txt → SAR-Template.md). Supports -Phase Before/After/Full, -WhatIf, and -SkipHardening. NIST controls: CA-2 (Security Assessments), RA-5 (Vulnerability Monitoring and Scanning). Author: Glenn Byron.
+
+---
+
 ## [Lab — Session 13] — 2026-06-02
 
 ### Sync from Lab-Export, Subnet Drift Fix, First Real Screenshots
