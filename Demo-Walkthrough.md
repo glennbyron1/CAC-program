@@ -173,8 +173,13 @@ Show the green dashboard with CRL validity windows and OCSP status.
 > approaches failure, it sends an alert email. This is the continuous monitoring posture
 > required by NIST CA-7 and our ATO commitment."
 
-**📸 Pending capture** — `Monitor-PKIHealth.ps1` output showing all green
-> See `Screenshots/README.md` for the capture checklist.
+**📸 Real capture — 2026-06-04 12:18:49 on Lab-DC01:**
+
+![PKI Health Monitor dashboard — ALL CHECKS PASSED](Screenshots/06-pki-health-dashboard.png)
+
+The summary block at the bottom reads `ALL CHECKS PASSED — PKI environment is healthy.` This is a baseline run invoked without optional parameters, so the individual rows show `[SKIP]` — the script's defensive defaults gracefully skip optional checks rather than fail. A parameterized run (with `-CRLUrls`, `-OCSPUrl`, `-IssuingCAServer`) populates the rows with `[OK]` / `[WARN]` / `[CRIT]` against real expiry windows.
+
+**Supporting audit-trail evidence:** `Compliance-Reports/PKI-Health/2026-06-04/PKIHealth-DC01-AuditLog.txt` shows 7 successful runs across the day — immutable record of CA-7 continuous monitoring in action.
 
 ---
 

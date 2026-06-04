@@ -68,7 +68,7 @@ Living task list for the CAC/PIV ICAM portfolio project.
 
 - ⬜ Nessus Essentials — credentialed scan (free, up to 16 IPs)
 - ⬜ STIG Viewer — open .ckl files, review CAT I findings, document false positives
-- ⬜ PKI health check baseline — run `Monitor-PKIHealth.ps1`
+- ✅ PKI health check baseline — `Monitor-PKIHealth.ps1` run 7x on 2026-06-04 (audit log + 12:18:49 dashboard screenshot staged in `Compliance-Reports/PKI-Health/2026-06-04/`)
 
 ---
 
@@ -111,16 +111,17 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 
 - ✅ Portfolio Word docs updated with all three After-MFA scores (DC01 42.66% / WS01 42.20% / WO02 37.00%) — "SCAP Compliance Snapshot" section + results table + interpretation paragraph + source citation added to `CAC-Program-Showcase-GlennByron.docx` and `Federal_Upgrade_Path.docx` (2026-06-03)
 - ✅ `SCAP-Workflow-QuickRef.md` promoted from `Dispatch/` to `Lab-Kit/05-Compliance/` — stale `192.168.1.10` fixed to `10.10.10.10` / `Lab-DC01`. Docker `scap-summary` moved to "Optional Enhancements" at bottom (deferred until DC hardening pass)
-- ⏳ **Screenshots — 5 of 8 staged**
+- ⏳ **Screenshots — 6 of 8 staged**
     - ✅ Slot 2 — `02-pin-entry-cert-subject.png` (PIN prompt)
     - ✅ Slot 2b — `02b-incorrect-pin-validation.png` (incorrect PIN dialog)
     - ✅ Slot 3 — `03-pkinit-validation-table.png` (Event 4768 annotated)
+    - ✅ Slot 6 — `06-pki-health-dashboard.png` (Monitor-PKIHealth.ps1 on Lab-DC01, 2026-06-04 12:18:49, ALL CHECKS PASSED)
     - ✅ Slot 7 — `07-scap-before-after-side-by-side.png` (DC01 44.95% → 42.66%)
     - ✅ Slot 8 — `08-scap-win11-stig-result.png` (SCC Summary Viewer, WO02)
-    - ⬜ Slot 6 — PKI health dashboard (**not blocked**, ~5 min when next at DC01)
     - ⬜ Slot 1 — lock screen smart-card-only (**card-blocked** — v1.1)
     - ⬜ Slot 4 — session lock on card removal w/ stopwatch (**card-blocked** — v1.1)
     - ⬜ Slot 5 — VPN connected EAP-TLS (**card-blocked** — v1.1)
+    - ⬜ *(optional v1.1 polish)* parameterized PKI health run with `-CRLUrls`/`-OCSPUrl`/`-IssuingCAServer` populated → captures all-green `[OK]` rows instead of `[SKIP]`
 - ⬜ Run full Ansible STIG hardening pass — pushes scores up before v1.1
 - ⬜ Final `Scrub-Repo.ps1 -WhatIf` pass before any push
 
@@ -228,7 +229,7 @@ Requires: Dell 3080 Micro #2 + OPNsense.
 | 4 — Lab Execution (SCAP Scans) | ✅ Complete (DC01 + WS01 + WO02 all scanned) |
 | 5 — RMF Authorize | ✅ Templates populated · AO signature pending |
 | 6 — Advanced Automation | ✅ Complete |
-| 7 — Portfolio Finalization | ⏳ Portfolio docs ✅ · 5 of 8 screenshots staged · 3 card-blocked → v1.1 |
+| 7 — Portfolio Finalization | ⏳ Portfolio docs ✅ · 6 of 8 screenshots staged · 3 card-blocked → v1.1 |
 | 8 — Zero Trust Extension | ✅ 8 full scripts + 13 scaffolds + Demo-Walkthrough-ZT.md shipped in v1.0 |
 | 9 — Azure Cloud VPN | ⬜ Design done · not started |
 | 9B — On-Prem VPN Appliance | ⬜ Design done · hardware needed |
