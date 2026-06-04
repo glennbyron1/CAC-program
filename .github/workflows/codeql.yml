@@ -1,30 +1,37 @@
-name: CodeQL SAST — Static Analysis
+name: CodeQL SAST - Static Analysis
 
-# Runs on every push and pull request that touches Python code.
-# Catches common security issues (injection, insecure crypto, path traversal,
-# hardcoded credentials, etc.) before they reach the main branch.
-# Part of the DevSecOps pipeline — shift-left security scanning.
+# Scans the repo's GitHub Actions workflow files for common security issues
+# (script injection, untrusted input flowing to shell, missing permissions,
+# unpinned action versions, etc.). Part of the DevSecOps pipeline.
+#
+# This repo is PowerShell + Markdown + YAML - no Python, no compiled languages.
+# CodeQL's `actions` language scans workflow YAML directly, which is the real
+# attack surface here: workflows have write access to the repo and secrets.
+#
+# Results land in: GitHub -> Security -> Code scanning alerts
 
 on:
   push:
     paths:
-      - '**/*.py'
-      - '.github/workflows/codeql.yml'
+      - '.github/workflows/**'
+      - '.github/actions/**'
   pull_request:
     paths:
-      - '**/*.py'
+      - '.github/workflows/**'
+      - '.github/actions/**'
   schedule:
-    # Weekly full scan every Monday at 06:00 UTC — catches new CVEs in unchanged code
+    # Weekly full scan every Monday at 06:00 UTC - catches new CodeQL queries
+    # against unchanged workflows.
     - cron: '0 6 * * 1'
 
 jobs:
   analyze:
-    name: CodeQL — Python SAST
+    name: CodeQL - GitHub Actions SAST
     runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read
-      security-events: write   # Required to upload SARIF results to GitHub Security tab
+      security-events: write   # Required to upload SARIF results to the Security tab
 
     steps:
       - name: Check out repository
@@ -33,16 +40,15 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: python
-          # Security-and-quality query suite: broader than default, catches more issues
+          languages: actions
+          # Security-and-quality query suite: broader than default, surfaces
+          # more workflow-hardening findings.
           queries: security-and-quality
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+      # No build step needed for the `actions` language - it analyzes YAML directly.
 
       - name: Run CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:python"
-          # Results appear in GitHub → Security → Code scanning alerts
+          category: "/language:actions"
           upload: true
