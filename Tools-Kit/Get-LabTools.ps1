@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Glenn Byron
+﻿# Copyright (c) 2026 Glenn Byron
 # Licensed under the MIT License. See LICENSE in the repository root.
 
 <#
@@ -149,18 +149,22 @@ $sccDest = Join-Path $OutputPath "00-SCAP-SCC"
 if (-not (Test-Path $sccDest)) { New-Item -ItemType Directory -Path $sccDest -Force | Out-Null }
 
 $placeholder = Join-Path $sccDest "PUT-SCAP-SCC-INSTALLER-HERE.txt"
-Set-Content -Path $placeholder -Value @"
-SCAP Compliance Checker (SCC) — Manual Download Required
 
-The SCC installer requires a DoD CAC or ECA certificate to access the
-download page at cyber.mil. See the full instructions in:
-  Tools-Kit\Manual-Downloads\SCAP-SCC-Instructions.txt
+$txt = @(
+"SCAP Compliance Checker (SCC) - Manual Download Required",
+"",
+"The SCC installer requires a DoD CAC or ECA certificate to access the",
+"download page at cyber.mil. See the full instructions in:",
+"  Tools-Kit\\Manual-Downloads\\SCAP-SCC-Instructions.txt",
+"",
+"After you download SCC, place the installer (.exe or .zip) in this folder:",
+"  $sccDest",
+"",
+"Then install it on your lab VMs by running the installer as Administrator."
+)
 
-After you download SCC, place the installer (.exe or .zip) in this folder:
-  $sccDest
+Set-Content -Path $placeholder -Value $txt
 
-Then install it on your lab VMs by running the installer as Administrator.
-"@
 
 Write-Warn "SCAP SCC requires manual download — see Manual-Downloads\SCAP-SCC-Instructions.txt"
 Write-Info "Placeholder file created at: $sccDest"

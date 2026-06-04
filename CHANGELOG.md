@@ -24,6 +24,23 @@ Automates the complete SCAP before/after compliance scan loop. Runs SCAP SCC hea
 **`Screenshots/06-pki-health-dashboard.png`** + **`Compliance-Reports/PKI-Health/2026-06-04/`**
 Real console capture of `Monitor-PKIHealth.ps1` running on Lab-DC01 at 12:18:49 — banner, all five check sections, and the `ALL CHECKS PASSED — PKI environment is healthy.` summary line. Wired into `Demo-Walkthrough.md` Step 6 (slot 6) with honest annotation: rows show `[SKIP]` because optional parameters weren't passed in this baseline run; a follow-up parameterized run is queued for v1.1. Audit-log evidence (`PKIHealth-DC01-AuditLog.txt`) shows seven independent script invocations across the day, all `Critical: False | Warning: False` — immutable CA-7 continuous-monitoring pulse. Folder includes a `README.md` mapping the artifacts to RMF SAR Section 3, POAM baseline-pulse, and SSP Section 7.
 
+### Live-Servers + Tools-Kit Sync from Lab Export
+
+**Trigger:** Reviewed `CAC-Lab-Kit-20260526-lab-file.zip` (lab snapshot, 105 MB, 182 files) and identified two folders present on the lab DC but missing from the public repo. Both folders are clean of sensitive patterns (audited against every entry in `.scrub-patterns.local.json` — lab passwords, real organizational identifiers, real-world subnets, real email, labtech cert thumbprint — zero hits across all 11 files). Imported as-is, no scrubbing required.
+
+#### Added
+
+**`Live-Servers/`** (new top-level folder, 5 files)
+Production deployment helpers — the bridge from the Hyper-V test lab to real production servers. `Test-ServerReadiness.ps1` is a read-only assessor that reports what is installed, what is missing, and the exact command to fix each gap on any target server. `Test-GPOCompliance.ps1` takes a GPO name and verifies (1) it is linked, (2) it has applied to the machine, and (3) the registered settings are active in the registry — with built-in profiles for smart card, audit policy, and VPN GPOs. Supporting docs: `Install-Guide.md` (step-by-step install organized by server role and phase), `GPO-Check-Guide.md` (how to read the compliance output), `README.md` (folder index). Closes the design-it-in-lab / validate-on-target loop with the same tooling. Author: Glenn Byron.
+
+**`Tools-Kit/`** (new top-level folder, 6 files)
+Bootstrap downloader for the compliance and PKI tools the lab depends on. `Get-LabTools.ps1` is the one-command entry — run on any internet-connected machine, it stages `C:\FedCompliance-Tools\` ready to copy onto lab VMs (also supports `-OutputPath` to stage directly to a USB drive). Category-specific bundles in `Download-FedCompliance-Kit.ps1`, `Download-IssuingCA-Kit.ps1`, `Download-OfflineCA-Kit.ps1`. `Manual-Downloads/SCAP-SCC-Instructions.txt` covers the few items that require a manual click (public.cyber.mil login). `START-HERE.md` is the folder index. Improves portfolio reproducibility — anyone cloning the repo can bootstrap the same tools used to build the lab. Author: Glenn Byron.
+
+#### Removed
+
+**`TROUBLESHOOTING.md`** (top-level, stale 12.7 KB copy)
+Removed in favor of the canonical `Lab-Kit/Reference/TROUBLESHOOTING.md` (21.6 KB, sanitized). The top-level file was a strict subset that predated the Reference/ sync — missing the Common Lab Operations section (at the top) and the entire Physical Endpoint / Smart Card Enrollment section (six entries including the certreq enrollment-target-store gotcha and the TightVNC PIN-blocking issue). `README.md` updated to point at the Reference/ location with descriptive link text.
+
 ### Real-World Deployment Bug Fixes (Phase 8 + PKI Monitor)
 
 **Trigger:** Running `Monitor-PKIHealth.ps1` and `Set-AuthenticationPolicySilo.ps1` on Lab-DC01 surfaced two real PowerShell 5.1 / Active Directory edge cases that didn't show up in -WhatIf testing. Both fixes are battle-tested by actual lab deployment.

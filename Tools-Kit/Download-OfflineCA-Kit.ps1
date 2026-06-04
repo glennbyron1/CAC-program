@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Offline Root CA Transfer Kit — Pre-Staging Download Utility
@@ -257,7 +257,7 @@ $caPolicyContent = @"
 ; to match your HTTP CRL server address before installation.
 
 [Version]
-Signature="$Windows NT$"
+Signature="`$Windows NT$"
 
 [PolicyStatementExtension]
 Policies=InternalPolicy

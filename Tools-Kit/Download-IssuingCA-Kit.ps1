@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Enterprise Issuing CA & Domain Server — Prerequisite Download and Staging Utility
@@ -153,6 +153,7 @@ Write-Host ""
 # ──────────────────────────────────────────────────────────────────────────────
 # STEP 1: CREATE STAGING STRUCTURE
 # ──────────────────────────────────────────────────────────────────────────────
+if (-not (Test-Path $StagingPath)) { New-Item -ItemType Directory -Path $StagingPath -Force | Out-Null }
 Write-Step "Creating staging directory structure"
 
 $Dirs = @(
@@ -174,44 +175,52 @@ Write-OK "Directory structure created at: $StagingPath"
 # ──────────────────────────────────────────────────────────────────────────────
 Write-Step "Verifying required Windows roles and features"
 
-$RequiredFeatures = @(
-    @{ Name = "AD-Certificate";        Display = "Active Directory Certificate Services (AD CS)" },
-    @{ Name = "ADCS-Cert-Authority";   Display = "AD CS — Certification Authority role service" },
-    @{ Name = "ADCS-Web-Enrollment";   Display = "AD CS — Web Enrollment (certmgr IIS frontend)" },
-    @{ Name = "ADCS-Online-Cert";      Display = "AD CS — Online Responder (OCSP)" },
-    @{ Name = "Web-Server";            Display = "IIS Web Server (HTTP CRL/AIA endpoint)" },
-    @{ Name = "Web-Mgmt-Console";      Display = "IIS Management Console" },
-    @{ Name = "RSAT-ADCS";             Display = "RSAT — AD CS Management Tools" },
-    @{ Name = "RSAT-AD-PowerShell";    Display = "RSAT — Active Directory PowerShell" }
-)
+# Get-WindowsFeature / Install-WindowsFeature are Server-only cmdlets.
+# ProductType: 1 = Workstation, 2 = Domain Controller, 3 = Server
+$osProductType = (Get-CimInstance -ClassName Win32_OperatingSystem).ProductType
+if ($osProductType -eq 1) {
+    Write-Warn "Skipping feature check — this machine is a Windows client (not Server)."
+    Write-Warn "Re-run this script on the target Issuing CA server to install roles."
+} else {
+    $RequiredFeatures = @(
+        @{ Name = "AD-Certificate";        Display = "Active Directory Certificate Services (AD CS)" },
+        @{ Name = "ADCS-Cert-Authority";   Display = "AD CS — Certification Authority role service" },
+        @{ Name = "ADCS-Web-Enrollment";   Display = "AD CS — Web Enrollment (certmgr IIS frontend)" },
+        @{ Name = "ADCS-Online-Cert";      Display = "AD CS — Online Responder (OCSP)" },
+        @{ Name = "Web-Server";            Display = "IIS Web Server (HTTP CRL/AIA endpoint)" },
+        @{ Name = "Web-Mgmt-Console";      Display = "IIS Management Console" },
+        @{ Name = "RSAT-ADCS";             Display = "RSAT — AD CS Management Tools" },
+        @{ Name = "RSAT-AD-PowerShell";    Display = "RSAT — Active Directory PowerShell" }
+    )
 
-$toInstall = @()
-foreach ($feat in $RequiredFeatures) {
-    $state = (Get-WindowsFeature -Name $feat.Name -ErrorAction SilentlyContinue).InstallState
-    if ($state -eq "Installed") {
-        Write-OK "Already installed : $($feat.Display)"
-    } else {
-        Write-Warn "Not installed : $($feat.Display)"
-        $toInstall += $feat.Name
-    }
-}
-
-if ($toInstall.Count -gt 0) {
-    Write-Step "Installing $($toInstall.Count) missing Windows features"
-    Write-Host "    Features: $($toInstall -join ', ')" -ForegroundColor DarkGray
-    if ($PSCmdlet.ShouldProcess("Windows Features: $($toInstall -join ', ')", "Install")) {
-        $result = Install-WindowsFeature -Name $toInstall -IncludeManagementTools
-        if ($result.Success) {
-            Write-OK "All features installed successfully"
-            if ($result.RestartNeeded -eq "Yes") {
-                Write-Warn "A REBOOT IS REQUIRED before continuing. Reboot and re-run this script."
-            }
+    $toInstall = @()
+    foreach ($feat in $RequiredFeatures) {
+        $state = (Get-WindowsFeature -Name $feat.Name -ErrorAction SilentlyContinue).InstallState
+        if ($state -eq "Installed") {
+            Write-OK "Already installed : $($feat.Display)"
         } else {
-            Write-Fail "Feature installation reported failures — review Install-WindowsFeature output"
+            Write-Warn "Not installed : $($feat.Display)"
+            $toInstall += $feat.Name
         }
     }
-} else {
-    Write-OK "All required Windows features are already installed"
+
+    if ($toInstall.Count -gt 0) {
+        Write-Step "Installing $($toInstall.Count) missing Windows features"
+        Write-Host "    Features: $($toInstall -join ', ')" -ForegroundColor DarkGray
+        if ($PSCmdlet.ShouldProcess("Windows Features: $($toInstall -join ', ')", "Install")) {
+            $result = Install-WindowsFeature -Name $toInstall -IncludeManagementTools
+            if ($result.Success) {
+                Write-OK "All features installed successfully"
+                if ($result.RestartNeeded -eq "Yes") {
+                    Write-Warn "A REBOOT IS REQUIRED before continuing. Reboot and re-run this script."
+                }
+            } else {
+                Write-Fail "Feature installation reported failures — review Install-WindowsFeature output"
+            }
+        }
+    } else {
+        Write-OK "All required Windows features are already installed"
+    }
 }
 
 # ──────────────────────────────────────────────────────────────────────────────

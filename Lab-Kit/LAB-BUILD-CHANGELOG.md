@@ -1312,6 +1312,16 @@ A secondary issue caused the same crash during `-WhatIf` runs: steps 3-4 (grant 
 - Wrapped each AD call in `try/catch` to allow the loop to continue on per-account failures.
 - Added inline note: re-run this script after populating admin groups to bind newly added accounts.
 
+### Lab Export Review + Live-Servers/Tools-Kit Sync
+
+**Trigger:** Glenn provided `CAC-Lab-Kit-20260526-lab-file.zip` (105 MB, 182 files) for review against the public repo. Audit run: real organizational identifiers (org name, internal subnets, real email) already scrubbed in the lab kit; lab-only credentials (lab admin password, labtech account password, labtech cert thumbprint) still present in their raw form (expected for the LAB version — those values are swapped for `<LAB-*>` placeholders at push time by `Scrub-Repo.ps1`).
+
+Two top-level folders identified as present on the lab DC but missing from the repo. Both confirmed clean of sensitive patterns. Imported as-is:
+- `Live-Servers/` (5 files) — production deployment helpers: `Test-ServerReadiness.ps1`, `Test-GPOCompliance.ps1`, `Install-Guide.md`, `GPO-Check-Guide.md`, `README.md`
+- `Tools-Kit/` (6 files) — tool downloaders: `Get-LabTools.ps1`, three `Download-*-Kit.ps1` scripts, `Manual-Downloads/SCAP-SCC-Instructions.txt`, `START-HERE.md`
+
+Also removed a stale top-level `TROUBLESHOOTING.md` (12.7 KB) that was a strict subset of the sanitized `Lab-Kit/Reference/TROUBLESHOOTING.md` (21.6 KB) — predated the Reference/ sync. Root `README.md` link redirected to the Reference/ canonical copy.
+
 ### Lessons Learned — Session 5
 
 | # | Lesson | Impact |
@@ -1320,4 +1330,6 @@ A secondary issue caused the same crash during `-WhatIf` runs: steps 3-4 (grant 
 | 10 | `Grant-ADAuthenticationPolicySiloAccess` only accepts user/computer accounts, not groups | Loop over `Get-ADGroupMember` and grant each member individually. Cmdlet error message blames the group identity, not the type mismatch. |
 | 11 | Annotated AD ops in `-WhatIf` blocks still need existence guards | Steps that depend on an earlier dry-run-skipped step will crash. Add an `$xExists` check before each dependent step. |
 | 12 | The "happy path" is where StrictMode bugs hide | Bugs only surface when the success branch executes. Test both populated and empty result sets. |
+| 13 | Lab kit zips contain raw lab credentials by design | Lab-side scrub already strips real organizational identifiers (org name, internal subnets, real email). Lab credentials (lab admin password, labtech password) remain raw so the lab is operable. `Scrub-Repo.ps1` swaps those for `<LAB-*>` placeholders at push time — never extract a lab kit zip into the repo without re-running the scrubber. |
+| 14 | Documentation about scrub patterns will be flagged by the scrub scanner | The scanner can't distinguish "this is an audit note listing what we checked for" from "this is an accidental leak." When writing audit narratives in changelogs, refer to patterns by category ("lab admin password", "real internal subnets") rather than by literal value. |
 

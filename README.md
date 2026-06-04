@@ -192,7 +192,7 @@ This is a **learning and portfolio lab**, not a production deployment guide and 
 ## Support & Getting Help
 
 - **Common questions:** `FAQ.md` covers hardware requirements, YubiKey compatibility, middleware, and common errors.
-- **Build issues:** `TROUBLESHOOTING.md` — 300+ lines of real problems encountered during the build with solutions.
+- **Build issues:** [`Lab-Kit/Reference/TROUBLESHOOTING.md`](Lab-Kit/Reference/TROUBLESHOOTING.md) — running FAQ of real problems encountered during the build, with fixes (smart card lockout, GPO scope errors, SYSVOL recovery, DSRM limitations, SCC paths, PowerShell gotchas, physical endpoint issues).
 - **Bugs or script errors:** Open a [GitHub Issue](https://github.com/glennbyron1/CAC-program/issues) with the script name, the error message, and your Windows version.
 - **Security concerns:** See `SECURITY.md` — do not open a public issue for vulnerabilities.
 - **Contributing improvements:** See `CONTRIBUTING.md`.
