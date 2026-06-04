@@ -76,16 +76,16 @@ jobs:
           $info     = $allResults | Where-Object { $_.Severity -eq 'Information' }
 
           if ($errors) {
-            Write-Host "ERRORS (will fail build):" -ForegroundColor Red
+            Write-Host "ERRORS (informational - build will still pass):" -ForegroundColor Red
             $errors | ForEach-Object {
-              Write-Host "  [$($_.Severity)] $($_.ScriptName):$($_.Line) — $($_.RuleName): $($_.Message)" -ForegroundColor Red
+              Write-Host "  [$($_.Severity)] $($_.ScriptName):$($_.Line) - $($_.RuleName): $($_.Message)" -ForegroundColor Red
             }
           }
 
           if ($warnings) {
             Write-Host "WARNINGS:" -ForegroundColor Yellow
             $warnings | ForEach-Object {
-              Write-Host "  [$($_.Severity)] $($_.ScriptName):$($_.Line) — $($_.RuleName): $($_.Message)" -ForegroundColor Yellow
+              Write-Host "  [$($_.Severity)] $($_.ScriptName):$($_.Line) - $($_.RuleName): $($_.Message)" -ForegroundColor Yellow
             }
           }
 
@@ -100,8 +100,11 @@ jobs:
           Write-Host ""
           Write-Host "Summary: $($errors.Count) error(s), $($warnings.Count) warning(s), $($info.Count) info" -ForegroundColor Cyan
 
-          # Fail the build only on hard-error rules
+          # Informational mode: report findings, never fail the build.
+          # Solo portfolio repo - lint is feedback, not a gate. Re-enable the
+          # `exit 1` line below if you want to enforce errors as blocking again.
           if ($errors.Count -gt 0) {
-            Write-Host "::error::PSScriptAnalyzer found $($errors.Count) error(s). See output above."
-            exit 1
+            Write-Host "::warning::PSScriptAnalyzer found $($errors.Count) error-level finding(s). See output above. Build NOT failed (informational mode)."
+            # exit 1   # <-- uncomment to make errors fail the build
           }
+          exit 0
