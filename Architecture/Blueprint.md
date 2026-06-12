@@ -10,7 +10,7 @@ Framework Alignment: NIST SP 800-53 Rev. 5, FIPS 201-3, DISA STIG, NIST CSF 2.0,
 ________________________________________
 1. Executive Summary & Intent
 This document defines the production engineering baseline for migrating from password-based legacy authentication to a zero-password, hardware-backed Identity, Credential, and Access Management (ICAM) system.
-The baseline architecture satisfies commercial high-security requirements using enterprise tools (Active Directory, AD CS, WatchGuard IKEv2, Entra ID) while creating a clear engineering roadmap to achieve full Federal Information Security Management Act (FISMA) and FedRAMP authorization tiers.
+The baseline architecture satisfies commercial high-security requirements using enterprise tools (Active Directory, AD CS, an IKEv2 VPN gateway such as WatchGuard, Entra ID) while creating a clear engineering roadmap to achieve full Federal Information Security Management Act (FISMA) and FedRAMP authorization tiers.
 ________________________________________
 2. Public Key Infrastructure (PKI) Topology
 To ensure security boundaries are maintained, a two-tier Public Key Infrastructure topology is mandated. Software-isolated environments are utilized for testing, with hardware integration planned for the federal target state.

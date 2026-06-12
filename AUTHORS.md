@@ -9,8 +9,7 @@ This repository was created and is maintained by:
 ## Project Origin
 
 This project began as the architectural design work for a real enterprise
-identity and access management upgrade — replacing software MFA (WatchGuard
-AuthPoint) with hardware-backed, certificate-based smart card authentication
+identity and access management upgrade — replacing a cloud-based software MFA product with hardware-backed, certificate-based smart card authentication
 across Windows workstations, VPN, and Microsoft 365.
 
 The committed repository is the *sanitized* version of that work, scrubbed of
