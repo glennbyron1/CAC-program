@@ -125,7 +125,7 @@ these as your answers and reference the relevant repository artifacts as evidenc
 | CSET Question Category | CSET Control | CAC/PIV Answer | Evidence |
 |----------------------|-------------|----------------|---------|
 | Identity management | MFA for privileged accounts | Yes | `Build-CA-GPO.ps1`; `Group-Policy/Enforce-SmartCard.ps1` |
-| Identity management | MFA for remote access | Yes | `WatchGuard-IKEv2-VPN-Guide.md`; `Deploy-VPNClient.ps1` |
+| Identity management | MFA for remote access | Yes | `WatchGuard-IKEv2-VPN-Guide.md` (on-prem); `Deploy-VPNClient.ps1`; `Architecture/Roadmap/CAC_PIV_Phase9_Azure_VPN_ConditionalAccess.md` (cloud/federal target) |
 | Identity management | Phishing-resistant MFA | Yes | Hardware PKI certificates (not OTP or SMS) |
 | Identity management | Credential lifecycle management | Yes | `New-TokenEnrollment.ps1` — RA/Issuer separation |
 | Identity management | Privileged account separation | Yes | Separate YubiKey slot for admin accounts |

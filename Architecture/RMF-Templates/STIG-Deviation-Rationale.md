@@ -94,7 +94,7 @@ coverage for the current scale and operational environment.
 client CRL cache refresh (typically 1–8 hours for delta CRLs). This is acceptable because:
 revocation events in this environment are expected to be rare (physical token loss or employee
 departure); delta CRLs are published frequently (see Issuing CA configuration); and the
-WatchGuard VPN performs CRL validation on every connection.
+VPN gateway performs CRL validation on every connection (WatchGuard Firebox on-prem; Azure VPN Gateway with native CRL/OCSP support for the cloud/federal target).
 
 **Compensating Controls:**
 - HTTP-based CRL distribution with short delta CRL lifetime

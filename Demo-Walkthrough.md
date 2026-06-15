@@ -144,9 +144,10 @@ AuthenticationMethod : {Eap}
 ```
 
 > **What to say:** "The VPN uses IKEv2 with EAP-TLS — the same certificate the user
-> just used to log into the domain is presented to the WatchGuard firewall. The firewall
+> just used to log into the domain is presented to the VPN gateway. The gateway
 > validates the certificate chain against the same Root CA. One token, one identity,
-> two authentication points. This satisfies NIST AC-17, SC-8, and IA-2."
+> two authentication points. This satisfies NIST AC-17, SC-8, and IA-2. Lab implementation
+> uses WatchGuard Firebox; federal target is Azure VPN Gateway with Conditional Access (Phase 9)."
 
 **📸 Pending capture** — VPN connected status, no password prompt visible
 > See `Screenshots/README.md` for the capture checklist.
@@ -229,7 +230,7 @@ Session `2026-06-02_104513`, scanned as `LAB\labtech` with smart card enforcemen
 | "Why smart card instead of authenticator app?" | Hardware-bound private key cannot be extracted or phished. The credential lives on the token, not in software. DoD mandate; FIPS 201 requirement. |
 | "How is this different from YubiKey with a password?" | No password exists. The GPO removes the password logon path at the OS level. |
 | "What happens if someone loses their card?" | Certificate is revoked at the CA. CRL propagates within the configured window (default: 1 week, shorter for high-security). Revoked cert is blocked at next CRL refresh. New enrollment requires in-person identity verification by a Registration Authority. |
-| "How does the VPN know to trust the certificate?" | The WatchGuard firewall is configured to trust our internal Root CA. The IKEv2/EAP-TLS exchange validates the full chain — same PKI, same trust anchor. |
+| "How does the VPN know to trust the certificate?" | The VPN gateway is configured to trust our internal Root CA. The IKEv2/EAP-TLS exchange validates the full chain — same PKI, same trust anchor. This works identically with WatchGuard Firebox (on-prem implementation) and Azure VPN Gateway (cloud/federal target — Phase 9). |
 | "What frameworks does this map to?" | NIST SP 800-53 IA-2, IA-2(11), AC-5, AC-11, AC-17, SC-8, SC-17, AU-2, CA-7. FIPS 201-3. DISA STIG for Windows Server 2022, AD DS, AD CS. |
 | "How long did this take to build?" | The architecture is fully scripted — a fresh lab deploys in under 2 hours. The documentation and RMF artifact package took significantly longer. |
 

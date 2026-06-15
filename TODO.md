@@ -1,7 +1,7 @@
 # CAC Program — Outstanding Tasks
 
 **Author:** Glenn Byron
-**Last Updated:** June 4, 2026
+**Last Updated:** June 15, 2026
 
 Living task list for the CAC/PIV ICAM portfolio project.
 ✅ Complete · ⬜ Needs hands-on work · ⏳ In progress
@@ -10,11 +10,12 @@ Living task list for the CAC/PIV ICAM portfolio project.
 
 ## Security Posture
 
-- ✅ **Repo is public again** (2026-06-03), but the lab admin password is **still treated as sensitive** and gets scrubbed before push.
-- ✅ **Lab admin password is kept stable** (no rotation) — same string used by `Unattend-Server.xml` and all local docs. Real value lives in `.scrub-patterns.local.json` and is replaced with `<LAB-ADMIN-PASSWORD>` at push time by `Scrub-Repo.ps1`.
-- ✅ **Pre-add scan workflow** — `security/scripts/Scan-LocalRepo.ps1` runs against new files before they're committed (catches leaks of real org names, emails, and the lab password before they ship)
-- ✅ `.scrub-patterns.local.json` cleaned up — duplicate-case keys removed (was causing JSON parse error in both `Scrub-Repo.ps1` and the scanner), dotless subnet pattern removed (was generating false positives). Scanner now parses via `ConvertFrom-Json` cleanly.
-- ✅ Scanner shows per-pattern `[CLEAN]`/`[LEAK]` status block so each pattern is visibly checked.
+- ✅ **Repo is public** (2026-06-03), with sensitive values scrubbed at push time via `Scrub-Repo.ps1` reading `.scrub-patterns.local.json`.
+- ✅ **Lab admin password rotated** (2026-06-15) — defense-in-depth response following forensic verification of the public-window exposure. Treated as if leaked even though no direct evidence of malicious cloning was found. New value lives in `.scrub-patterns.local.json` and is replaced with `<LAB-ADMIN-PASSWORD>` at push time. Methodology + analysis documented in [`Architecture/Lessons-Learned/2026-06-13-Stale-Clone-After-History-Rewrite.md`](Architecture/Lessons-Learned/2026-06-13-Stale-Clone-After-History-Rewrite.md).
+- ✅ **Pre-add scan workflow** — `security/scripts/Scan-LocalRepo.ps1` runs against new files before they're committed.
+- ✅ **10 patterns all `[CLEAN]`** verified via `Scan-LocalRepo.ps1` after fresh-clone rebuild (Stale Clone exercise outcome). Per-pattern `[CLEAN]/[LEAK]` status block shows every pattern was visibly checked.
+- ✅ `.scrub-patterns.local.json` cleaned up — duplicate-case keys removed, dotless subnet pattern removed. Scanner parses via `ConvertFrom-Json` cleanly with regex fallback.
+- ✅ **Stale-clone incident handled safely** (2026-06-13) — merge aborted on secondary Windows clone before any compromised state was pushed; forensic verification via Events API + Wayback Machine + Traffic dashboard confirmed bounded exposure window. Lessons-learned doc published.
 
 ---
 
@@ -24,6 +25,19 @@ Living task list for the CAC/PIV ICAM portfolio project.
 - ✅ **v1.0 pushed** (2026-06-03) — two-tier PKI + smart card MFA on physical endpoint + SCAP evidence (DC01 42.66% / WS01 42.20% / WO02 37.00%) + Phase 8 Zero Trust extension (8 full scripts + 13 scaffolds + Demo-Walkthrough-ZT.md)
 - ✅ **GitHub release notes published** (2026-06-04) — v1.0 release notes posted on the `v1.0` tag covering PKI, smart card MFA, SCAP evidence, ZT extension, with card-blocked items called out as deferred to v1.1.
 - ⬜ **v1.1 (when cards arrive)** — slot 1/4/5 screenshots, VPN EAP-TLS test, `Card-Test-Matrix.md` filled in, optional Ansible STIG hardening pass to push compliance % up
+
+---
+
+## Lab Discipline (scope boundaries)
+
+The lab is now in **converging mode**, not creating mode. Finish what is in flight. The following discipline rules govern what does and does not get added:
+
+- **8-tool suite is frozen.** No new tools, no 10th repo, no new phases chasing "completeness." Finishing > creating.
+- **Don't chase SCAP score to 90%.** The **delta** from hardening is the portfolio value — not the absolute number.
+- **Phase 9B (on-prem VPN appliance)** is **decide-don't-default** — build only if it shows DoD something Azure VPN doesn't.
+- The 13 Phase 8 ZT scaffolds are fine as "designed, not built" — portfolio-positive as designs.
+- All work-lab docs stay **generic** — no employer-identifying details public.
+- Hardware behavior in `Card-Test-Matrix.md` — no vendor pricing, roadmap, or commercial-engagement detail.
 
 ---
 
@@ -68,6 +82,7 @@ Living task list for the CAC/PIV ICAM portfolio project.
 
 - ⬜ Nessus Essentials — credentialed scan (free, up to 16 IPs)
 - ⬜ STIG Viewer — open .ckl files, review CAT I findings, document false positives
+- ⬜ **CIS Workbench reference materials** — register at [workbench.cisecurity.org](https://workbench.cisecurity.org/) (free for individuals); download the Windows Server 2022 + Windows 11 CIS Benchmarks for reference alongside DISA STIG. Reference only — not a parallel hardening pass (per Lab Discipline). Backs the framework comparison in [`Architecture/Frameworks-Considered.md`](Architecture/Frameworks-Considered.md) and the cross-reference table in `SSP-Template.md` § 6.7.
 - ✅ PKI health check baseline — `Monitor-PKIHealth.ps1` run 7x on 2026-06-04 (audit log + 12:18:49 dashboard screenshot staged in `Compliance-Reports/PKI-Health/2026-06-04/`)
 
 ---
@@ -85,6 +100,12 @@ Living task list for the CAC/PIV ICAM portfolio project.
 - ⬜ **Nessus Essentials scan** — adds vulnerability evidence; results go in SAR § 7 and POAM
 - ⬜ **IIS STIG assessment** — CRL/AIA server; referenced as pending in all four templates
 - ⬜ **STIG Viewer CAT I review** — open .ckl files, document false positives, update POAM rows
+
+### Multi-Framework Awareness
+
+- ✅ **`Architecture/Frameworks-Considered.md`** — short doc explaining why DISA STIG was chosen for this lab and noting CIS Benchmarks as the equivalent for non-DoD / commercial deployments. Lists CMMC, NIST 800-171, ISO 27001, CJIS, HITRUST, PCI DSS as adjacent frameworks worth knowing.
+- ✅ **CIS Controls v8 cross-reference added to SSP-Template.md § 6.7** — maps each implemented NIST 800-53 control to its CIS Controls v8 equivalent. Shows framework portability without running a parallel CIS hardening pass.
+- (Not doing) Separate CIS Benchmark hardening pass — would violate "8-tool suite frozen" discipline. CIS is mapped, not duplicated.
 
 ---
 
@@ -127,39 +148,31 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 
 ---
 
-## Card Hardware Testing — Waiting on Amazon Order
+## Card Hardware Testing — Hardware on hand, v1.1 testing in progress
 
-Test buy planned: 2 x YubiKey 5 NFC (~$110) + 1-2 x Hirsch uTrust FIDO2 FIPS Card (~$25 each) + spare Identiv reader if needed.
-
-- ⬜ Order test cards from Amazon (Yubico storefront + Identiv)
-- ⬜ Run `certutil -scinfo` on Hirsch card to confirm PIV applet is loaded (the FIDO2-only listing may or may not include PIV)
-- ⬜ Email Hirsch Sales for bulk-order quote + confirm PIV applet on UPC 721755006139
+- ✅ Test hardware received: YubiKey 5 NFC units + Hirsch uTrust FIDO2 FIPS Cards + additional cards from CardLogix
+- ⬜ Run `certutil -scinfo` on Hirsch card to confirm PIV applet is loaded
 - ⬜ Test PIV enrollment on YubiKey 5 NFC via `New-YubiKeyToken.ps1` or `certreq` INF method
 - ⬜ Test FIDO2 on YubiKey via WebAuthn.io (smoke test)
 - ⬜ Test FIDO2 on Hirsch card via WebAuthn.io
 - ⬜ Test smart card logon to `lab.local` with each card type
-- ⬜ Document findings in `Lab-Kit/Reference/Card-Test-Matrix.md` (form factor × PIV × FIDO2 × bulk price × reset workflow)
-- ⬜ Update `Federal_Upgrade_Path.docx` with FIPS 140-3 / AAL3 / TAA / CJIS evidence from Hirsch card
+- ⬜ **Capture slot 1** — lock screen smart-card-only
+- ⬜ **Capture slot 4** — session lock on card removal w/ stopwatch
+- ⬜ **Capture slot 5** — VPN connected EAP-TLS
+- ⬜ **VPN EAP-TLS test from WO02** — card-to-VPN proof closes the credential story
+- ⬜ Document findings in `Lab-Kit/Reference/Card-Test-Matrix.md` (form factor × PIV × FIDO2 × bulk price × reset workflow). Hardware behavior only — no vendor pricing or roadmap details.
+- ⬜ Update `Federal_Upgrade_Path.docx` with FIPS 140-3 / AAL3 / TAA evidence from Hirsch card
+- ⬜ (Optional) Email Hirsch Sales for bulk-order quote + confirm PIV applet on UPC 721755006139
 
 ---
 
 ## Phase 8 — Zero Trust Extension ✅ Shipped in v1.0
 
-**Status:** 8 full implementations · 13 scaffolds · 2 docs (21 scripts in `Lab-Kit/07-ZeroTrust/`).
+8 full implementations · 13 scaffolds · 2 docs · 21 scripts total in `Lab-Kit/07-ZeroTrust/`. **The 13 scaffolds are intentionally left as "designed, not built" — portfolio-positive as designs; not chasing build for build's sake.**
 
 - Design: [`Architecture/Roadmap/CAC_PIV_Phase8_ZeroTrust_Extension.md`](Architecture/Roadmap/CAC_PIV_Phase8_ZeroTrust_Extension.md)
-- Scripts + run order: [`Lab-Kit/07-ZeroTrust/README.md`](Lab-Kit/07-ZeroTrust/README.md)
-- Live demo: [`Lab-Kit/07-ZeroTrust/Demo-Walkthrough-ZT.md`](Lab-Kit/07-ZeroTrust/Demo-Walkthrough-ZT.md)
-
-| Subphase | Full | Scaffold | What's Shipped / What's Pending |
-|---|---|---|---|
-| 8.1 — Authorization & Least Privilege | 3 | 2 | Tiered admin model, least-privilege GPO, auth policy silos shipped. RBAC + resource gateway need product choice. |
-| 8.2 — Device Trust | 2 | 2 | Device cert template + autoenroll shipped. Compliance check + two-cert VPN need product wiring. |
-| 8.3 — Continuous & Conditional Access | 1 | 2 | Kerberos lifetimes (4h/10m) shipped. Conditional Access + risk policy overlap Phase 9. |
-| 8.4 — Workload / Non-Person *(optional)* | 0 | 3 | Workload cert template, gMSA hardening, mTLS — all scaffolds. |
-| 8.5 — Network Segmentation | 1 | 1 | Microsegmentation GPO (default-deny east-west) shipped. Per-app VPN needs broker product. |
-| 8.6 — Visibility → Decisioning | 0 | 3 | SIEM, detection rules, analytics→policy loop — pick SIEM first (Splunk Free / Sentinel / Elastic). |
-| 8.7 — Validation & Evidence | 2 | 0 | 7-layer ZT validator + ZT demo walkthrough shipped. |
+- Run order + per-script detail: [`Lab-Kit/07-ZeroTrust/README.md`](Lab-Kit/07-ZeroTrust/README.md)
+- Live demo script: [`Lab-Kit/07-ZeroTrust/Demo-Walkthrough-ZT.md`](Lab-Kit/07-ZeroTrust/Demo-Walkthrough-ZT.md)
 
 **Pending follow-ons (small):**
 
@@ -215,6 +228,16 @@ Requires: Dell 3080 Micro #2 + OPNsense.
 
 ---
 
+## Recent Wins (2026-06-05 to 06-15)
+
+- ✅ **Stale-clone incident handled cleanly** (2026-06-13) — secondary Windows clone hit divergence after history rewrite; merge aborted before any compromised state was pushed; forensic verification via Events API + Wayback Machine + Traffic dashboard bounded the public exposure window; password rotated as defense in depth. Lessons-learned doc published.
+- ✅ **`Architecture/Lessons-Learned/2026-06-13-Stale-Clone-After-History-Rewrite.md`** — portfolio-grade DevSecOps incident-response narrative. Documents the diagnosis, fix, forensic methodology, and the operational rule that prevents recurrence. Maps to NIST 800-53 SI-12 / CM-3 / IR-4 / AC-6 and CISA ZTMM Visibility pillar.
+- ✅ **Repo hardening via fresh clone after rewrite** — old working tree discarded, fresh clone pulled, 3 gitignored local-only files restored from backup, `Scan-LocalRepo.ps1` verified all 10 patterns `[CLEAN]`.
+- ✅ **`Architecture/Frameworks-Considered.md`** + CIS Controls v8 cross-reference in `SSP-Template.md` § 6.7 — multi-framework portability signal without parallel hardening work.
+- ✅ **Card hardware received** — YubiKey 5 NFC units + Hirsch uTrust FIDO2 cards + CardLogix shipment. v1.1 testing window now open.
+
+---
+
 ## Recent Wins (2026-06-02 to 06-04)
 
 - ✅ WO02 physical laptop end-to-end — domain join, VSC, smart card logon, Event 4768 Type 16 PKINIT captured
@@ -240,3 +263,5 @@ Requires: Dell 3080 Micro #2 + OPNsense.
 *RMF templates: `Architecture/RMF-Templates/`*
 *Phase 8–9B design: `Architecture/Roadmap/`*
 *Laptop guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`*
+*Frameworks comparison: `Architecture/Frameworks-Considered.md`*
+*Lessons learned: `Architecture/Lessons-Learned/`*

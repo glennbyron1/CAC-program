@@ -10,7 +10,7 @@ Framework Alignment: NIST SP 800-53 Rev. 5, FIPS 201-3, DISA STIG, NIST CSF 2.0,
 ________________________________________
 1. Executive Summary & Intent
 This document defines the production engineering baseline for migrating from password-based legacy authentication to a zero-password, hardware-backed Identity, Credential, and Access Management (ICAM) system.
-The baseline architecture satisfies commercial high-security requirements using enterprise tools (Active Directory, AD CS, an IKEv2 VPN gateway such as WatchGuard, Entra ID) while creating a clear engineering roadmap to achieve full Federal Information Security Management Act (FISMA) and FedRAMP authorization tiers.
+The baseline architecture satisfies commercial high-security requirements using enterprise tools (Active Directory, AD CS, IKEv2 VPN gateways — WatchGuard Firebox for on-prem or Azure VPN Gateway for cloud/federal alignment, Entra ID) while creating a clear engineering roadmap to achieve full Federal Information Security Management Act (FISMA) and FedRAMP authorization tiers.
 ________________________________________
 2. Public Key Infrastructure (PKI) Topology
 To ensure security boundaries are maintained, a two-tier Public Key Infrastructure topology is mandated. Software-isolated environments are utilized for testing, with hardware integration planned for the federal target state.
@@ -52,7 +52,7 @@ ________________________________________
 A major vulnerability in smart card programs is authentication failure due to network isolation. If a domain controller cannot reach a CRL endpoint, smart card logons fail across the entire enterprise.
 3.1 HTTP vs. LDAP Distribution Points
 This architecture strictly mandates HTTP-based CRL Distribution Points (CDPs) over traditional Active Directory LDAP endpoints.
-•	The WAN Failure Mode: Remote sites, DMZs, or clients authenticating across a WatchGuard IKEv2 VPN tunnel often face strict port restrictions or temporary routing dropouts that block LDAP (TCP/UDP 389).
+•	The WAN Failure Mode: Remote sites, DMZs, or clients authenticating across an IKEv2 VPN tunnel (WatchGuard Firebox on-prem or Azure VPN Gateway in cloud) often face strict port restrictions or temporary routing dropouts that block LDAP (TCP/UDP 389).
 •	The Resolution: HTTP (TCP 80) CRL files are cached naturally by local client machines and edge proxy clusters. This minimizes network traffic overhead and ensures authentication survives cross-site WAN brownouts.
 3.2 Authority Information Access (AIA) Configuration
 Workstations must quickly resolve the parent trust chain without polling the internet. AIA fields in all issued certificates must point exclusively to high-availability local HTTP endpoints hosting the subordinate CA root certificate (.crt).
@@ -89,7 +89,7 @@ PACS infrastructure with the same rigor as IT systems.
 | Credential Use | Protocol | Infrastructure |
 |---|---|---|
 | Windows interactive logon | Kerberos PKINIT (smart card TLS) | Active Directory + AD CS |
-| Remote VPN access | EAP-TLS | WatchGuard IKEv2 |
+| Remote VPN access | EAP-TLS | WatchGuard IKEv2 (on-prem) or Azure VPN Gateway (cloud / federal target) |
 | Cloud / SaaS (Entra ID) | FIDO2 WebAuthn | Microsoft Entra ID |
 | Physical door/facility access | PACS card reader (125 kHz / 13.56 MHz contactless) | Physical access control system |
 

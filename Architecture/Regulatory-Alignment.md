@@ -82,7 +82,7 @@ following goals:
 | CPG ID | Goal Description | CAC/PIV Implementation | Status |
 |---|---|---|---|
 | 2.A | Phishing-resistant MFA for all users | Hardware PIV/CAC certificate — not OTP or push | ✅ Satisfied |
-| 2.B | Phishing-resistant MFA for remote access | EAP-TLS smart card authentication on WatchGuard IKEv2 VPN | ✅ Satisfied |
+| 2.B | Phishing-resistant MFA for remote access | EAP-TLS smart card authentication on IKEv2 VPN gateway — WatchGuard Firebox (on-prem) or Azure VPN Gateway (cloud/federal target) | ✅ Satisfied |
 | 2.C | MFA for privileged accounts | Separate YubiKey administrative slot; privileged accounts cannot log in without hardware token | ✅ Satisfied |
 | 2.D | MFA for IT systems management | All AD, AD CS, and PKI management requires authenticated admin smart card session | ✅ Satisfied |
 | 4.A | Separation of privileges | RA / Card Issuer role separation; PKI Admin ≠ Domain Admin | ✅ Satisfied |

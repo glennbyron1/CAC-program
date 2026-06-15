@@ -33,7 +33,7 @@ Framework: NIST SP 800-53 Rev. 5 | NIST SP 800-37 Rev. 2 RMF Authorize | FIPS 19
 
 This system deploys hardware-backed, certificate-based multi-factor authentication (MFA) across
 enterprise infrastructure running Active Directory, Active Directory Certificate Services (AD CS),
-WatchGuard IKEv2 VPN, and Microsoft 365 (Entra ID). It replaces password-based authentication
+IKEv2 VPN gateways (WatchGuard Firebox for on-prem; Azure VPN Gateway for cloud/federal target), and Microsoft 365 (Entra ID). It replaces password-based authentication
 with a zero-password topology using smart cards and FIDO2 security keys.
 
 The architecture follows the DoD Common Access Card (CAC) and Federal PIV operating model and is
@@ -50,7 +50,8 @@ The ICAM system consists of the following major components:
 | Enterprise Issuing CA | Active enrollment engine — domain-joined, running AD CS | LAB-DC01 |
 | Domain Controller | Active Directory authentication and Kerberos PKINIT | LAB-DC01 |
 | HTTP CRL Server | Certificate revocation list distribution (IIS on port 80) | Pending — IIS not deployed in current phase |
-| WatchGuard Firebox | IKEv2 VPN gateway with EAP-TLS smart card authentication | Lab environment — Deploy-VPNClient.ps1 |
+| WatchGuard Firebox | IKEv2 VPN gateway with EAP-TLS smart card authentication (on-prem implementation) | Lab environment — `Deploy-VPNClient.ps1` |
+| Azure VPN Gateway | IKEv2 VPN gateway with EAP-TLS smart card + Conditional Access (cloud/federal target) | Phase 9 build — planned v1.1 |
 | Admin Workstation | PKI administration, STIG scanning, enrollment operations | Hyper-V host (main desktop) |
 | Enrolled Endpoints | Windows workstations with smart card logon enforced | LAB-WORKSTATION01 + physical laptop (pending) |
 
@@ -60,7 +61,7 @@ The authorization boundary includes:
 - The two-tier PKI (Offline Root CA and Enterprise Issuing CA)
 - The Active Directory domain and domain controllers
 - The HTTP CRL distribution server
-- The WatchGuard IKEv2 VPN gateway
+- IKEv2 VPN gateways — WatchGuard Firebox (on-prem implementation) and Azure VPN Gateway (cloud/federal target, Phase 9 planned)
 - All domain-joined Windows endpoints with smart card enforcement
 
 **Out of scope:** Microsoft 365 / Entra ID is considered a leveraged external system. Conditional
@@ -141,7 +142,7 @@ from NIST SP 800-53 Rev. 5 at the HIGH baseline, tailored for this system.
 | AC-3 | Access Enforcement | GPO enforces smart card requirement; standard password logon blocked enterprise-wide | `Build-CA-GPO.ps1`; `Group-Policy/Enforce-SmartCard.ps1` |
 | AC-5 | Separation of Duties | Registration Authority and Card Issuer are separate roles; no single administrator can perform both | `Architecture/Blueprint.md §4.1`; enrollment SOP |
 | AC-11 | Session Lock | GPO triggers immediate workstation lock within 2 seconds of smart card removal | `Build-CA-GPO.ps1` (ScRemoveOption = 1); `Group-Policy/README.md` |
-| AC-17 | Remote Access | WatchGuard IKEv2 VPN requires EAP-TLS certificate authentication; no password-based VPN tunnels | `Architecture/WatchGuard-IKEv2-VPN-Guide.md`; `Automation-Scripts/Deploy-VPNClient.ps1` |
+| AC-17 | Remote Access | IKEv2 VPN gateways require EAP-TLS certificate authentication; no password-based VPN tunnels. Lab implementation: WatchGuard Firebox. Federal target: Azure VPN Gateway with Conditional Access (Phase 9). | `Architecture/WatchGuard-IKEv2-VPN-Guide.md`; `Automation-Scripts/Deploy-VPNClient.ps1`; `Architecture/Roadmap/CAC_PIV_Phase9_Azure_VPN_ConditionalAccess.md` |
 | AC-17(2) | Remote Access — Protection of Confidentiality/Integrity | IKEv2 tunnel uses AES-256-GCM; all VPN traffic encrypted in transit | `Deploy-VPNClient.ps1` IPsec policy settings |
 
 ### 6.2 Audit and Accountability (AU)
@@ -168,7 +169,7 @@ from NIST SP 800-53 Rev. 5 at the HIGH baseline, tailored for this system.
 | IA-2 | Identification and Authentication | Hardware-backed smart card (PIV/CAC model) required for all interactive logons; FIDO2 security keys for Microsoft 365 | `Build-CAC-Lab.ps1`; `Architecture/Blueprint.md` |
 | IA-2(1) | MFA for Privileged Accounts | Administrative accounts require separate hardware token (YubiKey administrative slot); no shared admin credentials | `Architecture/Blueprint.md §4.2` |
 | IA-2(11) | Workstation Logon Using Hardware Tokens | GPO sets `scforceoption = 1`; standard password logon blocked at the workstation level | `Group-Policy/Enforce-SmartCard.ps1`; `Group-Policy/README.md` |
-| IA-3 | Device Identification and Authentication | VPN EAP-TLS requires both user certificate (smart card) and WatchGuard server certificate from trusted CA | `WatchGuard-IKEv2-VPN-Guide.md §3` |
+| IA-3 | Device Identification and Authentication | VPN EAP-TLS requires both user certificate (smart card) and VPN gateway server certificate from trusted CA — applies to WatchGuard Firebox (current) and Azure VPN Gateway (Phase 9 planned) | `WatchGuard-IKEv2-VPN-Guide.md §3`; `Architecture/Roadmap/CAC_PIV_Phase9_Azure_VPN_ConditionalAccess.md` |
 | IA-5 | Authenticator Management | Token lifecycle: RA identity verification → Card Issuer provisioning → mandatory PIN change; revocation via AD CS | `Architecture/Blueprint.md §4`; `Download-IssuingCA-Kit.ps1` |
 | IA-8 | Identification and Authentication (Non-Org. Users) | [FILL IN — document how contractors or visitors authenticate, if applicable] | |
 
@@ -176,7 +177,7 @@ from NIST SP 800-53 Rev. 5 at the HIGH baseline, tailored for this system.
 
 | Control | Title | Implementation | Evidence |
 |---------|-------|----------------|----------|
-| SC-8 | Transmission Confidentiality and Integrity | IKEv2 VPN encrypts all remote traffic with AES-256-GCM; TLS used for AD CS web enrollment | `Deploy-VPNClient.ps1`; `WatchGuard-IKEv2-VPN-Guide.md §4.4` |
+| SC-8 | Transmission Confidentiality and Integrity | IKEv2 VPN encrypts all remote traffic with AES-256-GCM; TLS used for AD CS web enrollment. Applies to WatchGuard Firebox (lab) and Azure VPN Gateway (Phase 9 federal target). | `Deploy-VPNClient.ps1`; `WatchGuard-IKEv2-VPN-Guide.md §4.4`; `Architecture/Roadmap/CAC_PIV_Phase9_Azure_VPN_ConditionalAccess.md` |
 | SC-8(1) | Transmission Confidentiality — Cryptographic Protection | IKEv2 Phase 1: AES-256-GCM, SHA-256, DH ECP384; Phase 2: AES-256-GCM, SHA-256, PFS ECP384 | `Deploy-VPNClient.ps1 Set-VpnConnectionIPsecConfiguration` |
 | SC-12 | Cryptographic Key Establishment and Management | RSA 4096 Root CA key; RSA 2048/4096 Issuing CA key; non-exportable smart card keys generated on-token | `Architecture/Blueprint.md §2` |
 | SC-17 | Public Key Infrastructure Certificates | Two-tier PKI with 10-year Root CA and 5-year Issuing CA certificates; SHA-256 signatures | `Download-OfflineCA-Kit.ps1`; `Download-IssuingCA-Kit.ps1` |
@@ -188,6 +189,45 @@ from NIST SP 800-53 Rev. 5 at the HIGH baseline, tailored for this system.
 |---------|-------|----------------|----------|
 | CM-6 | Configuration Settings | DISA STIG baselines applied via SCAP SCC; GPO enforces smart card and session lock settings | `Compliance-Reports/`; `Group-Policy/` |
 | CM-7 | Least Functionality | HTTP CRL server configured with minimal IIS feature set; only port 80 for CRL distribution | `Download-IssuingCA-Kit.ps1 -ConfigureCRLServer` |
+
+### 6.7 Multi-Framework Cross-Reference (CIS Controls v8 ↔ NIST 800-53)
+
+The controls in §§ 6.1 – 6.6 are drawn from NIST SP 800-53 Rev. 5. CIS Controls v8 provides an equivalent control framework widely used in commercial and non-DoD federal contexts. The table below cross-references the NIST 800-53 controls implemented in this lab to their CIS Controls v8 equivalents. The intent is to demonstrate that the architecture is framework-portable without requiring redundant parallel hardening passes.
+
+For a discussion of framework choice and when each applies, see `Architecture/Frameworks-Considered.md`.
+
+| NIST 800-53 Rev. 5 | CIS Controls v8 | Notes |
+|---|---|---|
+| AC-2 (Account Management) | CIS 5 (Account Management) | Both require documented account lifecycle |
+| AC-3 (Access Enforcement) | CIS 6 (Access Control Management) | Identity → resource mapping |
+| AC-5 (Separation of Duties) | CIS 6 (Access Control Management) | CIS 6 covers RBAC and least privilege |
+| AC-11 (Session Lock) | CIS 4 (Secure Configuration of Enterprise Assets) | Workstation hardening |
+| AC-17 (Remote Access) | CIS 12 (Network Infrastructure Management) | VPN access enforcement |
+| AC-17(2) (Crypto on remote) | CIS 3 (Data Protection) + CIS 12 | Encryption in transit on remote access |
+| AU-2 (Event Logging) | CIS 8 (Audit Log Management) | Centralized logging coverage |
+| AU-9 (Protection of Audit Information) | CIS 8 (Audit Log Management) | Tamper-resistant logs |
+| AU-12 (Audit Record Generation) | CIS 8 (Audit Log Management) | Logging completeness |
+| CA-2 (Security Assessments) | CIS 7 (Continuous Vulnerability Management) + CIS 16 (Application Software Security) | Assessment lifecycle |
+| CA-5 (POA&M) | CIS 7 (Continuous Vulnerability Management) | Tracking remediation |
+| CA-6 (Authorization) | (Process control — not a direct CIS Safeguard) | Governance, captured in CIS implementation groups |
+| CA-7 (Continuous Monitoring) | CIS 7 + CIS 8 | Ongoing posture verification |
+| IA-2 (Identification and Authentication) | CIS 5 + CIS 6 | Identity → authentication flow |
+| IA-2(1) (MFA — Privileged) | CIS 6.5 (Require MFA for administrative access) | Direct equivalence |
+| IA-2(11) (MFA at workstation logon) | CIS 6.3 + 6.5 | Smart card MFA covers both safeguards |
+| IA-3 (Device Identification) | CIS 1 (Inventory of Enterprise Assets) + CIS 12 | Device authentication via certificates |
+| IA-5 (Authenticator Management) | CIS 5 (Account Management) | Credential lifecycle |
+| IA-8 (Non-Organizational Users) | CIS 5 + CIS 6 | Contractor / vendor identity |
+| SC-8 (Transmission Confidentiality) | CIS 3 (Data Protection) + CIS 12 | Encryption in transit |
+| SC-8(1) (Crypto on transmission) | CIS 3 (Data Protection) | Cipher selection and strength |
+| SC-12 (Key Management) | CIS 3 (Data Protection) | Cryptographic key lifecycle |
+| SC-17 (PKI Certificates) | CIS 3 (Data Protection) | PKI as a data protection mechanism |
+| SC-28 (Protection at Rest) | CIS 3 (Data Protection) | Encryption at rest |
+| CM-6 (Configuration Settings) | CIS 4 (Secure Configuration of Enterprise Assets) | STIG / CIS Benchmark baseline |
+| CM-7 (Least Functionality) | CIS 4 (Secure Configuration) | Minimal services / open ports |
+
+**Source mapping:** CIS Controls v8 → NIST 800-53 official cross-reference, available at https://www.cisecurity.org/controls/v8-mapping-to-nist-800-53.
+
+**Note on portability:** in a CIS-aligned environment, the Lab-Kit scripts, RMF artifact structure, and Phase 8 Zero Trust extension all remain valid. Substitute CIS-CAT Pro for SCAP SCC, swap the CIS Controls v8 column references into the controls assessment, and the package supports a CIS-context authorization decision.
 
 ---
 
