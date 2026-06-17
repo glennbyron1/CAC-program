@@ -68,10 +68,18 @@ $FileExtensions = @(
     "*.html", "*.css"
 )
 
-# Files to skip entirely (in addition to the script itself)
+# Files to skip entirely (in addition to the script itself).
+# The Scan-LocalRepo.ps1 + SCAN-README.md pair are gitignored local-only tools
+# (see .gitignore - they live alongside .scrub-patterns.local.json and never
+# ship to the public repo). They contain real values BY DESIGN (the scanner
+# documents the pattern conventions) and must not be rewritten by the scrubber
+# - that would degrade the local documentation you use during pre-push scans.
+# Symmetry: Scan-LocalRepo.ps1 itself skips its own directory at scan time.
 $ExcludeNames = @(
     "Scrub-Repo.ps1",
-    ".scrub-patterns.local.json"
+    ".scrub-patterns.local.json",
+    "Scan-LocalRepo.ps1",
+    "SCAN-README.md"
 )
 
 # ------------------------------------------------------------------
@@ -101,8 +109,14 @@ try {
 
 # Convert from PSCustomObject (ConvertFrom-Json default) to a hashtable
 # so we can iterate keys reliably across PowerShell 5.1 and 7+.
+# Keys beginning with _ are meta/comment entries (e.g. _README, _README_REBUILT,
+# _README_TRIPWIRE_POLICY) and are not real scrub patterns - skip them here so
+# the scrubber does not substitute the literal text "_README" everywhere it
+# appears in the repo (including inside this script's own loader logic).
+# Behaviour kept in sync with security\scripts\Scan-LocalRepo.ps1.
 $PatternMap = [ordered]@{}
 foreach ($prop in $loaded.PSObject.Properties) {
+    if ($prop.Name -like '_*') { continue }
     $PatternMap[$prop.Name] = $prop.Value
 }
 

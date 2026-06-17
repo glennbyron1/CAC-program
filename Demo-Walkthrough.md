@@ -47,8 +47,9 @@ Boot or lock the workstation (`Win + L`). The Windows logon screen should show
 > to type a password into. This satisfies NIST SP 800-53 IA-2(11): hardware token MFA
 > is enforced, not just offered."
 
-**📸 Pending capture** — Lock screen showing smart card prompt only, no password field
-> See `Screenshots/README.md` for the capture checklist.
+**📸 Captured — Lock screen showing smart card prompt only (`jdoe@lab.local`, "Security device sign-in", PIN field; no password option)**
+
+![Smart-card-only lock screen — jdoe@lab.local, Security device sign-in, no password field](Screenshots/01-lockscreen-smartcard-only.png)
 
 ---
 
@@ -100,6 +101,22 @@ Event 4768 — Kerberos Authentication Service Ticket Request
 
 This is the cryptographic proof. Every field maps to a NIST IA-2(11) requirement.
 
+**Supplementary — `certutil -scinfo` confirms the cert chain validates on the physical YubiKey:**
+
+![certutil -scinfo chain validates on Yubico YubiKey OTP+FIDO+CCID 0 — Smart Card Logon EKU 1.3.6.1.4.1.311.20.2.2, completed successfully](Screenshots/01b-certutil-scinfo-yubikey-chain-validates.png)
+
+*Identity binding — Subject CN=Jane Doe, OU=SmartCard-Pilot, UPN jdoe@lab.local on the physical YubiKey:*
+
+![certutil -scinfo cert context — CN=Jane Doe, OU=SmartCard-Pilot, DC=lab, DC=local on Yubico YubiKey reader](Screenshots/01d-certutil-scinfo-yubikey-cert-context-jane-doe.png)
+
+> **What to say:** "Beyond the logon event, we verify the credential at the reader level. `certutil -scinfo` walks every reader visible to Windows, names the physical token, and validates the certificate chain to our internal CA. This is also our acceptance check against silent fallback to a Virtual Smart Card — a failure mode documented in `Architecture/Lessons-Learned/2026-06-16-Silent-VSC-Fallback-Discovery.md` where an enrollment can appear successful while the credential silently lands on a TPM-backed VSC instead of the intended physical token."
+
+**What that failure mode looks like in practice** — the same `certutil -scinfo` output during the discovery shows the cert landed on `Microsoft Virtual Smart Card 0` instead of the intended physical reader:
+
+![certutil -scinfo showing silent fallback — Microsoft Virtual Smart Card 0 holding labtech and jdoe certs instead of the physical reader](Screenshots/issue9-vsc-fallback-microsoft-virtual-smart-card.png)
+
+> **What to say:** "This is what the failure mode looks like — the enrollment wizard reported success, the smart-card logon worked, but `certutil -scinfo` revealed the cert was never actually written to the physical card. The TPM VSC silently caught it. Without this check, a hardware-factor authentication design quietly demotes to a software-factor design with no warning. We caught it; the runbook acceptance check now requires this verification on every enrollment."
+
 ---
 
 ## Step 4 — Pull the Card: Session Locks in Under 2 Seconds
@@ -117,8 +134,9 @@ Start a timer visible to the audience before pulling the card.
 > card, an attacker sitting down has a window measured in seconds before the screen locks.
 > Compare this to a password environment where the screen may never lock automatically."
 
-**📸 Pending capture** — Locked screen immediately after card removal, timer visible
-> See `Screenshots/README.md` for the capture checklist.
+**📸 Captured — Locked screen within ~2 seconds of card removal (measured: 2 seconds)**
+
+![Lock screen 2 seconds after card removal — Windows 11 lockscreen, 2:13 Tuesday June 16](Screenshots/04-session-lock-on-card-removal.png)
 
 ---
 

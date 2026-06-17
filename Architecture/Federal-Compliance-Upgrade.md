@@ -27,7 +27,7 @@ it frames the upgrade and points to the deep-dive documents:
 | # | Area | Commercial Baseline (as implemented) | Federal Upgrade |
 | :-- | :--- | :--- | :--- |
 | 1 | **CA key storage** | Root + Issuing CA private keys in a software Key Storage Provider (KSP) | Keys generated in and bound to a **FIPS 140-3 Level 3 HSM** (e.g., Thales Luna, YubiHSM 2). Software KSP prohibited. |
-| 2 | **Token & reader procurement** | CardLogix GIDS cards + HIRSCH uTrust FIDO2 NFC+, commercial off-the-shelf | All tokens, readers, and middleware sourced from the **GSA FIPS 201 Approved Products List (APL)**. |
+| 2 | **Token & reader procurement** | GIDS smart cards + HIRSCH uTrust FIDO2 NFC+, commercial off-the-shelf | All tokens, readers, and middleware sourced from the **GSA FIPS 201 Approved Products List (APL)**. |
 | 3 | **Trust anchor** | Self-contained two-tier PKI, trusted locally via AD NTAuth | Issuing CA **cross-certifies to the Federal Common Policy CA (FBCA)** for cross-agency trust, per **NIST SP 800-217**. |
 | 4 | **Derived credential issuance** | Secondary tokens issued at an admin desk after in-person RA photo-ID verification | Per **NIST SP 800-157**, derived credentials issued via automated kiosk using the primary PIV card as the cryptographic voucher. |
 

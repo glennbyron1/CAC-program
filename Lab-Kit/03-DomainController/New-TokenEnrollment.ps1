@@ -340,7 +340,7 @@ function Invoke-IssuerPhase {
     }
 
     $tokenSerial = Read-Host "`n  Enter token serial number (printed on card/key)"
-    $tokenType   = Read-Host "  Token type (e.g., CardLogix GIDS, YubiKey 5 NFC)"
+    $tokenType   = Read-Host "  Token type (e.g., GIDS smart card, YubiKey 5 NFC)"
 
     # --- Certificate enrollment ---
     Write-Host ""

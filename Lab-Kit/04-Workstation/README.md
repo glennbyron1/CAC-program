@@ -20,19 +20,19 @@ Before running `Enforce-SmartCard.ps1` or testing smart card logon, the workstat
 
 ### Reader driver
 
-Most USB CCID smart card readers (including the ones that ship with CardLogix GIDS cards and most YubiKey models) are plug-and-play on Windows 10, Windows 11, and Windows Server 2022/2025. Windows ships with a built-in USB CCID driver. Plug in the reader, wait a few seconds, and it should appear in Device Manager under **Smart card readers** with no additional driver needed.
+Most USB CCID smart card readers (including the ones that ship with GIDS smart cards and most YubiKey models) are plug-and-play on Windows 10, Windows 11, and Windows Server 2022/2025. Windows ships with a built-in USB CCID driver. Plug in the reader, wait a few seconds, and it should appear in Device Manager under **Smart card readers** with no additional driver needed.
 
 If the reader does not appear, download the driver from the manufacturer's website and install it before continuing.
 
 ### Card middleware
 
-Windows ships with a built-in **Base Smart Card Cryptographic Service Provider (CSP)** and a **minidriver** that handles GIDS-compliant cards (the standard used by CardLogix GIDS cards) and PIV-compliant cards (the standard used by YubiKey PIV). For this lab you **do not need to install ActivClient or any third-party middleware** — the Windows built-in minidriver handles everything.
+Windows ships with a built-in **Base Smart Card Cryptographic Service Provider (CSP)** and a **minidriver** that handles GIDS-compliant cards (Generic Identity Device Specification) and PIV-compliant cards (the standard used by YubiKey PIV). For this lab you **do not need to install ActivClient or any third-party middleware** — the Windows built-in minidriver handles everything.
 
 Summary by token type:
 
 | Token | Middleware needed |
 |-------|-------------------|
-| CardLogix GIDS smart card | None — Windows GIDS minidriver handles it |
+| GIDS smart card | None — Windows GIDS minidriver handles it |
 | YubiKey (PIV mode) | None — Windows PIV minidriver handles it |
 | DoD CAC (physical) | ActivClient or OpenSC required |
 | Other proprietary cards | Check manufacturer documentation |

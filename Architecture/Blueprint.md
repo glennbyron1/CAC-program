@@ -69,7 +69,7 @@ The token enrollment cycle strictly separates administrative roles:
 1.	The Registration Authority (RA): Verifies the legal physical identity of the employee via two forms of valid identification and checks the authorization flag in the Active Directory identity store.
 2.	The Card Issuer: Executes the technical provisioning script, issues the smart card profile, and initializes the hardware token. An administrator cannot act as both the RA and the Issuer for the same transaction.
 4.2 Security Key & Smart Card Profile Matrix
-•	Standard Enterprise Profile: Physical CardLogix GIDS smart card mapping User Principal Names (UPN) to standard interactive desktops.
+•	Standard Enterprise Profile: Physical GIDS smart card mapping User Principal Names (UPN) to standard interactive desktops.
 •	Privileged Administrative Profile: Dual-interface cryptographic security token (e.g., YubiKey 5 Series). Enforces a hard separation between a user's standard account and their administrative directory account by requiring separate hardware slots for each identity tier.
 ________________________________________
 5. Physical Access Control Integration

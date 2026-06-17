@@ -537,8 +537,8 @@ Domain profile path is `C:\Users\Administrator.LAB\SCC\Sessions\` (not `Administ
 
 > **Token hardware:**
 > This lab uses a **Windows TPM Virtual Smart Card** (vTPM-backed). A physical
-> CardLogix GIDS card was attempted but became PIN-blocked due to a Windows GIDS
-> minidriver bug (random admin key — unrecoverable without CardLogix factory tools).
+> A GIDS smart card was attempted but became PIN-blocked due to a Windows GIDS
+> minidriver bug (random admin key — unrecoverable without the card vendor's factory tools).
 > See CHANGELOG.md for full details.
 >
 > **Recommended physical tokens for future runs:**

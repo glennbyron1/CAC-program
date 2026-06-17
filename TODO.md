@@ -1,7 +1,7 @@
 # CAC Program — Outstanding Tasks
 
 **Author:** Glenn Byron
-**Last Updated:** June 15, 2026
+**Last Updated:** June 16, 2026
 
 Living task list for the CAC/PIV ICAM portfolio project.
 ✅ Complete · ⬜ Needs hands-on work · ⏳ In progress
@@ -24,7 +24,14 @@ Living task list for the CAC/PIV ICAM portfolio project.
 - ✅ **GitHub repo topics added** — `identity-management`, `pki`, `smart-card`, `fido2`, `active-directory`, `certificate-authority`, `nist-800-53`, `fips-201`, `zero-trust`, `icam`, `ad-cs`, `powershell`, `disa-stig`, `hyper-v`, `rmf`, `cac`
 - ✅ **v1.0 pushed** (2026-06-03) — two-tier PKI + smart card MFA on physical endpoint + SCAP evidence (DC01 42.66% / WS01 42.20% / WO02 37.00%) + Phase 8 Zero Trust extension (8 full scripts + 13 scaffolds + Demo-Walkthrough-ZT.md)
 - ✅ **GitHub release notes published** (2026-06-04) — v1.0 release notes posted on the `v1.0` tag covering PKI, smart card MFA, SCAP evidence, ZT extension, with card-blocked items called out as deferred to v1.1.
-- ⬜ **v1.1 (when cards arrive)** — slot 1/4/5 screenshots, VPN EAP-TLS test, `Card-Test-Matrix.md` filled in, optional Ansible STIG hardening pass to push compliance % up
+- ⏳ **v1.1 in progress (2026-06-16)** — slot 1 ✅, slot 4 ✅, slot 1b cert chain ✅, slot 5 VPN EAP-TLS ⬜ (only blocker remaining). `Card-Test-Matrix.md` PIV row filled in. Silent VSC fallback discovery published as Lessons-Learned. Enrollment kit (4 scripts + runbook + session log) staged. Optional Ansible STIG hardening pass still queued.
+
+---
+
+## Forward-looking (queued, not blocking)
+
+- ⬜ **`Architecture/Lab-Topology.md`** — document the deliberate air-gapped lab topology: dumb switch between Hyper-V host and WO02; host has WiFi for staging only (not bridged to lab segment); lab segment has no internet; transfers staged on host then pushed into the lab via the lab switch. Include network diagram and isolation rationale mapped to NIST SC-7 (boundary protection), AC-4 (information flow), CM-7 (least functionality). Real-world "staging host + isolated production segment" pattern used in classified environments scaled down to a homelab.
+- ⬜ **Repo cleanup / consolidation pass** — sweep the repo for stale docs, consolidate where helpful, archive anything superseded. The doc count has grown substantially across v1.0 → v1.1 (Frameworks-Considered, Card-Test-Matrix, Lessons-Learned, Live-Servers, Tools-Kit, SCAP workflow, Phase 8 ZT extension, etc.). Worth a pass once card testing closes to verify nothing is orphaned, every top-level doc has a clear purpose, and the README "What's in the Repo" table matches reality.
 
 ---
 
@@ -132,37 +139,57 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 
 - ✅ Portfolio Word docs updated with all three After-MFA scores (DC01 42.66% / WS01 42.20% / WO02 37.00%) — "SCAP Compliance Snapshot" section + results table + interpretation paragraph + source citation added to `CAC-Program-Showcase-GlennByron.docx` and `Federal_Upgrade_Path.docx` (2026-06-03)
 - ✅ `SCAP-Workflow-QuickRef.md` promoted from `Dispatch/` to `Lab-Kit/05-Compliance/` — stale `192.168.1.10` fixed to `10.10.10.10` / `Lab-DC01`. Docker `scap-summary` moved to "Optional Enhancements" at bottom (deferred until DC hardening pass)
-- ⏳ **Screenshots — 6 of 8 staged**
+- ⏳ **Screenshots — 7 of 8 staged**
+    - ✅ Slot 1 — `01-lockscreen-smartcard-only.png` (jdoe@lab.local, Security device sign-in, no password field)
+    - ✅ Slot 1b — `01b-certutil-scinfo-yubikey-chain-validates.png` (cert chain validates on physical YubiKey, Smart Card Logon EKU)
     - ✅ Slot 2 — `02-pin-entry-cert-subject.png` (PIN prompt)
     - ✅ Slot 2b — `02b-incorrect-pin-validation.png` (incorrect PIN dialog)
     - ✅ Slot 3 — `03-pkinit-validation-table.png` (Event 4768 annotated)
+    - ✅ Slot 4 — `04-session-lock-on-card-removal.png` (lock screen ~2 seconds after card pull)
     - ✅ Slot 6 — `06-pki-health-dashboard.png` (Monitor-PKIHealth.ps1 on Lab-DC01, 2026-06-04 12:18:49, ALL CHECKS PASSED)
     - ✅ Slot 7 — `07-scap-before-after-side-by-side.png` (DC01 44.95% → 42.66%)
     - ✅ Slot 8 — `08-scap-win11-stig-result.png` (SCC Summary Viewer, WO02)
-    - ⬜ Slot 1 — lock screen smart-card-only (**card-blocked** — v1.1)
-    - ⬜ Slot 4 — session lock on card removal w/ stopwatch (**card-blocked** — v1.1)
-    - ⬜ Slot 5 — VPN connected EAP-TLS (**card-blocked** — v1.1)
+    - ⬜ Slot 5 — VPN connected EAP-TLS (depends on Phase 9 / Phase 9B VPN config)
     - ✅ *(v1.1 polish — done early)* parameterized PKI health run captured (13:59:25) — real `[OK]` rows for CRL Endpoint (expires 2026-12-05) + Issuing CA cert (expires 2031-05-26). `Screenshots/06-pki-health-dashboard-parameterized.jpg` is the primary slot 6 image; baseline `[SKIP]` run kept as supplementary.
+    - ✅ Supporting evidence (16 session shots + 4 webauthn credential cards) — see `Screenshots/` for full set tracing enrollment journey
 - ⬜ Run full Ansible STIG hardening pass — pushes scores up before v1.1
 - ⬜ Final `Scrub-Repo.ps1 -WhatIf` pass before any push
 
 ---
 
-## Card Hardware Testing — Hardware on hand, v1.1 testing in progress
+## Card Hardware Testing — ongoing (YubiKey + Hirsch closed in v1.1; other cards still in queue)
 
-- ✅ Test hardware received: YubiKey 5 NFC units + Hirsch uTrust FIDO2 FIPS Cards + additional cards from CardLogix
-- ⬜ Run `certutil -scinfo` on Hirsch card to confirm PIV applet is loaded
-- ⬜ Test PIV enrollment on YubiKey 5 NFC via `New-YubiKeyToken.ps1` or `certreq` INF method
-- ⬜ Test FIDO2 on YubiKey via WebAuthn.io (smoke test)
-- ⬜ Test FIDO2 on Hirsch card via WebAuthn.io
-- ⬜ Test smart card logon to `lab.local` with each card type
-- ⬜ **Capture slot 1** — lock screen smart-card-only
-- ⬜ **Capture slot 4** — session lock on card removal w/ stopwatch
-- ⬜ **Capture slot 5** — VPN connected EAP-TLS
-- ⬜ **VPN EAP-TLS test from WO02** — card-to-VPN proof closes the credential story
-- ⬜ Document findings in `Lab-Kit/Reference/Card-Test-Matrix.md` (form factor × PIV × FIDO2 × bulk price × reset workflow). Hardware behavior only — no vendor pricing or roadmap details.
-- ⬜ Update `Federal_Upgrade_Path.docx` with FIPS 140-3 / AAL3 / TAA evidence from Hirsch card
-- ⬜ (Optional) Email Hirsch Sales for bulk-order quote + confirm PIV applet on UPC 721755006139
+- ✅ Test hardware received: YubiKey 5 NFC units + Hirsch uTrust FIDO2 FIPS Cards + additional smart cards from other vendors
+- ✅ `certutil -scinfo` on Hirsch card — PIV applet confirmed present (`Identity Device (NIST SP 800-73 [PIV])`)
+- ✅ PIV enrollment on YubiKey 5 NFC — succeeded via `New-YubiKeyToken.ps1` (Enroll-on-Behalf path with Yubico minidriver); cert + chain verified by `certutil -scinfo`
+- ✅ FIDO2 on YubiKey via webauthn.io — device-bound passkey, transports `nfc`/`usb`
+- ✅ FIDO2 on Hirsch card via webauthn.io — device-bound passkey, transports `ble`/`nfc`/`usb`
+- ✅ Smart card logon to `lab.local` with YubiKey — jdoe logs into WO02 with card + PIN under `SmartcardLogonRequired=True`
+- ✅ Hirsch PIV (n=2) — declared NO-GO; factory 3DES management key rejected on both cards. Vendor personalization tool + per-card mgmt key required. FIDO2 still works.
+- ✅ **Slot 1 captured** — `01-lockscreen-smartcard-only.png`
+- ✅ **Slot 1b captured** — `01b-certutil-scinfo-yubikey-chain-validates.png` (cert chain proof)
+- ✅ **Slot 4 captured** — `04-session-lock-on-card-removal.png` (~2-second lock confirmed)
+- ⬜ **Slot 5 — VPN EAP-TLS from WO02** (depends on Phase 9 / Phase 9B VPN config)
+- ✅ `Lab-Kit/Reference/Card-Test-Matrix.md` PIV + FIDO2 rows filled in; Hirsch NO-GO finding documented
+- ✅ **`Architecture/Lessons-Learned/2026-06-16-Silent-VSC-Fallback-Discovery.md`** — discovered & published: silent fallback to TPM Virtual Smart Card during enrollment when physical PIV applet is unmanageable. Detection methodology + compensating controls documented. Original DevSecOps finding.
+- ✅ **Enrollment kit staged** — `New-LabUser.ps1`, `New-TokenEnrollment.ps1`, `New-YubiKeyToken.ps1`, `Deploy-ScriptsToDC.ps1` in `Lab-Kit/03-DomainController/`; `RUNBOOK-YubiKey-Enrollment.md` (RUNBOOK-ICAM-001) in `Lab-Kit/Reference/`
+- ✅ **Session log** — `Architecture/Lessons-Learned/2026-06-16-CAC-Enrollment-Session.md` (scrubbed)
+- ⬜ Update `Federal_Upgrade_Path.docx` with FIPS 140-3 / AAL3 / TAA evidence from Hirsch card (vendor materials, not lab-tested)
+- ⬜ (Optional) Real AAGUID values via `ykman fido info` for both cards (webauthn.io anonymizes them)
+
+### Cards closed (v1.1)
+
+- ✅ **YubiKey 5 NFC** — PIV end-to-end (Enroll-on-Behalf + Yubico minidriver), FIDO2 (device-bound passkey, nfc/usb), smart-card logon to `lab.local` under `SmartcardLogonRequired=True`. Reference design for any future YubiKey-line testing.
+- ✅ **Hirsch uTrust FIDO2 FIPS (n=2)** — FIDO2 works; PIV declared NO-GO (factory 3DES mgmt key rejected on both cards; requires vendor personalization tool + per-card mgmt key).
+
+### Cards still to test (queued)
+
+- ⬜ **GIDS PKI smart cards** — Generic Identity Device Specification; Windows includes a built-in GIDS minidriver, so PIV enrollment may work without a vendor-specific minidriver install (would be a different procurement story than Hirsch's). Verify: PIV applet present, factory mgmt key state, GIDS minidriver behavior during Enroll-on-Behalf, FIDO2 if applicable.
+- ⬜ **Additional smart-card form factors in queue** — various PKI implementations TBD; add a row to `Card-Test-Matrix.md` per card tested.
+- ⬜ **(Optional) YubiKey 5 NFC FIPS SKU** — separate procurement from the tested 5 NFC. Higher-assurance variant; would validate the same workflow against a FIPS 140-3 Level 2 module. Not on hand; would only add if there's a specific reason (e.g., federal target environment requires FIPS).
+- ⬜ Any future card form factors as they enter the lab — same test pattern: detection via `certutil -scinfo`, FIDO2 via webauthn.io, PIV via Enroll-on-Behalf, smart-card logon to `lab.local`, VPN EAP-TLS once Phase 9 / 9B lands.
+
+**Procurement-question to evaluate each new card against early:** can the card be brought to a known-management-key state using off-the-shelf tooling (ykman, OpenSC, GIDS minidriver), or does it require vendor-specific software + per-card management key? The Hirsch uTrust NO-GO finding turned on exactly this question.
 
 ---
 
@@ -224,7 +251,20 @@ Requires: Dell 3080 Micro #2 + OPNsense.
 | 8 — Zero Trust Extension | ✅ 8 full scripts + 13 scaffolds + Demo-Walkthrough-ZT.md shipped in v1.0 |
 | 9 — Azure Cloud VPN | ⬜ Design done · not started |
 | 9B — On-Prem VPN Appliance | ⬜ Design done · hardware needed |
-| Card Hardware Testing | ⬜ Waiting on Amazon order (YubiKey + Hirsch FIDO2) |
+| Card Hardware Testing | ⏳ YubiKey ✅ · Hirsch uTrust NO-GO ✅ · GIDS + additional cards in queue · slot 5 VPN pending |
+
+---
+
+## Recent Wins (2026-06-16)
+
+- ✅ **YubiKey PIV enrollment end-to-end** — jdoe enrolled on physical YubiKey 5 NFC via `New-YubiKeyToken.ps1` + Enroll-on-Behalf, logged into WO02 with card + PIN under full smart-card-required enforcement.
+- ✅ **Silent VSC Fallback discovery published** — `Architecture/Lessons-Learned/2026-06-16-Silent-VSC-Fallback-Discovery.md`. Original DevSecOps finding: smart card enrollment can silently land on a TPM Virtual Smart Card when the physical PIV applet is unmanageable, defeating the hardware-factor assurance claim. Detection methodology, compensating controls, and four-point operator acceptance check documented. Maps to NIST IA-2(11), IA-5(11), CM-6, AU-6 and CISA ZTMM Identity pillar.
+- ✅ **Enrollment kit staged** — 4 PowerShell scripts (`New-LabUser.ps1`, `New-TokenEnrollment.ps1`, `New-YubiKeyToken.ps1`, `Deploy-ScriptsToDC.ps1`) + operator runbook (`RUNBOOK-YubiKey-Enrollment.md`, RUNBOOK-ICAM-001) + scrubbed session log. Scripts include fixes for: strict-mode null guards, AES-256 vs AES-192 byte sizing, RFC 4514 CSR subject format, certreq template attribute, hashtable splatting, ykman stderr handling on PS 5.1.
+- ✅ **Hirsch uTrust FIDO2 FIPS PIV declared NO-GO (n=2 cards)** — factory 3DES management key rejected on both; vendor personalization tool + per-card mgmt key required. FIDO2 applet on same cards works fine. Documented in `Card-Test-Matrix.md`.
+- ✅ **Card-Test-Matrix.md PIV + FIDO2 rows filled in** — detection results, FIDO2 webauthn.io evidence (device-bound passkey, transport differences, AAGUID anonymization), PIV enrollment workflow, observations.
+- ✅ **Demo-Walkthrough.md slots 1 / 1b / 4 captured and embedded** — lock screen smart-card-only, certutil -scinfo chain validates, 2-second lock on card removal. Three "📸 Pending capture" placeholders closed.
+- ✅ **Screenshot triage** — 31 raw screenshots → 24 keepers staged in `Screenshots/` with named slot filenames; 1 redacted to remove YubiKey serial + AES-256 management key; 7 deleted as duplicates/empty states.
+- ✅ **`.scrub-patterns.local.json` extended** — added YubiKey management key, Hyper-V host name, YubiKey serial as scrub patterns (local-only, gitignored).
 
 ---
 
@@ -234,7 +274,7 @@ Requires: Dell 3080 Micro #2 + OPNsense.
 - ✅ **`Architecture/Lessons-Learned/2026-06-13-Stale-Clone-After-History-Rewrite.md`** — portfolio-grade DevSecOps incident-response narrative. Documents the diagnosis, fix, forensic methodology, and the operational rule that prevents recurrence. Maps to NIST 800-53 SI-12 / CM-3 / IR-4 / AC-6 and CISA ZTMM Visibility pillar.
 - ✅ **Repo hardening via fresh clone after rewrite** — old working tree discarded, fresh clone pulled, 3 gitignored local-only files restored from backup, `Scan-LocalRepo.ps1` verified all 10 patterns `[CLEAN]`.
 - ✅ **`Architecture/Frameworks-Considered.md`** + CIS Controls v8 cross-reference in `SSP-Template.md` § 6.7 — multi-framework portability signal without parallel hardening work.
-- ✅ **Card hardware received** — YubiKey 5 NFC units + Hirsch uTrust FIDO2 cards + CardLogix shipment. v1.1 testing window now open.
+- ✅ **Card hardware received** — YubiKey 5 NFC units + Hirsch uTrust FIDO2 cards + additional smart cards from other vendors. v1.1 testing window now open.
 
 ---
 

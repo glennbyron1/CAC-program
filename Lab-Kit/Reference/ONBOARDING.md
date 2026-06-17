@@ -337,7 +337,7 @@ for both. Only Part 3 (card setup) and the token serial number differ.
 | **Token serial (ceremony)** | `ROOT\SMARTCARDREADER\0000` | Card serial (from certutil -scinfo or printed on card) |
 | **PIN reset** | `tpmvscmgr.exe destroy` + recreate | YubiKey: `ykman piv reset` / GIDS: factory reset tool |
 | **Recommended for lab** | ✅ Quick, no hardware needed | ✅ Most realistic — use YubiKey 5 NFC |
-| **Avoid** | — | CardLogix GIDS (admin key is random, unrecoverable if PIN blocked) |
+| **Avoid** | — | GIDS smart cards under Windows inbox minidriver (admin key is random, unrecoverable if PIN blocked) |
 
 ---
 

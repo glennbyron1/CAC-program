@@ -26,7 +26,7 @@ No. The lab's enrollment scripts work with **YubiKey 5** series devices, which s
 Any YubiKey 5 series (5 NFC, 5C, 5Ci, 5C NFC, or the Nano variants). The key needs to support PIV — all YubiKey 5 models do.
 
 **Do I need ActivClient or any middleware?**
-Not for YubiKeys or CardLogix GIDS cards. Windows has a built-in PIV/GIDS minidriver that handles both. For a real DoD CAC you'd need ActivClient or OpenSC — see `Lab-Kit/04-Workstation/README.md` for the middleware table.
+Not for YubiKeys or GIDS smart cards. Windows has a built-in PIV/GIDS minidriver that handles both. For a real DoD CAC you'd need ActivClient or OpenSC — see `Lab-Kit/04-Workstation/README.md` for the middleware table.
 
 **What kind of card reader do I need?**
 Any CCID-compliant USB reader. Windows plug-and-play handles the driver automatically — no extra software. $15–30 readers from Amazon work fine.

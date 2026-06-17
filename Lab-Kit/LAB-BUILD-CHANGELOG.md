@@ -766,7 +766,7 @@ certreq -f -new C:\Temp\sclogon.inf C:\Temp\sclogon.req
 
 ### Phase 9 — GIDS Card Blocked During Enrollment
 
-**Problem:** The CardLogix GIDS card became PIN-blocked (retry counter = 0) during
+**Problem:** A GIDS smart card became PIN-blocked (retry counter = 0) during
 `certreq -new`. Root cause: the Windows GIDS minidriver retried PIN verification
 internally during key generation attempts, exhausting the 3-attempt counter.
 
@@ -776,9 +776,9 @@ internally during key generation attempts, exhausting the 3-attempt counter.
   key `010203040506070801020304050607080102030405060708` does not match.
 - `pkcs15-init --erase-card` → `Couldn't bind to the card: Requested object not found` —
   OpenSC cannot access the GIDS filesystem structure on a blocked card.
-- **Card is unrecoverable** without the original admin key or CardLogix factory tools.
+- **Card is unrecoverable** without the original admin key or the card vendor's factory tools.
 
-**Lesson:** CardLogix GIDS cards managed by the Windows GIDS minidriver use a randomly
+**Lesson:** GIDS smart cards managed by the Windows GIDS minidriver use a randomly
 generated admin key that is not stored anywhere accessible on the host. For lab use,
 prefer a **YubiKey 5 NFC** (ykman allows complete PIV reset in 2 seconds) or
 **HID Crescendo C2300** (same FIPS 201 chip platform as government PIV/CAC cards).

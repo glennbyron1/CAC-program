@@ -159,7 +159,7 @@ $ErrorActionPreference = 'Stop'
 #  Slot metadata
 # ---------------------------------------------------------------------------
 $SlotInfo = @{
-    '9a' = @{ Name = 'PIV Authentication';  Purpose = 'Windows smart card logon, SSH'; TouchPolicy = 'cached' }
+    '9a' = @{ Name = 'PIV Authentication';  Purpose = 'Windows smart card logon, SSH'; TouchPolicy = 'never'  }
     '9c' = @{ Name = 'Digital Signature';   Purpose = 'Document / email signing';       TouchPolicy = 'always' }
     '9d' = @{ Name = 'Key Management';      Purpose = 'Email encryption, key escrow';   TouchPolicy = 'cached' }
     '9e' = @{ Name = 'Card Authentication'; Purpose = 'Physical access, CMS';           TouchPolicy = 'never'  }
@@ -221,7 +221,17 @@ function Write-AuditLog {
 
 function Invoke-Ykman {
     param([string[]]$Arguments)
-    $result = & ykman @Arguments 2>&1
+    # ykman writes prompts/warnings (e.g. "Touch your YubiKey...") to stderr. With the script's
+    # $ErrorActionPreference='Stop', capturing stderr via 2>&1 can turn those informational lines
+    # into terminating errors before we ever check the exit code. Force Continue locally and
+    # judge success solely by the process exit code.
+    $eap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $result = & ykman @Arguments 2>&1
+    } finally {
+        $ErrorActionPreference = $eap
+    }
     if ($LASTEXITCODE -ne 0) {
         throw "ykman $($Arguments -join ' ') failed (exit $LASTEXITCODE): $result"
     }
@@ -233,8 +243,10 @@ function Test-TrivialPin {
     # Reject all-same digit, sequential ascending/descending
     if ($Pin -match '^(\d)\1+$') { return $true }
     $digits = $Pin.ToCharArray() | ForEach-Object { [int]::Parse($_) }
-    $ascending  = 0..($digits.Count-2) | Where-Object { $digits[$_+1] - $digits[$_] -ne 1 }
-    $descending = 0..($digits.Count-2) | Where-Object { $digits[$_] - $digits[$_+1] -ne 1 }
+    # Wrap in @() so an empty pipeline result is an empty array (.Count = 0) rather than
+    # $null, which would throw under Set-StrictMode when we read .Count below.
+    $ascending  = @(0..($digits.Count-2) | Where-Object { $digits[$_+1] - $digits[$_] -ne 1 })
+    $descending = @(0..($digits.Count-2) | Where-Object { $digits[$_] - $digits[$_+1] -ne 1 })
     if ($ascending.Count -eq 0)  { return $true }   # e.g. 123456
     if ($descending.Count -eq 0) { return $true }   # e.g. 654321
     return $false
@@ -387,8 +399,9 @@ function Invoke-PivReset {
 function Set-ManagementKey {
     Write-Step "Setting Management Key (AES-256)"
 
-    # Generate 24 random bytes = 48 hex chars (AES-256 for PIV management key)
-    $bytes   = New-Object byte[] 24
+    # Generate 32 random bytes = 64 hex chars (AES-256 for PIV management key).
+    # AES-256 requires a 32-byte key; 24 bytes is only valid for TDES/AES-192.
+    $bytes   = New-Object byte[] 32
     [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
     $mgmtKey = ($bytes | ForEach-Object { $_.ToString('X2') }) -join ''
 
@@ -490,7 +503,9 @@ function Invoke-SlotProvisioning {
     # ── 2. Generate CSR ────────────────────────────────────────────────────
     $csrFile  = Join-Path $WorkDir "csr-$Slot.req"
     $cn       = ($UPN -split '@')[0]
-    $subject  = "/CN=$cn/emailAddress=$UPN"
+    # ykman 5.x requires an RFC 4514 subject (e.g. "CN=jdoe"), not the OpenSSL slash format.
+    # The enterprise template builds the real subject + UPN SAN from AD, so a minimal CN is fine.
+    $subject  = "CN=$cn"
 
     Write-Info "Generating Certificate Signing Request..."
     Invoke-Ykman @(
@@ -531,7 +546,7 @@ _continue_ = "upn=$UPN&"
     Write-Warn "certreq will prompt for CA credentials if required."
     Write-Host ""
 
-    $certreqOut = & certreq -submit "-config" $CAServer $csrFile $certFile 2>&1
+    $certreqOut = & certreq -submit -attrib "CertificateTemplate:$TemplateName" "-config" $CAServer $csrFile $certFile 2>&1
     if ($LASTEXITCODE -ne 0) {
         Write-Warn "certreq output:"
         $certreqOut | ForEach-Object { Write-Info $_ }
@@ -644,6 +659,10 @@ function Main {
             New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
 
             Write-AuditLog "PROVISIONING STARTED | Token Serial: $($tokenInfo.Serial) | UPN: $UserPrincipalName | Slots: $($Slots -join ',') | Operator: $env:USERDOMAIN\$env:USERNAME"
+
+            # Initialize so the finally-block cleanup never trips Set-StrictMode if we fail
+            # before the PIN is set (otherwise the real error gets masked by an unset-$pin error).
+            $pin = $null
 
             try {
                 # Optional PIV reset

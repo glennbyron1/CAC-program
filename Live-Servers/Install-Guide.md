@@ -31,7 +31,7 @@ WARNs are advisories — address them before you go live.
 | Your organization's domain name | e.g., agency.gov |
 | Static IP addresses for each server | Assigned by your network team |
 | DNS entries for PKI hostnames | e.g., pki.agency.gov, ocsp.agency.gov |
-| Smart card tokens (GIDS cards or YubiKeys) | CardLogix, HIRSCH, Yubico |
+| Smart card tokens (GIDS cards or YubiKeys) | HIRSCH, Yubico, and other vendors |
 | Smart card readers | USB or built-in, CCID compliant |
 | The FedCompliance-Tools folder | Built by Tools-Kit\Get-LabTools.ps1 |
 
