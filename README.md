@@ -4,7 +4,20 @@
 [![PowerShell Lint](https://github.com/glennbyron1/CAC-program/actions/workflows/ps-lint.yml/badge.svg)](https://github.com/glennbyron1/CAC-program/actions/workflows/ps-lint.yml)
 
 **Author:** Glenn Byron | **GitHub:** [@glennbyron1](https://github.com/glennbyron1) | **License:** MIT
+**Releases:** [v1.1](https://github.com/glennbyron1/CAC-program/releases/tag/v1.1) (2026-06-16, latest) · [v1.0](https://github.com/glennbyron1/CAC-program/releases/tag/v1.0) (2026-06-03)
  
+---
+
+## What's new in v1.1 (2026-06-16)
+
+- **Silent TPM Virtual Smart Card Fallback discovery** — original DevSecOps finding: smart card enrollment can silently land on a TPM-backed VSC instead of the intended physical token, defeating hardware-factor assurance with no error. Detection methodology + four-point operator acceptance check published in [`Architecture/Lessons-Learned/2026-06-16-Silent-VSC-Fallback-Discovery.md`](Architecture/Lessons-Learned/2026-06-16-Silent-VSC-Fallback-Discovery.md). Maps to NIST IA-2(11), IA-5(11), CM-6, AU-6.
+- **YubiKey PIV enrollment validated end-to-end** — physical token + Yubico minidriver + Enroll-on-Behalf + Issuing CA + smart-card-required GPO. Lock screen, cert chain verification, and 2-second lock-on-removal screenshots captured.
+- **Two operator runbooks** — [`RUNBOOK-YubiKey-Enrollment.md`](Lab-Kit/Reference/RUNBOOK-YubiKey-Enrollment.md) (scripted path) + [`MANUAL-Enrollment-Walkthrough.md`](Lab-Kit/Reference/MANUAL-Enrollment-Walkthrough.md) (GUI / copy-a-peer-in-ADUC path). Both runbooks cross-reference; together they show the same workflow at two automation levels.
+- **Card-Test-Matrix methodology** — hardware-evaluation framework applied to YubiKey 5 NFC (✅ PIV + FIDO2 working) and Hirsch uTrust FIDO2 FIPS (❌ PIV NO-GO, vendor mgmt key required; FIDO2 works). Procurement-evaluation criterion stated explicitly for future card form factors. [`Lab-Kit/Reference/Card-Test-Matrix.md`](Lab-Kit/Reference/Card-Test-Matrix.md).
+- **Scrub-Repo.ps1 hardening** — two bug fixes caught by `-WhatIf` preview before any file was touched (`_*` meta-key filter, gitignored-tool exclusion). Shipped publicly as documentation for anyone forking the scrub pattern.
+
+Full release notes on the [v1.1 tag](https://github.com/glennbyron1/CAC-program/releases/tag/v1.1).
+
 ---
 
 ## What this is
@@ -120,16 +133,17 @@ Phase 8 extends the lab to full Zero Trust Architecture: least-privilege RBAC, K
 |--------|----------|
 | `Lab-Kit/01-HyperV-Host/` | VM creation, post-config, snapshot manager |
 | `Lab-Kit/02-OfflineRootCA/` | 8-step guided air-gapped Root CA ceremony |
-| `Lab-Kit/03-DomainController/` | AD build, Issuing CA, GPO, cert templates, OCSP, token enrollment, YubiKey, audit forwarding, PKI health monitor |
+| `Lab-Kit/03-DomainController/` | AD build, Issuing CA, GPO, cert templates, OCSP, token enrollment (RA + Issuer SoD ceremony), YubiKey PIV provisioning, AD user creation with OU resolver, SMB-based script deploy helper, audit forwarding, PKI health monitor |
 | `Lab-Kit/04-Workstation/` | Smart card enforcement GPO, IKEv2/EAP-TLS VPN client |
 | `Lab-Kit/05-Compliance/` | 7-layer pre-scan validator; SCAP SCC Before/After-MFA staging; `Invoke-SCAPWorkflow.ps1` automation; SCAP workflow quick reference |
 | `Lab-Kit/06-PhysicalEndpoint/` | Physical laptop onboarding (WO02): domain join, vTPM/VSC creation, smart card cert enrollment, full Add-Physical-Laptop guide |
 | `Lab-Kit/07-ZeroTrust/` | Phase 8 Zero Trust extension: tiered admin model, auth policy silos, device certs, Kerberos lifetime hardening, microsegmentation, ZT validator (8 full + 13 scaffolds + ZT demo walkthrough) |
 | `Lab-Kit/Ansible/` | `windows-stig-hardening.yml` — automated STIG remediation playbook; AD health check; cert expiry report |
-| `Lab-Kit/Reference/` | Sanitized ONBOARDING + TROUBLESHOOTING synced from the lab — lab user accounts, smart card enrollment 7-part walkthrough, two-mechanism scforceoption-vs-SmartcardLogonRequired root-cause table |
+| `Lab-Kit/Reference/` | Operator runbooks (scripted RUNBOOK-ICAM-001 + manual GUI walkthrough RUNBOOK-ICAM-002), `Card-Test-Matrix.md` hardware-evaluation methodology, sanitized ONBOARDING + TROUBLESHOOTING synced from the lab |
 | `Tools-Kit/` | Downloads SCAP SCC, STIG Viewer, Nessus Essentials, PSPKI |
 | `Architecture/` | PKI Blueprint, STIG Hardening Guide, regulatory alignment, VPN guide |
 | `Architecture/RMF-Templates/` | SSP, SAR, POA&M, ATO Letter, STIG deviation rationale, annual rescan SOP |
+| `Architecture/Lessons-Learned/` | DevSecOps incident-response and discovery write-ups — Silent VSC Fallback discovery (Issue #9), stale-clone-after-history-rewrite recovery, full v1.1 enrollment session log |
 | `Architecture/Zero-Trust-Reference/` | 5-paper Zero Trust series + 4 SVG architecture diagrams |
 | `Architecture/Roadmap/` | Phase 8 (Zero Trust Extension), Phase 9 (Azure Conditional Access VPN), Phase 9B (On-Prem VPN appliance) |
 | `Compliance-Reports/` | Before-MFA and After-MFA SCAP SCC scan output with real scores |
