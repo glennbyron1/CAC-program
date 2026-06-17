@@ -201,7 +201,7 @@ cybersecurity maturity. Your CSET exports satisfy this requirement when:
 
 1. The assessment is completed annually (or after significant system changes)
 2. The results are documented and available for review if requested by the Maryland Department of the Environment (MDE) or Maryland Department of Information Technology (DoIT)
-3. A remediation plan exists for any identified gaps (the POA&M in `Architecture/POAM-Template.md` serves this purpose for IT systems; create a parallel OT gap remediation plan for CSET findings)
+3. A remediation plan exists for any identified gaps (the POA&M in `POAM-Template.md` serves this purpose for IT systems; create a parallel OT gap remediation plan for CSET findings)
 
 ### Annual Compliance Summary Statement
 
@@ -218,7 +218,7 @@ After completing the assessment, complete this block for your compliance records
 | Access Control Category Score | [FILL IN]% |
 | Detect/Monitor Category Score | [FILL IN]% |
 | Significant Gaps Identified | [FILL IN — or "None"] |
-| Remediation Plan Reference | `Architecture/POAM-Template.md` |
+| Remediation Plan Reference | `POAM-Template.md` |
 | Next Assessment Due | [FILL IN — ~12 months] |
 
 ---
@@ -234,4 +234,4 @@ After completing the assessment, complete this block for your compliance records
 ---
 
 *Related: `Architecture/Regulatory-Alignment.md` (CISA ZTMM and NIST CSF mapping),
-`Architecture/POAM-Template.md` (gap remediation tracking), `ROADMAP.md Phase 5`.*
+`POAM-Template.md` (gap remediation tracking), `ROADMAP.md Phase 5`.*

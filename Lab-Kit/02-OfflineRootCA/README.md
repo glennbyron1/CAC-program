@@ -146,4 +146,4 @@ The Root CA's private key is the highest-value asset in the PKI. If it were onli
 
 ---
 
-*Related: `Architecture/PKI-Blueprint.md`, `Lab-Kit/03-DomainController/Build-CA-GPO.ps1`, `Lab-Kit/START-HERE.md`*
+*Related: `Architecture/Blueprint.md`, `Lab-Kit/03-DomainController/Build-CA-GPO.ps1`, `Lab-Kit/START-HERE.md`*

@@ -43,7 +43,7 @@ in your assessment records.
 ### 1.2 Identify Systems in Scope
 
 Confirm which systems are within the authorization boundary before scanning. Cross-reference
-against the system boundary in the SSP (`Architecture/SSP-Template.md §2.3`).
+against the system boundary in the SSP (`SSP-Template.md §2.3`).
 
 | System | Hostname | OS | Last Scan Date | STIG Version (Last) |
 |--------|----------|----|----------------|---------------------|
@@ -113,7 +113,7 @@ Review any findings that changed status compared to the prior checklist (.ckl fi
 
 For each new open finding:
 1. Determine if it is a true finding or a false positive
-2. If true: add to the POA&M (`Architecture/POAM-Template.md`) with a remediation timeline
+2. If true: add to the POA&M (`POAM-Template.md`) with a remediation timeline
 3. If false positive: document the Not Applicable rationale in STIG Viewer and save the .ckl
 
 Export updated .ckl files to `Compliance-Reports\After-MFA\` and overwrite the prior year's files.
@@ -163,7 +163,7 @@ VM and the USB transfer kit from `Download-OfflineCA-Kit.ps1`.
 
 ## 5. POA&M Update
 
-After scans are complete, update `Architecture/POAM-Template.md`:
+After scans are complete, update `POAM-Template.md`:
 
 1. Mark any findings remediated since the last assessment as Closed
 2. Add any new open findings discovered in this assessment
@@ -185,13 +185,13 @@ and submit to the Authorizing Official for ATO renewal:
 
 | Document | Location | Status |
 |---------|---------|--------|
-| Updated SSP | `Architecture/SSP-Template.md` | [ ] Updated with current scan scores |
-| Updated SAR | `Architecture/SAR-Template.md` | [ ] Updated with this year's findings |
-| Updated POA&M | `Architecture/POAM-Template.md` | [ ] All findings current |
+| Updated SSP | `SSP-Template.md` | [ ] Updated with current scan scores |
+| Updated SAR | `SAR-Template.md` | [ ] Updated with this year's findings |
+| Updated POA&M | `POAM-Template.md` | [ ] All findings current |
 | SCAP SCC results (XCCDF + HTML) | `Compliance-Reports/After-MFA/` | [ ] Current year scan staged |
 | STIG Viewer checklists (.ckl) | `Compliance-Reports/After-MFA/` | [ ] Updated |
 | Nessus scan PDF | `Compliance-Reports/After-MFA/` | [ ] Current year scan |
-| ATO renewal letter | `Architecture/ATO-Letter-Template.md` | [ ] Prepared for AO signature |
+| ATO renewal letter | `ATO-Letter-Template.md` | [ ] Prepared for AO signature |
 
 ---
 
@@ -230,4 +230,4 @@ Fill in after each annual cycle.
 ---
 
 *Related: `Architecture/FedGov-Tools-Setup-Guide.md`, `Architecture/STIG-Hardening-Guide.md`,
-`Architecture/POAM-Template.md`, `Architecture/SAR-Template.md`, `ROADMAP.md Phase 6`.*
+`POAM-Template.md`, `SAR-Template.md`, `ROADMAP.md Phase 6`.*

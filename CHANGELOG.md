@@ -613,11 +613,11 @@ Reference links back to canonical architecture documents in `/Architecture`, cov
 
 | ID | File | Phase |
 |---|---|---|
-| ARCH-ICAM-001 | Architecture/PKI-Blueprint.md | 3 |
+| ARCH-ICAM-001 | Architecture/Blueprint.md | 3 |
 | ARCH-ICAM-002 | Architecture/STIG-Hardening-Guide.md | 3 |
-| ARCH-ICAM-003 | Architecture/NIST-CISA-Alignment.md | 3 |
+| ARCH-ICAM-003 | Architecture/Regulatory-Alignment.md | 3 |
 | ARCH-ICAM-004 | Architecture/WatchGuard-IKEv2-VPN-Guide.md | 3 |
-| ARCH-ICAM-005 | Architecture/FedGov-Upgrade-Path.md | 3 |
+| ARCH-ICAM-005 | Architecture/Federal-Compliance-Upgrade.md | 3 |
 | ARCH-ICAM-006 | Architecture/RMF-Templates/SSP-Template.md | 5 |
 | ARCH-ICAM-007 | Architecture/RMF-Templates/POAM-Template.md | 5 |
 | ARCH-ICAM-008 | Architecture/RMF-Templates/SAR-Template.md | 5 |
@@ -632,6 +632,8 @@ Reference links back to canonical architecture documents in `/Architecture`, cov
 | SCRIPT-ICAM-015 | Lab-Kit/03-DomainController/Set-OCSPResponder.ps1 | 6 |
 | SCRIPT-ICAM-016 | Lab-Kit/03-DomainController/New-YubiKeyToken.ps1 | 6 |
 | DEMO-ICAM-001 | Demo-Walkthrough.md | 6 |
+| RUNBOOK-ICAM-001 | Lab-Kit/Reference/RUNBOOK-YubiKey-Enrollment.md | v1.1 |
+| RUNBOOK-ICAM-002 | Lab-Kit/Reference/MANUAL-Enrollment-Walkthrough.md | v1.1 |
 
 ---
 

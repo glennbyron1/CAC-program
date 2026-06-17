@@ -129,4 +129,4 @@ Each new card form factor gets a row added to every section below.
 
 ---
 
-*Related: `Lab-Kit/Reference/ONBOARDING.md`, `Lab-Kit/Reference/TROUBLESHOOTING.md`, `Architecture/Federal_Upgrade_Path.docx`*
+*Related: `Lab-Kit/Reference/ONBOARDING.md`, `Lab-Kit/Reference/TROUBLESHOOTING.md`, `Portfolio/Federal_Upgrade_Path.docx`*

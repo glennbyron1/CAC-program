@@ -150,5 +150,5 @@ program's hardening scripts address. Check off as confirmed remediated by your p
 
 ---
 
-*Related documents: `Architecture/SSP-Template.md`, `Architecture/SAR-Template.md`,
+*Related documents: `SSP-Template.md`, `SAR-Template.md`,
 `Compliance-Reports/README.md`. See `ROADMAP.md Phase 5` for the full ATO package checklist.*

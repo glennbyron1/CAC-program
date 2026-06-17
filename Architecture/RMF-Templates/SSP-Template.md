@@ -158,8 +158,8 @@ from NIST SP 800-53 Rev. 5 at the HIGH baseline, tailored for this system.
 | Control | Title | Implementation | Evidence |
 |---------|-------|----------------|----------|
 | CA-2 | Security Assessments | SCAP SCC STIG scans executed before and after hardening; results staged by `Stage-Reports.ps1` | `Compliance-Reports/Before-MFA/`; `Compliance-Reports/After-MFA/` |
-| CA-5 | Plan of Action and Milestones | POA&M maintained in `Architecture/POAM-Template.md`; updated after each assessment cycle | `Architecture/POAM-Template.md` |
-| CA-6 | Authorization | ATO package includes this SSP, SAR, and POA&M; submitted to Authorizing Official | This document; `Architecture/SAR-Template.md` |
+| CA-5 | Plan of Action and Milestones | POA&M maintained in `POAM-Template.md`; updated after each assessment cycle | `POAM-Template.md` |
+| CA-6 | Authorization | ATO package includes this SSP, SAR, and POA&M; submitted to Authorizing Official | This document; `SAR-Template.md` |
 | CA-7 | Continuous Monitoring | Monthly SCAP re-scans planned; CRL/OCSP health monitoring; Windows Event Log review | `ROADMAP.md Phase 6`; `Automation-Scripts/Download-FedCompliance-Kit.ps1` |
 
 ### 6.4 Identification and Authentication (IA)
@@ -254,14 +254,14 @@ For a discussion of framework choice and when each applies, see `Architecture/Fr
 | Nessus Essentials (Before hardening) | Nessus | Pending | Pending |
 | Nessus Essentials (After hardening) | Nessus | Pending | Pending |
 
-Detailed findings are in the Security Assessment Report (`Architecture/SAR-Template.md`) and
-the Plan of Action & Milestones (`Architecture/POAM-Template.md`).
+Detailed findings are in the Security Assessment Report (`SAR-Template.md`) and
+the Plan of Action & Milestones (`POAM-Template.md`).
 
 ---
 
 ## 9. POA&M Summary
 
-Open findings requiring remediation are tracked in `Architecture/POAM-Template.md`. The AO
+Open findings requiring remediation are tracked in `POAM-Template.md`. The AO
 accepts residual risk for findings with an accepted risk disposition before the ATO is granted.
 
 | POA&M Item Count | Risk Level | Status |
@@ -293,7 +293,7 @@ accepts residual risk for findings with an accepted risk disposition before the 
 
 ---
 
-*See `ROADMAP.md` for the full program phase plan. See `Architecture/SAR-Template.md` for the
-Security Assessment Report and `Architecture/POAM-Template.md` for the Plan of Action & Milestones.*
+*See `ROADMAP.md` for the full program phase plan. See `SAR-Template.md` for the
+Security Assessment Report and `POAM-Template.md` for the Plan of Action & Milestones.*
 
 *Note: This is a personal learning and portfolio lab with no production ATO. The "authorization" here demonstrates the RMF workflow and documentation discipline — not a formal DoD authorization decision.*

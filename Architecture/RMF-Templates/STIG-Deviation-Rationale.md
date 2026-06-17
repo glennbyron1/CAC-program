@@ -141,7 +141,7 @@ rather than remediating, document it here using the template above. Each entry n
 4. At least one compensating control
 5. AO sign-off
 
-Any finding accepted here must also appear in the POA&M (`Architecture/POAM-Template.md`)
+Any finding accepted here must also appear in the POA&M (`POAM-Template.md`)
 Risk Acceptance Register.
 
 ---
@@ -155,5 +155,5 @@ Risk Acceptance Register.
 
 ---
 
-*Related: `Architecture/POAM-Template.md` (Risk Acceptance Register), `Architecture/SAR-Template.md`
-(assessment findings), `Architecture/SSP-Template.md` (system controls).*
+*Related: `POAM-Template.md` (Risk Acceptance Register), `SAR-Template.md`
+(assessment findings), `SSP-Template.md` (system controls).*

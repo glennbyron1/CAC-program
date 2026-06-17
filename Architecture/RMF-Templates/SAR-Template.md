@@ -7,7 +7,7 @@ Framework: NIST SP 800-53 Rev. 5 CA-2 | NIST SP 800-37 Rev. 2 | DISA RMF Assess 
 > **How to use this template:** This document summarizes the results of Phase 4 STIG and
 > vulnerability assessments. Complete it after all SCAP SCC scans, STIG Viewer checklist reviews,
 > and Nessus Essentials scans are finished. The SAR feeds directly into the POA&M
-> (`Architecture/POAM-Template.md`) and SSP (`Architecture/SSP-Template.md`) for the ATO package.
+> (`POAM-Template.md`) and SSP (`SSP-Template.md`) for the ATO package.
 
 ---
 
@@ -249,7 +249,7 @@ scoped as the next phase (`Lab-Kit/Ansible/windows-stig-hardening.yml`).
 
 ---
 
-*Related documents: `Architecture/SSP-Template.md` (system description and controls),
-`Architecture/POAM-Template.md` (open finding tracking), `Compliance-Reports/` (raw scan artifacts).*
+*Related documents: `SSP-Template.md` (system description and controls),
+`POAM-Template.md` (open finding tracking), `Compliance-Reports/` (raw scan artifacts).*
 
 *Note: This is a personal learning and portfolio lab with no production ATO. The "authorization" here demonstrates the RMF workflow and documentation discipline — not a formal DoD authorization decision.*

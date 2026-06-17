@@ -63,7 +63,7 @@ typically 3 years from authorization date].
 1. All CAT I (Critical) findings identified in the Security Assessment Report must be remediated
    or have a documented risk acceptance within [FILL IN — e.g., 30 days] of this authorization.
 
-2. The POA&M (`Architecture/POAM-Template.md`) must be updated with remediation status within
+2. The POA&M (`POAM-Template.md`) must be updated with remediation status within
    [FILL IN — e.g., 60 days] of this authorization and reviewed quarterly thereafter.
 
 3. Monthly PKI health monitoring must be maintained per `Automation-Scripts/Monitor-PKIHealth.ps1`.
@@ -121,4 +121,4 @@ Date: ___________________________
 ---
 
 *This document is part of the ICAM program ATO package. Related documents:
-`Architecture/SSP-Template.md`, `Architecture/SAR-Template.md`, `Architecture/POAM-Template.md`.*
+`SSP-Template.md`, `SAR-Template.md`, `POAM-Template.md`.*
