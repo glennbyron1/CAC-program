@@ -107,7 +107,7 @@ The lab is now in **converging mode**, not creating mode. Finish what is in flig
 - ✅ **AO name and signature** — filled in SSP and SAR (Glenn Byron, System Owner / Lab Program Manager, Self-Assessed Lab)
 - ⬜ **Nessus Essentials scan** — adds vulnerability evidence; results go in SAR § 7 and POAM
 - ⬜ **IIS STIG assessment** — CRL/AIA server; referenced as pending in all four templates
-- ⬜ **STIG Viewer CAT I review** — open .ckl files, document false positives, update POAM rows
+- ✅ **STIG Viewer CAT I review — DONE 2026-06-17** — all 22 unique CAT I findings across DC01 / WS01 / WO02 documented in `Architecture/RMF-Templates/POAM-Template.md` grouped by category (AutoPlay×6, Windows Installer Always Install Elevated×2, WinRM Basic auth×4, Anonymous share enumeration×2, LM auth level×2, AD data files permissions×1, Win11-specific×5). All real findings — none are false positives. Disposition: 18 queued for Ansible remediation, 1 manual review (AD data files), 2 risk-accept candidates (BitLocker disk encryption + pre-boot PIN on WO02), 4 operational no-op but remediate (WinRM Basic auth — lab uses Kerberos). Confirmed smart-card STIG rules (`WN22-SO-000120` Interactive logon require smart card; `WN22-CC-000080` smart card removal behavior) **passed** the scans — identity controls IA-2 / AC-5 / IA-2(11) fully satisfied. Risk Acceptance Register seeded with RA-001 (BitLocker disk) and RA-002 (BitLocker PIN), pending Glenn-as-AO sign-off.
 
 ### Multi-Framework Awareness
 
