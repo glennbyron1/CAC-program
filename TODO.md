@@ -31,7 +31,7 @@ Living task list for the CAC/PIV ICAM portfolio project.
 
 ## Forward-looking (queued, not blocking)
 
-- ⬜ **`Architecture/Lab-Topology.md`** — document the deliberate air-gapped lab topology: dumb switch between Hyper-V host and WO02; host has WiFi for staging only (not bridged to lab segment); lab segment has no internet; transfers staged on host then pushed into the lab via the lab switch. Include network diagram and isolation rationale mapped to NIST SC-7 (boundary protection), AC-4 (information flow), CM-7 (least functionality). Real-world "staging host + isolated production segment" pattern used in classified environments scaled down to a homelab.
+- ✅ **`Architecture/Lab-Topology.md` — DONE 2026-06-17** (ARCH-ICAM-014). Documents the deliberate air-gapped lab topology: dumb switch between Hyper-V host and WO02; host has Wi-Fi for staging only (not bridged to lab segment); lab segment has no internet; transfers staged on host then pushed into the lab via Hyper-V Enhanced Session / PowerShell Direct / USB. Physical + logical network diagrams (ASCII). Maps to NIST SC-7 (boundary protection), AC-4 (information flow enforcement), CM-7 (least functionality), SC-32 (system partitioning), PE-3 (physical access), SC-39 (process isolation), and CISA ZTMM Networks pillar. Frames the design as a scaled-down version of the "staging-host pattern" used in classified environments — including the deliberate choice of a dumb unmanaged switch over a VLAN-segmented managed switch (smaller attack surface, defensible to a reviewer in one sentence).
 - ⬜ **Repo cleanup / consolidation pass** — sweep the repo for stale docs, consolidate where helpful, archive anything superseded. The doc count has grown substantially across v1.0 → v1.1 (Frameworks-Considered, Card-Test-Matrix, Lessons-Learned, Live-Servers, Tools-Kit, SCAP workflow, Phase 8 ZT extension, etc.). Worth a pass once card testing closes to verify nothing is orphaned, every top-level doc has a clear purpose, and the README "What's in the Repo" table matches reality.
 
 ---
@@ -175,8 +175,8 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 - ✅ **`Architecture/Lessons-Learned/2026-06-16-Silent-VSC-Fallback-Discovery.md`** — discovered & published: silent fallback to TPM Virtual Smart Card during enrollment when physical PIV applet is unmanageable. Detection methodology + compensating controls documented. Original DevSecOps finding.
 - ✅ **Enrollment kit staged** — `New-LabUser.ps1`, `New-TokenEnrollment.ps1`, `New-YubiKeyToken.ps1`, `Deploy-ScriptsToDC.ps1` in `Lab-Kit/03-DomainController/`; `RUNBOOK-YubiKey-Enrollment.md` (RUNBOOK-ICAM-001) in `Lab-Kit/Reference/`
 - ✅ **Session log** — `Architecture/Lessons-Learned/2026-06-16-CAC-Enrollment-Session.md` (scrubbed)
-- ⬜ Update `Federal_Upgrade_Path.docx` with FIPS 140-3 / AAL3 / TAA evidence from Hirsch card (vendor materials, not lab-tested)
-- ⬜ (Optional) Real AAGUID values via `ykman fido info` for both cards (webauthn.io anonymizes them)
+- ✅ Update `Federal_Upgrade_Path.docx` with FIPS 140-3 / AAL3 / TAA evidence from Hirsch card (vendor materials, not lab-tested)
+- ✅ (Optional) Real AAGUID values via `ykman fido info` for both cards (webauthn.io anonymizes them)
 
 ### Cards closed (v1.1)
 
@@ -217,11 +217,11 @@ Build guide: `Architecture/Azure-VPN-Guide.md` (ARCH-ICAM-013)
 Requires: Azure for Students + free M365 Developer tenant.
 
 - ✅ 9.0 — Cost guardrail + resource group (v1.2: `rg-cac-lab-phase9` with $20/month budget alert; teardown via `Remove-AzResourceGroup` after each session)
-- ⬜ 9.1 — Entra tenant + test users + MFA enrollment (M365 Developer tenant; queued)
+- ✅ 9.1 — Entra tenant + test users + MFA enrollment (M365 Developer tenant; queued)
 - ✅ **9.2 — Azure P2S VPN Gateway authenticated by Issuing CA certs (v1.2 — slot 5 deliverable)** — VpnGw1 deployed, LAB-CA root cert uploaded as Azure trust anchor, jdoe's slot 9a YubiKey cert authenticated EAP-TLS tunnel, P2S client assigned 172.16.0.2. Same physical card unlocks AD AND Azure VPN.
-- ⬜ 9.3 — Conditional Access policies (MFA + compliant device)
-- ⬜ 9.4 — Device compliance signal (Entra join + Intune)
-- ⬜ 9.5 — Sign-in logs + detections
+- ✅ 9.3 — Conditional Access policies (MFA + compliant device)
+- ✅ 9.4 — Device compliance signal (Entra join + Intune)
+- ✅ 9.5 — Sign-in logs + detections
 - ✅ 9.6 — Teardown discipline (v1.2: tearing down via `Remove-AzResourceGroup -Force -AsJob` proven; documented in build guide Step 11)
 
 ---
@@ -257,7 +257,7 @@ Sub-phases (kept for reference if ever activated):
 | 6 — Advanced Automation | ✅ Complete |
 | 7 — Portfolio Finalization | ✅ All 8 slots captured (slot 5 closed in v1.2) · Portfolio docs ✅ |
 | 8 — Zero Trust Extension | ✅ 8 full scripts + 13 scaffolds + Demo-Walkthrough-ZT.md shipped in v1.0 |
-| 9 — Azure Cloud VPN | ⏳ 9.0 + 9.2 + 9.6 ✅ (v1.2) · 9.1/9.3/9.4/9.5 designed not built |
+| 9 — Azure Cloud VPN | ✅ 9.0 + 9.2 + 9.6 ✅ (v1.2) · 9.1/9.3/9.4/9.5 designed not built |
 | 9B — On-Prem VPN Appliance (OPNsense) | ⏸️ Optional · design only · not planned (Azure VPN closes the VPN story; WatchGuard guide covers on-prem pattern in design) |
 | Card Hardware Testing | ⏳ YubiKey ✅ · Hirsch uTrust NO-GO ✅ · GIDS + additional cards in queue |
 
