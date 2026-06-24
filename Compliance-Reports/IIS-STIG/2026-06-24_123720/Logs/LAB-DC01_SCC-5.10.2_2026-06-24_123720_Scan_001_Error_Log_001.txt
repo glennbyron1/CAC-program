@@ -1,0 +1,23 @@
+SCC - 5.10.2 on host LAB-DC01 running Microsoft Windows Server 2025 Standard 24H2 (Intel64 Family 6 Model 170 Stepping 4)
+
+    Time	 Level	Message
+
+12:37:22	WARN	
+Manual Question Auto-Answer file for IIS_10-0_Server_STIG, version: 3.2.9 was not found in:
+C:\Program Files\SCAP Compliance Checker 5.10.2\Resources\Content\Manual_Questions\Completed_Files\
+
+	All manual checks will be marked as 'Not Reviewed'.
+
+	* For CSCC Command Line Usage: Manual Question Auto-Answer templates for DISA STIG manual
+	checks can be found in:C:\Program Files\SCAP Compliance Checker 5.10.2\Resources\Content\Manual_Questions\Templates\
+* For SCC GUI Usage:  Manual Question Auto-Answer results for DISA STIG manual checks can
+	be created by clicking on the 'Manual Questions' button in 'Content Details'
+
+	   Target System  :     LAB-DC01
+	   Stream Name :        IIS_10-0_Server_STIG
+	   SCAP Stream:         IIS_10-0_Server_STIG
+	   Profile ID:          xccdf_navy.navwar.niwcatlantic.scc_profile_MAC-1_Classified
+	   Definition ID:       oval:navy.navwar.niwcatlantic.scc.ms.iis.10.0:def:100
+	   Test ID:             oval:navy.navwar.niwcatlantic.scc.ms.iis.10.0:tst:100
+	   State ID:            oval:navy.navwar.niwcatlantic.scc.ms.iis.10.0:ste:100
+

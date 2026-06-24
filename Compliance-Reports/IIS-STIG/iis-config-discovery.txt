@@ -1,0 +1,35 @@
+PS C:\Users\Administrator> # Confirm IIS is running, see what's installed
+PS C:\Users\Administrator> Get-WindowsFeature -Name Web-* | Where-Object Installed | Format-Table Name, DisplayName
+
+Name                 DisplayName
+----                 -----------
+Web-Server           Web Server (IIS)
+Web-WebServer        Web Server
+Web-Common-Http      Common HTTP Features
+Web-Default-Doc      Default Document
+Web-Dir-Browsing     Directory Browsing
+Web-Http-Errors      HTTP Errors
+Web-Static-Content   Static Content
+Web-Health           Health and Diagnostics
+Web-Http-Logging     HTTP Logging
+Web-Performance      Performance
+Web-Stat-Compression Static Content Compression
+Web-Security         Security
+Web-Filtering        Request Filtering
+Web-Mgmt-Tools       Management Tools
+Web-Mgmt-Console     IIS Management Console
+
+
+PS C:\Users\Administrator>
+PS C:\Users\Administrator> # Confirm the CRL site is serving the right files
+PS C:\Users\Administrator> Get-IISSite | Format-List Name, State, Bindings
+
+
+Name     : Default Web Site
+State    : Started
+Bindings : {http *:80:}
+
+
+
+PS C:\Users\Administrator> Get-WebApplication
+PS C:\Users\Administrator>

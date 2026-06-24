@@ -1,7 +1,7 @@
 # Card Test Matrix
 
 **Author:** Glenn Byron
-**Last Updated:** 2026-06-16
+**Last Updated:** 2026-06-17 (YubiKey AAGUID captured via `ykman fido info`)
 **Purpose:** Evidence-based comparison of smart card / hardware token form factors tested against the lab's CAC/PIV ICAM architecture. Hardware behavior only — no vendor pricing, roadmap, or commercial-engagement detail.
 
 ---
@@ -36,10 +36,10 @@ Each new card form factor gets a row added to every section below.
 
 ## FIDO2 / WebAuthn (webauthn.io)
 
-| Card | Registration | Authentication | Reported transports | Credential type | AAGUID via webauthn.io | PIN prompted? | Touch required? |
-|---|---|---|---|---|---|---|---|
-| YubiKey 5 NFC | ✅ Success (`glenntest-yubikey`, both `none` and `direct` attestation) | ✅ Success | `nfc`, `usb` | device-bound passkey | `00000000-...` even with `Attestation: direct` — Windows anonymizes attestation data | ✅ Yes — required to set FIDO2 PIN on first registration; required to enter PIN on subsequent operations | ✅ Yes — touch on gold disc |
-| Hirsch uTrust FIDO2 FIPS | ✅ Success (`glenntest-hirsch`, both `none` and `direct` attestation) | ✅ Success | `ble`, `nfc`, `usb` | device-bound passkey | `00000000-...` even with `Attestation: direct` — Windows anonymizes attestation data | ✅ Yes — PIN prompted (FIPS card behavior — required for every operation) | N/A (contact card, no touch sensor) |
+| Card | Registration | Authentication | Reported transports | Credential type | AAGUID (webauthn.io) | AAGUID (device-side CLI) | PIN prompted? | Touch required? |
+|---|---|---|---|---|---|---|---|---|
+| YubiKey 5 NFC | ✅ Success (`glenntest-yubikey`, both `none` and `direct` attestation) | ✅ Success | `nfc`, `usb` | device-bound passkey | `00000000-...` (Windows anonymizes) | **`d7781e5d-e353-46aa-afe2-3ca49f13332a`** (via `ykman fido info`; YubiKey 5 NFC FW 5.7.x family) | ✅ Yes — required to set FIDO2 PIN on first registration; required to enter PIN on subsequent operations | ✅ Yes — touch on gold disc |
+| Hirsch uTrust FIDO2 FIPS | ✅ Success (`glenntest-hirsch`, both `none` and `direct` attestation) | ✅ Success | `ble`, `nfc`, `usb` | device-bound passkey | `00000000-...` (Windows anonymizes) | Pending — `ykman` is YubiKey-specific; needs libfido2 (`fido2-token -L`) or PowerShell 7 equivalent | ✅ Yes — PIN prompted (FIPS card behavior — required for every operation) | N/A (contact card, no touch sensor) |
 
 **Observations:**
 
@@ -118,7 +118,8 @@ Each new card form factor gets a row added to every section below.
 - [x] ~~PIN-prompt behavior on Hirsch FIDO2 FIPS~~ — confirmed: prompted for PIN, FIPS card behavior
 - [x] ~~Touch-required behavior on YubiKey~~ — confirmed: touch on gold disc required
 - [x] ~~AAGUID via webauthn.io with direct attestation~~ — captured, anonymized to all-zero by Windows; need device-side CLI for real AAGUID
-- [ ] Real AAGUID values via `ykman fido info` (YubiKey) and equivalent for Hirsch
+- [x] ~~Real AAGUID for YubiKey via `ykman fido info`~~ — **`d7781e5d-e353-46aa-afe2-3ca49f13332a`** (Yubico-published AAGUID for YubiKey 5 NFC, firmware 5.7.x family). Captured 2026-06-17 via `ykman fido info` (ykman 5.9.1). PIN attempts remaining: 8/8 (PIN set during v1.1 testing); credential storage 98/100 (2 slots in use from `glenntest-yubikey` + `glenntest-yubikey-direct` webauthn.io test credentials). Demonstrates how a federal IdP would allowlist this specific YubiKey model family for enterprise enrollment — vs. the all-zeros AAGUID that webauthn.io receives because Windows anonymizes attestation at the WebAuthn API layer.
+- [ ] **Hirsch uTrust FIDO2 AAGUID — deferred (tooling gap)** — `ykman` is YubiKey-specific and doesn't talk to the Hirsch. Options to surface the Hirsch AAGUID: (a) `fido2-token -L` from libfido2 (Linux / macOS via Homebrew); (b) PowerShell 7 `Get-PSWebAuthnAuthenticatorInformation` (Windows, support varies); (c) Hirsch vendor configuration tool if it exists. Webauthn.io with `Attestation: direct` returns all-zeros — Windows anonymizes regardless of authenticator vendor. Not blocking for the lab; documented as a tooling gap for any future federal-procurement-grade attestation work.
 - [x] ~~PIV enrollment workflow for YubiKey~~ — complete, see PIV row above; runbook at `Lab-Kit/Reference/RUNBOOK-YubiKey-Enrollment.md`
 - [x] ~~PIV enrollment workflow for Hirsch~~ — declared NO-GO; requires vendor personalization tool + per-card management key
 - [x] ~~Smart-card logon to lab.local with YubiKey~~ — `jdoe` logs into WO02 with card + PIN

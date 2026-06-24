@@ -234,4 +234,4 @@ After completing the assessment, complete this block for your compliance records
 ---
 
 *Related: `Architecture/Regulatory-Alignment.md` (CISA ZTMM and NIST CSF mapping),
-`POAM-Template.md` (gap remediation tracking), `ROADMAP.md Phase 5`.*
+`POAM-Template.md` (gap remediation tracking), [`TODO.md`](../../TODO.md) (Phase 5 — RMF Authorize).*

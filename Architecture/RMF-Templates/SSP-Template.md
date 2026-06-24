@@ -160,7 +160,7 @@ from NIST SP 800-53 Rev. 5 at the HIGH baseline, tailored for this system.
 | CA-2 | Security Assessments | SCAP SCC STIG scans executed before and after hardening; results staged by `Stage-Reports.ps1` | `Compliance-Reports/Before-MFA/`; `Compliance-Reports/After-MFA/` |
 | CA-5 | Plan of Action and Milestones | POA&M maintained in `POAM-Template.md`; updated after each assessment cycle | `POAM-Template.md` |
 | CA-6 | Authorization | ATO package includes this SSP, SAR, and POA&M; submitted to Authorizing Official | This document; `SAR-Template.md` |
-| CA-7 | Continuous Monitoring | Monthly SCAP re-scans planned; CRL/OCSP health monitoring; Windows Event Log review | `ROADMAP.md Phase 6`; `Automation-Scripts/Download-FedCompliance-Kit.ps1` |
+| CA-7 | Continuous Monitoring | Monthly SCAP re-scans planned; CRL/OCSP health monitoring; Windows Event Log review | [`TODO.md`](../../TODO.md) (Phase 6 — Advanced Automation); `Automation-Scripts/Download-FedCompliance-Kit.ps1` |
 
 ### 6.4 Identification and Authentication (IA)
 
@@ -293,7 +293,7 @@ accepts residual risk for findings with an accepted risk disposition before the 
 
 ---
 
-*See `ROADMAP.md` for the full program phase plan. See `SAR-Template.md` for the
+*See [`TODO.md`](../../TODO.md) for the full program phase plan. See `SAR-Template.md` for the
 Security Assessment Report and `POAM-Template.md` for the Plan of Action & Milestones.*
 
 *Note: This is a personal learning and portfolio lab with no production ATO. The "authorization" here demonstrates the RMF workflow and documentation discipline — not a formal DoD authorization decision.*

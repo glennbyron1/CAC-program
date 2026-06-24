@@ -1,7 +1,7 @@
 # CAC Program — Outstanding Tasks
 
 **Author:** Glenn Byron
-**Last Updated:** June 17, 2026 (post-v1.2 ship)
+**Last Updated:** June 24, 2026 (post-v1.2 living-doc + STIG-review cycle)
 
 Living task list for the CAC/PIV ICAM portfolio project.
 ✅ Complete · ⬜ Needs hands-on work · ⏳ In progress
@@ -32,7 +32,7 @@ Living task list for the CAC/PIV ICAM portfolio project.
 ## Forward-looking (queued, not blocking)
 
 - ✅ **`Architecture/Lab-Topology.md` — DONE 2026-06-17** (ARCH-ICAM-014). Documents the deliberate air-gapped lab topology: dumb switch between Hyper-V host and WO02; host has Wi-Fi for staging only (not bridged to lab segment); lab segment has no internet; transfers staged on host then pushed into the lab via Hyper-V Enhanced Session / PowerShell Direct / USB. Physical + logical network diagrams (ASCII). Maps to NIST SC-7 (boundary protection), AC-4 (information flow enforcement), CM-7 (least functionality), SC-32 (system partitioning), PE-3 (physical access), SC-39 (process isolation), and CISA ZTMM Networks pillar. Frames the design as a scaled-down version of the "staging-host pattern" used in classified environments — including the deliberate choice of a dumb unmanaged switch over a VLAN-segmented managed switch (smaller attack surface, defensible to a reviewer in one sentence).
-- ⬜ **Repo cleanup / consolidation pass** — sweep the repo for stale docs, consolidate where helpful, archive anything superseded. The doc count has grown substantially across v1.0 → v1.1 (Frameworks-Considered, Card-Test-Matrix, Lessons-Learned, Live-Servers, Tools-Kit, SCAP workflow, Phase 8 ZT extension, etc.). Worth a pass once card testing closes to verify nothing is orphaned, every top-level doc has a clear purpose, and the README "What's in the Repo" table matches reality.
+- ✅ **Repo cleanup / consolidation pass — DONE 2026-06-24** — comprehensive sweep completed across post-v1.2 living-doc cycle: (a) added missing rows for `Screenshots/` (30+ slot captures + supporting evidence) and `security/` (POLICY + INCIDENT_RESPONSE + pre-commit hook + local-only scrub tools) to README "What's in the Repo" table; (b) updated Architecture row with Lab-Topology.md (ARCH-ICAM-014); (c) fixed stale Phase 9 row in Roadmap section (Phase 9 shipped in v1.2 and was consolidated into Azure-VPN-Guide.md); (d) added "Where to start" sub-section after the folder table covering 5 entry-point paths (Build / Demo / Learn / Track / Package) so WALKTHROUGH.md, LAB-LEARNING-GUIDE.md, and Pack-LabKit.ps1 are discoverable; (e) fixed 6 broken `STATUS.md` / `ROADMAP.md` references across 5 RMF templates + CHANGELOG footer — replaced with `TODO.md` (where the phase tracking actually lives now); historical changelog entries describing the original STATUS.md / ROADMAP.md creation preserved as audit trail. Repo is internally consistent — README accurately describes everything in the tree; every cross-ref lands somewhere real.
 
 ---
 
@@ -89,7 +89,6 @@ The lab is now in **converging mode**, not creating mode. Finish what is in flig
 ### Optional Compliance Evidence
 
 - ⬜ Nessus Essentials — credentialed scan (free, up to 16 IPs)
-- ⬜ STIG Viewer — open .ckl files, review CAT I findings, document false positives
 - ⬜ **CIS Workbench reference materials** — register at [workbench.cisecurity.org](https://workbench.cisecurity.org/) (free for individuals); download the Windows Server 2022 + Windows 11 CIS Benchmarks for reference alongside DISA STIG. Reference only — not a parallel hardening pass (per Lab Discipline). Backs the framework comparison in [`Architecture/Frameworks-Considered.md`](Architecture/Frameworks-Considered.md) and the cross-reference table in `SSP-Template.md` § 6.7.
 - ✅ PKI health check baseline — `Monitor-PKIHealth.ps1` run 7x on 2026-06-04 (audit log + 12:18:49 dashboard screenshot staged in `Compliance-Reports/PKI-Health/2026-06-04/`)
 
@@ -106,7 +105,7 @@ The lab is now in **converging mode**, not creating mode. Finish what is in flig
 
 - ✅ **AO name and signature** — filled in SSP and SAR (Glenn Byron, System Owner / Lab Program Manager, Self-Assessed Lab)
 - ⬜ **Nessus Essentials scan** — adds vulnerability evidence; results go in SAR § 7 and POAM
-- ⬜ **IIS STIG assessment** — CRL/AIA server; referenced as pending in all four templates
+- ✅ **IIS STIG assessment — DONE 2026-06-24** — scanned LAB-DC01 IIS 10.0 CRL/AIA endpoint against IIS Server STIG 3.2.9 (53.85% score) + Site STIG 2.10.10 (54.55% score). Results staged at `Compliance-Reports/IIS-STIG/`. Populated 27 findings into POA&M (2 CAT I + 23 CAT II + 2 CAT III). **Headline finding: SV-218821 HTTPS-required → Risk Accept** with RFC 5280 §4.2.1.13 rationale (HTTP-only CRL distribution is the standard federal pattern; DoD CRL endpoints are also HTTP because HTTPS would create circular validation). Risk Acceptance Register extended with RA-003 (HTTPS), RA-004 (SSL Site CAT II), RA-005 (HSTS dependent). 29 SCAP Manual Questions notchecked → pending STIG Viewer manual review (Q3 2026). Full disposition in `Architecture/RMF-Templates/POAM-Template.md`.
 - ✅ **STIG Viewer CAT I review — DONE 2026-06-17** — all 22 unique CAT I findings across DC01 / WS01 / WO02 documented in `Architecture/RMF-Templates/POAM-Template.md` grouped by category (AutoPlay×6, Windows Installer Always Install Elevated×2, WinRM Basic auth×4, Anonymous share enumeration×2, LM auth level×2, AD data files permissions×1, Win11-specific×5). All real findings — none are false positives. Disposition: 18 queued for Ansible remediation, 1 manual review (AD data files), 2 risk-accept candidates (BitLocker disk encryption + pre-boot PIN on WO02), 4 operational no-op but remediate (WinRM Basic auth — lab uses Kerberos). Confirmed smart-card STIG rules (`WN22-SO-000120` Interactive logon require smart card; `WN22-CC-000080` smart card removal behavior) **passed** the scans — identity controls IA-2 / AC-5 / IA-2(11) fully satisfied. Risk Acceptance Register seeded with RA-001 (BitLocker disk) and RA-002 (BitLocker PIN), pending Glenn-as-AO sign-off.
 
 ### Multi-Framework Awareness
@@ -176,7 +175,7 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 - ✅ **Enrollment kit staged** — `New-LabUser.ps1`, `New-TokenEnrollment.ps1`, `New-YubiKeyToken.ps1`, `Deploy-ScriptsToDC.ps1` in `Lab-Kit/03-DomainController/`; `RUNBOOK-YubiKey-Enrollment.md` (RUNBOOK-ICAM-001) in `Lab-Kit/Reference/`
 - ✅ **Session log** — `Architecture/Lessons-Learned/2026-06-16-CAC-Enrollment-Session.md` (scrubbed)
 - ✅ Update `Federal_Upgrade_Path.docx` with FIPS 140-3 / AAL3 / TAA evidence from Hirsch card (vendor materials, not lab-tested)
-- ✅ (Optional) Real AAGUID values via `ykman fido info` for both cards (webauthn.io anonymizes them)
+- ⏳ (Optional) Real AAGUID values for both cards (webauthn.io anonymizes them) — **YubiKey 5 NFC ✅ DONE 2026-06-17** (`d7781e5d-e353-46aa-afe2-3ca49f13332a`, captured via `ykman fido info` 5.9.1; documented in `Lab-Kit/Reference/Card-Test-Matrix.md`). **Hirsch uTrust ⬜ deferred** — `ykman` is YubiKey-only; needs libfido2 (`fido2-token -L`) or PowerShell 7 equivalent. Tooling gap documented; not blocking.
 
 ### Cards closed (v1.1)
 
@@ -260,6 +259,20 @@ Sub-phases (kept for reference if ever activated):
 | 9 — Azure Cloud VPN | ✅ 9.0 + 9.2 + 9.6 ✅ (v1.2) · 9.1/9.3/9.4/9.5 designed not built |
 | 9B — On-Prem VPN Appliance (OPNsense) | ⏸️ Optional · design only · not planned (Azure VPN closes the VPN story; WatchGuard guide covers on-prem pattern in design) |
 | Card Hardware Testing | ⏳ YubiKey ✅ · Hirsch uTrust NO-GO ✅ · GIDS + additional cards in queue |
+
+---
+
+## Recent Wins (2026-06-24 — post-v1.2 living-doc + STIG-review cycle)
+
+- ✅ **STIG Viewer CAT I review (OS STIGs)** — all 22 unique CAT I findings across DC01 / WS01 / WO02 populated in `Architecture/RMF-Templates/POAM-Template.md` grouped into 7 categories (AutoPlay ×6, Windows Installer elevated ×2, WinRM Basic auth ×4, Anonymous share enumeration ×2, LM auth level ×2, AD data files permissions ×1, Win11-specific ×5). Disposition matrix: 18 Open (Ansible remediation queued), 1 manual review (AD data files DC-specific), 2 risk-accept candidates (BitLocker on WO02 → RA-001, RA-002), 4 operational no-op but remediate (WinRM Basic — lab uses Kerberos). **Smart-card STIG rules `WN22-SO-000120` and `WN22-CC-000080` PASSED** — identity controls IA-2 / IA-2(11) / AC-5 fully satisfied and NOT in open-findings list. None of the 22 are false positives.
+- ✅ **IIS STIG assessment** — scanned LAB-DC01 IIS 10.0 CRL/AIA endpoint against IIS Server STIG 3.2.9 (53.85% score) and Site STIG 2.10.10 (54.55% score). Results staged at `Compliance-Reports/IIS-STIG/`. 27 findings populated in POA&M (POA-023 through POA-051). **Headline finding: POA-024 SV-218821 HTTPS-required → Risk Accept** with **RFC 5280 §4.2.1.13** rationale (HTTP-only CRL distribution is the standard federal pattern; DoD CRL endpoints are also HTTP because HTTPS would create circular validation: TLS cert needs CRL which is served over TLS which needs CRL...). Risk Acceptance Register extended: RA-003 (HTTPS CAT I), RA-004 (SSL Site CAT II), RA-005 (HSTS dependent CAT III). 29 SCAP Manual Questions notchecked → STIG Viewer manual review queued for Q3 2026.
+- ✅ **YubiKey AAGUID captured** — `d7781e5d-e353-46aa-afe2-3ca49f13332a` (Yubico-published AAGUID for YubiKey 5 NFC firmware 5.7.x family) via `ykman fido info` 5.9.1. Documented in `Lab-Kit/Reference/Card-Test-Matrix.md` with both "webauthn.io anonymized" and "device-side CLI real" AAGUID columns. Closes the YubiKey half of the open AAGUID item. Hirsch AAGUID deferred (tooling gap — `ykman` is YubiKey-only; needs libfido2 `fido2-token -L` or PowerShell 7 equivalent).
+- ✅ **Compliance-Reports/README.md synced** — added cross-references to both the OS STIG CAT I review (POAM CAT I disposition) and the IIS STIG assessment (RFC 5280 risk-accept rationale). Closes the cross-doc internal-consistency gap between scan results and POA&M dispositions.
+- ✅ **Repo cleanup / consolidation pass** — see Forward-looking section above for full detail. 6 actionable discrepancies fixed (Screenshots/ + security/ added to README; Lab-Topology.md added to Architecture row; stale Phase 9 row updated; "Where to start" pointer paragraph added covering Build / Demo / Learn / Track / Package paths; 6 STATUS.md/ROADMAP.md broken refs fixed across 5 RMF templates + CHANGELOG footer).
+- ✅ **`Architecture/Lab-Topology.md` shipped** (ARCH-ICAM-014) — see Forward-looking section above for full detail. The "staging-host + isolated production segment" pattern documented with physical + logical network diagrams and NIST SC-7 / AC-4 / CM-7 / SC-32 / PE-3 / SC-39 mapping.
+- ✅ **Hirsch federal-evidence section added to `Portfolio/Federal_Upgrade_Path.docx`** (Section 2.2.1) — captures vendor-claimed evidence (CJIS / CMMC / government target markets, FIDO Alliance certified, GOV SKU, protocol support, compatibility) AND what the vendor materials do NOT substantiate (FIPS 140-3 CMVP cert number, AAL3, TAA, GSA APL, Section 889, Common Criteria EAL). Closes the evidence gap with 3 actionable steps (request formal vendor data sheet, cross-reference NIST CMVP database, check GSA APL portals).
+- ✅ **CardLogix scrubbed from all `Portfolio/*.docx` files** — 5 replacements across Federal_Upgrade_Path.docx + CAC-Program-Showcase-GlennByron.docx. Maximum-distance posture maintained alongside the earlier `.md`-scope sweep.
+- ✅ **TODO cleanup pass** — Phase 9B (OPNsense) declared explicitly Optional/Not Planned (Azure VPN closes the cloud story; WatchGuard guide covers on-prem in design); Phase 8 follow-ons bundled as v1.3 candidate with commercial-creep self-check resolved (verbally — runs same pattern as v1.0 SCAP cycle); slot 5 stale items reframed as v1.2 closed; AAGUID line reframed from premature ✅ to honest ⏳ partial (YubiKey done, Hirsch deferred).
 
 ---
 

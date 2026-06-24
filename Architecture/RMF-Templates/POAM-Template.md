@@ -21,7 +21,7 @@ Framework: NIST SP 800-53 Rev. 5 CA-5 | NIST SP 800-37 Rev. 2 | DISA RMF
 | Document ID | ARCH-ICAM-007 |
 | Prepared By | Glenn Byron |
 | Date Prepared | June 1, 2026 |
-| Last Updated | June 17, 2026 (STIG CAT I review populated) |
+| Last Updated | June 17, 2026 (STIG CAT I review populated + IIS STIG assessment) |
 | Assessment Period | May – June 2026 |
 
 ---
@@ -33,15 +33,17 @@ Update this table after each remediation cycle.
 Sources:
 - SCAP SCC 5.10.2 · MS_Windows_Server_2022_STIG-2.3.10 · DC01 + WS01 · scanned 2026-05-28
 - SCAP SCC 5.10.2 · Microsoft_Windows_11_STIG-2.3.9 · WO02 · scanned 2026-06-02
+- SCAP SCC 5.10.2 · IIS_10-0_Server_STIG-3.2.9 + IIS_10-0_Site_STIG-2.10.10 · LAB-DC01 (CRL/AIA HTTP endpoint) · scanned 2026-06-24
 
-| Risk Level | Total Findings | Remediated | Accepted Risk | Open |
+| Risk Level | Total Findings (all hosts + IIS) | Remediated | Accepted Risk | Open |
 |-----------|---------------|------------|---------------|------|
-| CAT I (Critical) | 22 unique rules across 3 hosts | 0 | 0 (2 pending — BitLocker on WO02) | 22 |
-| CAT II (High) | DC01: 110 · WS01: 111 · WO02: 122 | 0 | 0 | 343 |
-| CAT III (Medium/Low) | DC01: 6 · WS01: 6 · WO02: 8 | 0 | 0 | 20 |
-| **Total open** | **385** | **0** | **0** | **385** |
+| CAT I (Critical) | 24 unique rules (OS: 22 across 3 hosts + IIS: 2 on DC01) | 0 | 2 pending (BitLocker WO02) + 1 pending (HTTPS-required IIS SV-218821 — RFC 5280 risk-accept) | 21 (after risk-accepts applied) |
+| CAT II (High) | 366 total (OS: 343 + IIS: 23 across Server + Site) | 0 | ~6 pending Risk Accept (SSL/HTTPS-related IIS findings — N/A on HTTP CRL endpoint per RFC 5280) | ~360 |
+| CAT III (Medium/Low) | 22 total (OS: 20 + IIS: 2) | 0 | 1 pending (HSTS — depends on HTTPS) | ~19 |
+| **NotChecked (SCAP Manual Questions)** | 29 IIS rules pending STIG Viewer manual answer | — | — | 29 |
+| **Total open** | **~408** | **0** | **~10 pending** | **~400** |
 
-> **CAT I review complete (2026-06-17)** — all 22 unique CAT I rules across DC01 / WS01 / WO02 are populated below with disposition and remediation plan. Smart-card-related STIG rules (`WN22-SO-000120`, `WN22-CC-000080`, etc.) **passed** the scans — the identity authentication controls (IA-2, AC-5, IA-2(11)) are fully satisfied and not in the open-findings list. The 22 open CAT I findings are general Windows hardening gaps remediable via `Lab-Kit/Ansible/windows-stig-hardening.yml`.
+> **STIG reviews complete (2026-06-17 OS / 2026-06-24 IIS):** all CAT I rules across the OS STIGs (DC01 / WS01 / WO02) AND the IIS STIGs (Server + Site on LAB-DC01) are populated below with dispositions. Smart-card-related STIG rules **passed** — identity authentication controls IA-2 / IA-2(11) / AC-5 are satisfied. The **headline IIS finding (SV-218821 — HTTPS required)** is **Risk Accept** with RFC 5280 §4.2.1.13 rationale: HTTP-only CRL distribution is the standard federal pattern (DoD CRL endpoints also use HTTP) because TLS would create circular validation (TLS cert needs CRL which is served over TLS which needs CRL...).
 
 ---
 
@@ -129,22 +131,81 @@ The lab uses **Kerberos** for PowerShell Remoting (proven during the v1.2 build 
 | POA-021 | SV-253284 | Windows 11 Structured Exception Handling Overwrite Protection (SEHOP) must be enabled | SCC | WO02 | 2026-06-02 | Q3 2026 | Glenn Byron | Open | Ansible remediation queued (`DisableExceptionChainValidation` = 0). |
 | POA-022 | SV-253382 | Windows 11 Solicited Remote Assistance must not be allowed | SCC | WO02 | 2026-06-02 | Q3 2026 | Glenn Byron | Open | Ansible remediation queued (`fAllowToGetHelp` = 0). |
 
+#### Group 8 — IIS 10.0 Server STIG CAT I (2 findings on LAB-DC01 CRL endpoint)
+
+LAB-DC01 hosts the **HTTP CRL Distribution Point** (`http://pki.lab.local/crl/`) — static-file IIS serving CRL files from `C:\Windows\System32\CertSrv\CertEnroll\`. No app server features installed; no scripting; anonymous read only. Scanned 2026-06-24 against `IIS_10-0_Server_STIG-3.2.9` MAC-2 Sensitive profile.
+
+| ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
+|----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
+| POA-023 | SV-218795 | All IIS 10.0 web server sample code, example applications, and tutorials must be removed from a production server | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open — verify | Likely already N/A — no app server features installed (no ASP.NET, no PHP, no sample apps). Action: manual check `Get-ChildItem C:\inetpub\` and `C:\Program Files\IIS Express\` for any sample subdirectories; remove if present. |
+| POA-024 | SV-218821 | An IIS 10.0 web server must maintain the confidentiality of controlled information during transmission | SCC | LAB-DC01 (IIS) | 2026-06-24 | N/A | Glenn Byron | **Risk Accept** ⭐ | **Headline finding.** HTTP-only CRL distribution is **RFC 5280 §4.2.1.13** permitted; the standard federal pattern (DoD CRL endpoints also HTTP) because HTTPS would create circular validation (TLS cert needs CRL which is served over TLS which needs CRL...). The CRL files themselves are signed by the Issuing CA; integrity is end-to-end via the CRL signature, not transport. Moving to Risk Acceptance Register as RA-003. |
+
+#### Group 9 — IIS 10.0 Site STIG CAT I (0 findings — none flagged on the CRL site)
+
+Site STIG returned **zero CAT I FAIL** for the Default Web Site on LAB-DC01 (1 CAT I notchecked — pending STIG Viewer manual review). The Site STIG's CAT II findings (15) are populated below; many are SSL/TLS-dependent and trigger N/A or Risk Accept under the same RFC 5280 rationale as POA-024.
+
 ### CAT II — High Findings
 
-> DC01: 110 open · WS01: 111 open. Full list in STIG Viewer from .ckl files.
+#### OS STIGs (Server 2022 + Windows 11) — bulk row
+
+> DC01: 110 open · WS01: 111 open · WO02: 122 open. Full list in STIG Viewer from .ckl files.
 > Bulk remediation via `Lab-Kit/Ansible/windows-stig-hardening.yml`.
 
 | ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
 |----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
-| POA-004 | [See XCCDF XML] | 110 / 111 CAT II findings — see STIG Viewer | SCC | LAB-DC01 / LAB-WORKSTATION01 | 2026-05-28 | Q3 2026 | Glenn Byron | Open | Bulk remediation planned via Ansible STIG hardening playbook |
+| POA-025 | [See XCCDF XML] | 343 CAT II findings — see STIG Viewer | SCC | LAB-DC01 / LAB-WS01 / WO02 | 2026-05-28 / 2026-06-02 | Q3 2026 | Glenn Byron | Open | Bulk remediation planned via Ansible STIG hardening playbook |
 
-### CAT III — Medium / Low Findings
-
-> 6 open per VM. Low priority; address after CAT I/II remediation.
+#### IIS Server STIG CAT II (8 findings — itemized)
 
 | ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
 |----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
-| POA-005 | [See XCCDF XML] | 6 CAT III findings per VM — see STIG Viewer | SCC | LAB-DC01 / LAB-WORKSTATION01 | 2026-05-28 | Q4 2026 | Glenn Byron | Open | Low priority; address after CAT I/II remediation |
+| POA-026 | SV-218786 | Both log file and ETW for IIS 10.0 web server must be enabled | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Enable W3C log + ETW provider via `appcmd set config /section:httpLogging`. Standard audit configuration. |
+| POA-027 | SV-218788 | IIS 10.0 web server must produce log records that contain sufficient information to establish what type of events occurred | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | W3C log field configuration — add `s-sitename`, `s-computername`, `s-ip`, `cs-method`, `cs-uri-stem`, `cs-uri-query`, `s-port`, `cs-username`, `c-ip`, `cs(User-Agent)`, `sc-status`, `time-taken`. |
+| POA-028 | SV-218789 | IIS 10.0 web server must produce log records containing sufficient information to establish where events occurred | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Companion to POA-027 — additional log fields. |
+| POA-029 | SV-218798 | IIS 10.0 web server must have MIME types that invoke OS shells disabled | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Remove MIME mappings for `.exe`, `.dll`, `.com`, `.bat`, `.csh` from IIS staticContent. Critical hardening — privilege escalation vector. |
+| POA-030 | SV-218807 | Production IIS 10.0 web server must utilize SHA2 encryption for the Machine Key | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Set machineKey decryption to AES, validation to SHA512. `aspnet_regiis -pi` or `web.config` machineKey section. |
+| POA-031 | SV-218819 | IIS 10.0 web server must be tuned to handle the operational requirements of the hosted application | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Tune `system.webServer/serverRuntime` per the hosted-application traffic profile. For static CRL files: small worker process count, low queue length appropriate. |
+| POA-032 | SV-218825 | IIS 10.0 web server must have a global authorization rule configured to restrict access | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Add `<authorization><deny users="?" /></authorization>` to root applicationHost.config and override for `/crl/` virtual directory to allow anonymous (CRL distribution requires anonymous read by design). |
+| POA-033 | SV-268325 | The Request Smuggling filter must be enabled | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Enable via `appcmd set config /section:system.webServer/security/requestFiltering -enableHttpRequestSmugglingFilter:true`. Standard HTTP-smuggling defense. |
+
+#### IIS Site STIG CAT II (15 findings — itemized with N/A dispositions)
+
+A meaningful subset of the Site STIG CAT II findings are **N/A or Risk Accept** for this specific deployment because the CRL distribution endpoint is **deliberately HTTP-only per RFC 5280 §4.2.1.13** and serves **no application logic** (no cookies, no client auth, no session state). Findings related to SSL/HTTPS, client certificates, and cookie security inherit the same Risk Accept rationale as POA-024 (the headline CAT I finding).
+
+| ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
+|----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
+| POA-034 | SV-218737 | A private IIS 10.0 website must only accept SSL connections | SCC | LAB-DC01 (IIS) | 2026-06-24 | N/A | Glenn Byron | **Risk Accept** | This is a **public CRL distribution endpoint**, not a private website. Inherits RFC 5280 risk-accept rationale (see POA-024). Moving to Risk Acceptance Register as RA-004. |
+| POA-035 | SV-218738 | A public IIS 10.0 website must only accept SSL connections when authenticating users | SCC | LAB-DC01 (IIS) | 2026-06-24 | N/A | Glenn Byron | **N/A** | The CRL endpoint has no authentication mechanism — anonymous read only. SSL-when-authenticating is moot when there is no authentication. Disposition: N/A. |
+| POA-036 | SV-218739 | Both log file and ETW for each IIS 10.0 website must be enabled | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Site-level companion to POA-026. Same remediation pattern. |
+| POA-037 | SV-218741 | IIS 10.0 website must produce log records that contain sufficient information to establish what type of events occurred | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Site-level companion to POA-027. |
+| POA-038 | SV-218742 | IIS 10.0 website must produce log records containing sufficient information to establish where events occurred | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Site-level companion to POA-028. |
+| POA-039 | SV-218743 | IIS 10.0 website must have MIME types that invoke OS shells disabled | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Site-level companion to POA-029. |
+| POA-040 | SV-218748 | Each IIS 10.0 website must be assigned a default host header | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Set the Default Web Site binding to `*:80:pki.lab.local` instead of `*:80:` (no host header). Prevents host-header injection. |
+| POA-041 | SV-218749 | A private IIS 10.0 website authentication mechanism must use client certificates | SCC | LAB-DC01 (IIS) | 2026-06-24 | N/A | Glenn Byron | **N/A** | Public CRL endpoint — no client cert auth by design. Same rationale as POA-024 / POA-034. |
+| POA-042 | SV-218752 | IIS 10.0 website document directory must be in a separate partition from the IIS 10.0 website application | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open — review | The CRL files live at `C:\Windows\System32\CertSrv\CertEnroll\`. Strict interpretation says move to a separate partition. Practical disposition: documented architecture decision — CRL content management is tightly coupled to AD CS which manages the source location. |
+| POA-043 | SV-218756 | Non-ASCII characters in URLs must be prohibited by any IIS 10.0 website | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Enable via `<requestFiltering allowHighBitCharacters="false" />`. Standard input filtering. |
+| POA-044 | SV-218758 | Unlisted file extensions in URL requests must be filtered by any IIS 10.0 website | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Allow-list filter: only `.crl`, `.crt`, `.cer` extensions. Set via `<requestFiltering><fileExtensions allowUnlisted="false">` + explicit allowed extensions. |
+| POA-045 | SV-218763 | IIS 10.0 websites connectionTimeout setting must be explicitly configured | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Set `<sessionState timeout="00:20:00" />` or `<httpRuntime executionTimeout="..." />` per IIS-10 STIG default (5 min recommended for static content). |
+| POA-046 | SV-218768 | IIS 10.0 private website must employ TLS and require client certificates | SCC | LAB-DC01 (IIS) | 2026-06-24 | N/A | Glenn Byron | **N/A** | Same disposition as POA-041. Public CRL endpoint by design. |
+| POA-047 | SV-218770 | Cookies exchanged between IIS 10.0 website and client must have cookie properties set to indicate validation | SCC | LAB-DC01 (IIS) | 2026-06-24 | N/A | Glenn Byron | **N/A** | Static CRL endpoint sets no cookies. The rule has no operational footprint. |
+| POA-048 | SV-218772 | Maximum number of requests an application pool can process for each IIS 10.0 website must be set | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q3 2026 | Glenn Byron | Open | Set application pool recycling: `recycling.periodicRestart.requests` to e.g. `100000`. Prevents memory drift. |
+
+### CAT III — Medium / Low Findings
+
+#### OS STIGs — bulk row
+
+> DC01: 6 · WS01: 6 · WO02: 8. Low priority; address after CAT I/II remediation.
+
+| ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
+|----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
+| POA-049 | [See XCCDF XML] | 20 CAT III findings — see STIG Viewer | SCC | LAB-DC01 / LAB-WS01 / WO02 | 2026-05-28 / 2026-06-02 | Q4 2026 | Glenn Byron | Open | Low priority; address after CAT I/II remediation |
+
+#### IIS STIG CAT III (2 findings)
+
+| ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
+|----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
+| POA-050 | SV-218827 | IIS 10.0 web server must enable HTTP Strict Transport Security (HSTS) | SCC | LAB-DC01 (IIS) | 2026-06-24 | N/A | Glenn Byron | **Risk Accept** | HSTS requires HTTPS first. Since POA-024 risk-accepts HTTP-only for CRL distribution, HSTS has no surface to enable. Moving to Risk Acceptance Register as RA-005 (dependent finding). |
+| POA-051 | SV-241788 | HTTPAPI Server version must be removed from the HTTP Response Header information | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q4 2026 | Glenn Byron | Open | Minor information-disclosure hardening. Remove via registry: `HKLM\SYSTEM\CurrentControlSet\Services\HTTP\Parameters` set `DisableServerHeader` to 2. |
 
 ---
 
@@ -167,6 +228,9 @@ residual risk is formally accepted by the system owner or AO.
 |----|--------------|------------|------------------------|----------------------|-----------------|-----------------|------------|
 | RA-001 | BitLocker disk encryption on WO02 (SV-253259) | CAT I | Lab environment with no production data; BitLocker key escrow process for federal deployment requires AD recovery key infrastructure not in scope for this lab tier | Smart-card-required interactive logon (scforceoption=1); 2-second session lock on card removal (ScRemoveOption=1); physical access controlled (residential office); Hyper-V host where lab VMs live runs BitLocker | Glenn Byron (System Owner / Self-Assessed Lab AO) | [Pending decision] | Annual review 2027-05 |
 | RA-002 | BitLocker pre-boot PIN on WO02 (SV-253260) | CAT I | TPM-only vs TPM+PIN is a documented federal risk-accept pattern; TPM-only provides tamper-evidence; pre-boot PIN is operational-burden tradeoff for kiosk/shared-workstation scenarios | TPM 2.0 provides tamper-evidence; Smart-card-required logon at OS boundary; physical access control | Glenn Byron | [Pending decision] | Annual review 2027-05 |
+| RA-003 | HTTPS-required on IIS CRL endpoint (SV-218821) | CAT I | **Standard federal pattern.** HTTP-only CRL distribution is permitted by RFC 5280 §4.2.1.13. DoD CRL endpoints (e.g., DoD Root CA-3 CRL) are served over HTTP. HTTPS would create circular validation: TLS cert validity depends on CRL freshness, but CRL is served over TLS which requires CRL validation, etc. The CRL files themselves are signed by the Issuing CA — integrity is end-to-end via cryptographic signature, NOT transport. | (1) CRL files cryptographically signed by Issuing CA (integrity end-to-end); (2) CRL distribution is public information by design (no confidentiality requirement); (3) HTTP/IP layer isolation per Architecture/Lab-Topology.md SC-7 boundary controls; (4) Endpoint exists only inside the lab segment behind air-gap (production deployment would expose only the static CRL files via reverse proxy with no admin interface) | Glenn Byron | 2026-06-24 | Annual review 2027-06 |
+| RA-004 | Site STIG SSL requirement on IIS CRL endpoint (SV-218737) | CAT II | Inherits the same rationale as RA-003. The "private website must accept SSL only" rule applies to private/internal websites, NOT to public CRL distribution endpoints which are public by design. | Same as RA-003 | Glenn Byron | 2026-06-24 | Annual review 2027-06 |
+| RA-005 | HSTS dependent on HTTPS (SV-218827) | CAT III | HSTS (HTTP Strict Transport Security) is a header that instructs browsers to upgrade to HTTPS. It has no operational footprint when HTTPS is not enabled in the first place. Dependent on RA-003 disposition. | Inherits RA-003 controls; HSTS adds nothing when HTTPS is intentionally not deployed | Glenn Byron | 2026-06-24 | Annual review 2027-06 |
 
 ---
 
@@ -195,7 +259,9 @@ program's hardening scripts address. Check off as confirmed remediated by your p
 | After-MFA SCAP SCC scans complete | 2026-05-28 | Glenn Byron | [x] |
 | Initial POA&M populated from scan results | 2026-06-01 | Glenn Byron | [x] |
 | Nessus Essentials credentialed scan | Q3 2026 | Glenn Byron | [ ] |
-| STIG Viewer manual CAT I review complete | 2026-06-17 | Glenn Byron | [x] |
+| STIG Viewer manual CAT I review complete (OS STIGs) | 2026-06-17 | Glenn Byron | [x] |
+| IIS STIG assessment complete (Server STIG 3.2.9 + Site STIG 2.10.10 on LAB-DC01) | 2026-06-24 | Glenn Byron | [x] |
+| STIG Viewer manual review of 29 IIS notchecked rules (SCAP Manual Questions) | Q3 2026 | Glenn Byron | [ ] |
 | Ansible STIG hardening playbook run (CAT I/II remediation) | Q3 2026 | Glenn Byron | [ ] |
 | Post-remediation SCAP scan to verify improvements | Q3 2026 | Glenn Byron | [ ] |
 | CAT I findings remediated or risk accepted | Q3 2026 | Glenn Byron | [ ] |
@@ -212,8 +278,9 @@ program's hardening scripts address. Check off as confirmed remediated by your p
 | 0.1 | May 2026 | Glenn Byron | Initial template created |
 | 1.0 | June 1, 2026 | Glenn Byron | Populated with Before/After-MFA SCAP SCC scan results |
 | 1.1 | June 17, 2026 | Glenn Byron | STIG Viewer CAT I review: all 22 unique CAT I findings across DC01 / WS01 / WO02 populated with disposition and remediation plan. Confirmed smart-card-related STIG rules (`WN22-SO-000120`, `WN22-CC-000080`) passed the scans (identity controls IA-2 / AC-5 / IA-2(11) fully satisfied). Risk Acceptance Register seeded with two pending entries (RA-001 BitLocker disk encryption, RA-002 BitLocker pre-boot PIN). Dashboard updated with WO02 Win11 STIG numbers. |
+| 1.2 | June 24, 2026 | Glenn Byron | IIS STIG assessment complete: scanned LAB-DC01 IIS 10.0 CRL/AIA endpoint against IIS Server STIG 3.2.9 (53.85% score) and Site STIG 2.10.10 (54.55% score). 2 CAT I findings populated (POA-023 sample code removal — Open; POA-024 HTTPS-required — **Risk Accept** ⭐ headline finding with RFC 5280 §4.2.1.13 rationale). 23 CAT II findings populated and itemized — Server STIG 8 + Site STIG 15 (subset N/A due to RFC 5280 public-CRL-endpoint architecture). 2 CAT III findings (HSTS dependent on HTTPS — Risk Accept; HTTPAPI server header — Open). Risk Acceptance Register extended: RA-003 (HTTPS-required CAT I), RA-004 (SSL Site CAT II), RA-005 (HSTS CAT III). Closes the "STIG Viewer CAT I review" + "IIS STIG assessment" items from POA&M Still Needs Input section. |
 
 ---
 
 *Related documents: `SSP-Template.md`, `SAR-Template.md`,
-`Compliance-Reports/README.md`. See `ROADMAP.md Phase 5` for the full ATO package checklist.*
+`Compliance-Reports/README.md`. See [`TODO.md`](../../TODO.md) (Phase 5 — RMF Authorize) for the full ATO package checklist.*

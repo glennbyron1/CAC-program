@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SessionID:2026-06-24_123720,HostName:LAB-DC01,FileType:OVAL CPE Results,StreamName:IIS_10-0_Server_STIG-3.2.9,ErrorCount:0,WarnCount:0 -->
+
+<oval-res:oval_results xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-common-5 https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/oval-common-schema.xsd http://oval.mitre.org/XMLSchema/oval-results-5 https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/oval-results-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5 https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/oval-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#independent https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/independent-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#linux https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/linux-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#windows https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/windows-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/solaris-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#hpux https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/hpux-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#macos https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/macos-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#unix https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/unix-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5 https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/oval-system-characteristics-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#independent https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/independent-system-characteristics-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/windows-system-characteristics-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#linux https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/linux-system-characteristics-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#solaris https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/solaris-system-characteristics-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#hpux https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/hpux-system-characteristics-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#macos https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/macos-system-characteristics-schema.xsd http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#unix https://raw.githubusercontent.com/OVALProject/Language/5.11.2/schemas/unix-system-characteristics-schema.xsd http://scap.nist.gov/schema/scap/constructs/1.2 https://csrc.nist.gov/schema/scap/1.2/scap-constructs_1.2.xsd http://scap.nist.gov/schema/asset-reporting-format/1.1 https://csrc.nist.gov/schema/asset-reporting-format/1.1/asset-reporting-format_1.1.0.xsd http://scap.nist.gov/schema/reporting-core/1.1 https://csrc.nist.gov/schema/reporting-core/1.1/reporting-core_1.1.0.xsd" xmlns:oval-res="http://oval.mitre.org/XMLSchema/oval-results-5" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:ind-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5" xmlns:ind-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#independent" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:win-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" xmlns:win-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows" xmlns:linux-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" xmlns:linux-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#linux">
+      <oval-res:generator>
+            <oval:product_name>SCAP Compliance Checker</oval:product_name>
+            <oval:product_version>5.10.2</oval:product_version>
+            <oval:schema_version>5.11.2</oval:schema_version>
+            <oval:timestamp>2026-06-24T12:37:21</oval:timestamp>
+      </oval-res:generator>
+      <oval-res:directives>
+            <oval-res:definition_true content="full" reported="true"></oval-res:definition_true>
+            <oval-res:definition_false content="full" reported="true"></oval-res:definition_false>
+            <oval-res:definition_unknown content="full" reported="true"></oval-res:definition_unknown>
+            <oval-res:definition_error content="full" reported="true"></oval-res:definition_error>
+            <oval-res:definition_not_evaluated content="full" reported="true"></oval-res:definition_not_evaluated>
+            <oval-res:definition_not_applicable content="full" reported="true"></oval-res:definition_not_applicable>
+      </oval-res:directives>
+      <oval-def:oval_definitions>
+            <oval-def:generator>
+                  <oval:product_name>Naval Information Warfare Center Atlantic</oval:product_name>
+                  <oval:schema_version>5.11.2</oval:schema_version>
+                  <oval:timestamp>2023-01-18T09:00:00</oval:timestamp>
+            </oval-def:generator>
+            <oval-def:definitions>
+                  <oval-def:definition class="inventory" id="oval:navy.navwar.niwcatlantic.scc.ms.iis.10.0:def:100" version="3">
+                        <oval-def:metadata>
+                              <oval-def:title>Microsoft IIS 10.0 is installed</oval-def:title>
+                              <oval-def:affected family="windows">
+                                    <oval-def:platform>Windows</oval-def:platform>
+                              </oval-def:affected>
+                              <oval-def:reference ref_id="cpe:/a:microsoft:iis:10.0" source="CPE"></oval-def:reference>
+                              <oval-def:description>Microsoft IIS 10.0 is installed.</oval-def:description>
+                        </oval-def:metadata>
+                        <oval-def:criteria applicability_check="false">
+                              <oval-def:criterion applicability_check="false" comment="Microsoft IIS 10.0 is installed" test_ref="oval:navy.navwar.niwcatlantic.scc.ms.iis.10.0:tst:100"></oval-def:criterion>
+                        </oval-def:criteria>
+                  </oval-def:definition>
+            </oval-def:definitions>
+            <oval-def:tests>
+                  <win-def:registry_test check="only one" check_existence="at_least_one_exists" comment="Microsoft IIS 10.0 is installed" id="oval:navy.navwar.niwcatlantic.scc.ms.iis.10.0:tst:100" state_operator="AND" version="1">
+                        <win-def:object object_ref="oval:navy.navwar.niwcatlantic.scc.ms.iis.10.0:obj:100"></win-def:object>
+                        <win-def:state state_ref="oval:navy.navwar.niwcatlantic.scc.ms.iis.10.0:ste:100"></win-def:state>
+                  </win-def:registry_test>
+            </oval-def:tests>
+            <oval-def:objects>
+                  <win-def:registry_object comment="IIS Version String" id="oval:navy.navwar.niwcatlantic.scc.ms.iis.10.0:obj:100" version="1">
+                        <win-def:hive>HKEY_LOCAL_MACHINE</win-def:hive>
+                        <win-def:key>Software\Microsoft\InetStp</win-def:key>
+                        <win-def:name>VersionString</win-def:name>
+                  </win-def:registry_object>
+            </oval-def:objects>
+            <oval-def:states>
+                  <win-def:registry_state comment="Value Equal To 10.0" id="oval:navy.navwar.niwcatlantic.scc.ms.iis.10.0:ste:100" version="1">
+                        <win-def:value>Version 10.0</win-def:value>
+                  </win-def:registry_state>
+            </oval-def:states>
+      </oval-def:oval_definitions>
+      <oval-res:results>
+            <oval-res:system>
+                  <oval-res:definitions>
+                        <oval-res:definition definition_id="oval:navy.navwar.niwcatlantic.scc.ms.iis.10.0:def:100" result="true" version="3">
+                              <oval-res:criteria applicability_check="false" operator="AND" result="true">
+                                    <oval-res:criterion applicability_check="false" result="true" test_ref="oval:navy.navwar.niwcatlantic.scc.ms.iis.10.0:tst:100" version="1"></oval-res:criterion>
+                              </oval-res:criteria>
+                        </oval-res:definition>
+                  </oval-res:definitions>
+                  <oval-res:tests>
+                        <oval-res:test check="only one" check_existence="at_least_one_exists" result="true" state_operator="AND" test_id="oval:navy.navwar.niwcatlantic.scc.ms.iis.10.0:tst:100" version="1">
+                              <oval-res:tested_item item_id="1" result="true"></oval-res:tested_item>
+                        </oval-res:test>
+                  </oval-res:tests>
+                  <oval-sc:oval_system_characteristics>
+                        <oval-sc:generator>
+                              <oval:product_name>SCAP Compliance Checker</oval:product_name>
+                              <oval:product_version>5.10.2</oval:product_version>
+                              <oval:schema_version>5.11.2</oval:schema_version>
+                              <oval:timestamp>2026-06-24T12:37:21</oval:timestamp>
+                        </oval-sc:generator>
+                        <oval-sc:system_info>
+                              <oval-sc:os_name>Microsoft Windows Server 2025 Standard</oval-sc:os_name>
+                              <oval-sc:os_version>24H2</oval-sc:os_version>
+                              <oval-sc:architecture>Intel64 Family 6 Model 170 Stepping 4</oval-sc:architecture>
+                              <oval-sc:primary_host_name>LAB-DC01</oval-sc:primary_host_name>
+                              <oval-sc:interfaces>
+                                    <oval-sc:interface>
+                                          <oval-sc:interface_name>[00000000] Microsoft Hyper-V Network Adapter</oval-sc:interface_name>
+                                          <oval-sc:ip_address>10.10.10.10</oval-sc:ip_address>
+                                          <oval-sc:mac_address>00:15:5D:64:41:0C</oval-sc:mac_address>
+                                    </oval-sc:interface>
+                              </oval-sc:interfaces>
+                              <con:asset-identification xmlns:con="http://scap.nist.gov/schema/scap/constructs/1.2">
+                                    <arf:object-ref ref-id="SCC_LAB-DC01" xmlns:arf="http://scap.nist.gov/schema/asset-reporting-format/1.1" />
+                              </con:asset-identification>
+                        </oval-sc:system_info>
+                        <oval-sc:collected_objects>
+                              <oval-sc:object flag="complete" id="oval:navy.navwar.niwcatlantic.scc.ms.iis.10.0:obj:100" version="1">
+                                    <oval-sc:reference item_ref="1"></oval-sc:reference>
+                              </oval-sc:object>
+                        </oval-sc:collected_objects>
+                        <oval-sc:system_data>
+                              <win-sc:registry_item id="1" status="exists">
+                                    <win-sc:hive>HKEY_LOCAL_MACHINE</win-sc:hive>
+                                    <win-sc:key>Software\Microsoft\InetStp</win-sc:key>
+                                    <win-sc:name>VersionString</win-sc:name>
+                                    <win-sc:last_write_time datatype="int">134250684130000000</win-sc:last_write_time>
+                                    <win-sc:type>reg_sz</win-sc:type>
+                                    <win-sc:value>Version 10.0</win-sc:value>
+                                    <win-sc:windows_view>64_bit</win-sc:windows_view>
+                              </win-sc:registry_item>
+                        </oval-sc:system_data>
+                  </oval-sc:oval_system_characteristics>
+            </oval-res:system>
+      </oval-res:results>
+</oval-res:oval_results>

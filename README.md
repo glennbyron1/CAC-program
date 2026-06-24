@@ -151,17 +151,25 @@ Phase 8 extends the lab to full Zero Trust Architecture: least-privilege RBAC, K
 | `Lab-Kit/Ansible/` | `windows-stig-hardening.yml` — automated STIG remediation playbook; AD health check; cert expiry report |
 | `Lab-Kit/Reference/` | Operator runbooks (scripted RUNBOOK-ICAM-001 + manual GUI walkthrough RUNBOOK-ICAM-002), `Card-Test-Matrix.md` hardware-evaluation methodology, sanitized ONBOARDING + TROUBLESHOOTING synced from the lab |
 | `Tools-Kit/` | Downloads SCAP SCC, STIG Viewer, Nessus Essentials, PSPKI |
-| `Architecture/` | PKI Blueprint, STIG Hardening Guide, regulatory alignment, [`WatchGuard-IKEv2-VPN-Guide.md`](Architecture/WatchGuard-IKEv2-VPN-Guide.md) (on-prem VPN), [`Azure-VPN-Guide.md`](Architecture/Azure-VPN-Guide.md) (cloud VPN with cert auth via YubiKey, ARCH-ICAM-013, v1.2) |
+| `Architecture/` | PKI Blueprint, STIG Hardening Guide, regulatory alignment, [`WatchGuard-IKEv2-VPN-Guide.md`](Architecture/WatchGuard-IKEv2-VPN-Guide.md) (on-prem VPN), [`Azure-VPN-Guide.md`](Architecture/Azure-VPN-Guide.md) (cloud VPN with cert auth via YubiKey, ARCH-ICAM-013, v1.2), [`Lab-Topology.md`](Architecture/Lab-Topology.md) (air-gap design with NIST SC-7 / AC-4 / CM-7 mapping, ARCH-ICAM-014) |
 | `Architecture/RMF-Templates/` | SSP, SAR, POA&M, ATO Letter, STIG deviation rationale, annual rescan SOP |
 | `Architecture/Lessons-Learned/` | DevSecOps incident-response and discovery write-ups — Silent VSC Fallback discovery (Issue #9), stale-clone-after-history-rewrite recovery, full v1.1 enrollment session log |
 | `Architecture/Zero-Trust-Reference/` | 5-paper Zero Trust series + 4 SVG architecture diagrams |
-| `Architecture/Roadmap/` | Phase 8 (Zero Trust Extension), Phase 9 (Azure Conditional Access VPN), Phase 9B (On-Prem VPN appliance) |
-| `Compliance-Reports/` | Before-MFA and After-MFA SCAP SCC scan output with real scores |
+| `Architecture/Roadmap/` | Phase 8 (Zero Trust Extension), Phase 9B (On-Prem VPN appliance — optional, not planned). Note: Phase 9 (Azure VPN) shipped in v1.2 and was consolidated into [`Architecture/Azure-VPN-Guide.md`](Architecture/Azure-VPN-Guide.md). |
+| `Compliance-Reports/` | Before-MFA and After-MFA SCAP SCC scan output with real scores; `Compliance-Reports/PKI-Health/` audit logs from `Monitor-PKIHealth.ps1` runs |
 | `Portfolio/` | Plain-language program explainers and manager briefs |
 | `Live-Servers/` | Readiness checker and compliance scripts for production deployments |
+| `Screenshots/` | Real lab captures — all 8 Demo-Walkthrough slots (lock screen, PIN entry, PKINIT validation, lock-on-removal, Azure VPN Connected, PKI health dashboard, SCAP before/after, WO02 STIG) + supporting session evidence + FIDO2 webauthn credential cards + Silent VSC Fallback discovery shot |
+| `security/` | `POLICY.md` (security policy), `INCIDENT_RESPONSE.md` (incident-response procedure), `security/scripts/pre-commit` (git hook). Local-only scrub tools (gitignored) live alongside: `Scan-LocalRepo.ps1` + `SCAN-README.md`. |
 | `.github/workflows/` | PSScriptAnalyzer lint and secret scan CI on every push |
 
-Start at `Lab-Kit/START-HERE.md` → `Lab-Kit/LAB-DAY-CHECKLIST.md`.
+**Where to start:**
+
+- **Build the lab** — `Lab-Kit/START-HERE.md` → `Lab-Kit/LAB-DAY-CHECKLIST.md` for the operator-checklist build sequence, OR [`WALKTHROUGH.md`](WALKTHROUGH.md) for the long-form lab build narrative.
+- **Demo the lab** — [`Demo-Walkthrough.md`](Demo-Walkthrough.md) covers all 8 captured slots (lock screen → PIN entry → PKINIT validation → lock-on-removal → Azure VPN connected → PKI health → SCAP delta → WO02 STIG).
+- **Learn the concepts** — [`LAB-LEARNING-GUIDE.md`](LAB-LEARNING-GUIDE.md) covers the underlying PKI / smart card / Zero-Trust concepts the lab demonstrates.
+- **Track what's open** — [`TODO.md`](TODO.md) is the living phase/milestone tracker; [`CHANGELOG.md`](CHANGELOG.md) records what shipped in each release tag.
+- **Package the kit** — `Pack-LabKit.ps1` bundles the Lab-Kit folder for transfer (used when bootstrapping a new lab from this repo on a fresh host).
 
 ---
 

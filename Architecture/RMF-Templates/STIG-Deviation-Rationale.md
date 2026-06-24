@@ -99,7 +99,7 @@ VPN gateway performs CRL validation on every connection (WatchGuard Firebox on-p
 **Compensating Controls:**
 - HTTP-based CRL distribution with short delta CRL lifetime
 - Immediate forced GPO refresh and smart card lock on revocation event
-- OCSP deployment documented as Phase 6 deliverable (`ROADMAP.md`)
+- OCSP deployment documented as Phase 6 deliverable ([`TODO.md`](../../TODO.md))
 
 **AO Disposition:** [ ] Accepted | [ ] Requires Remediation | [ ] Accepted with Conditions
 

@@ -637,4 +637,4 @@ Reference links back to canonical architecture documents in `/Architecture`, cov
 
 ---
 
-*See `STATUS.md` for current phase progress. See `ROADMAP.md` for what comes next.*
+*See [`TODO.md`](TODO.md) for current phase progress and what comes next. STATUS.md and ROADMAP.md (referenced in the historical entries above) were merged into TODO.md during the v1.0 → v1.1 cleanup; the original creation entries remain for audit trail.*
