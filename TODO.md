@@ -42,7 +42,7 @@ The lab is now in **converging mode**, not creating mode. Finish what is in flig
 
 - **8-tool suite is frozen.** No new tools, no 10th repo, no new phases chasing "completeness." Finishing > creating.
 - **Don't chase SCAP score to 90%.** The **delta** from hardening is the portfolio value — not the absolute number.
-- **Phase 9B (on-prem VPN appliance — OPNsense)** is **decide-don't-default** — build only if it shows DoD something the Azure VPN we just shipped (v1.2) doesn't. Current view: Azure VPN closes the cloud-VPN story; OPNsense would close the on-prem appliance story. Worthwhile if pursuing a defense contractor role that emphasizes air-gapped / non-cloud environments. Otherwise skip.
+- **Phase 9B (on-prem VPN appliance — OPNsense) is OPTIONAL.** Azure VPN (v1.2) closes the cloud-VPN story end-to-end with the same physical YubiKey doing AD logon AND tunnel auth. OPNsense would close an on-prem appliance story that the WatchGuard guide (`Architecture/WatchGuard-IKEv2-VPN-Guide.md`) already covers in design. Not planned. Re-evaluate only if a specific defense-contractor role requires demonstrating an air-gapped / non-cloud appliance build.
 - The 13 Phase 8 ZT scaffolds are fine as "designed, not built" — portfolio-positive as designs.
 - All work-lab docs stay **generic** — no employer-identifying details public.
 - Hardware behavior in `Card-Test-Matrix.md` — no vendor pricing, roadmap, or commercial-engagement detail.
@@ -226,17 +226,22 @@ Requires: Azure for Students + free M365 Developer tenant.
 
 ---
 
-## Phase 9B — On-Prem VPN Appliance ⬜ Not Started
+## Phase 9B — On-Prem VPN Appliance (OPNsense) — ⏸️ OPTIONAL, NOT PLANNED
 
-Design: `Architecture/Roadmap/CAC_PIV_Phase9B_OnPrem_VPN_Appliance.md`
+Design exists at `Architecture/Roadmap/CAC_PIV_Phase9B_OnPrem_VPN_Appliance.md`.
 Requires: Dell 3080 Micro #2 + OPNsense.
 
-- ⬜ 9B.1 — Hardware + network prep
-- ⬜ 9B.2 — OPNsense base install + hardening
-- ⬜ 9B.3 — Issue server + client certs from your Issuing CA
-- ⬜ 9B.4 — VPN profile, cert-auth test, negative test (revoked cert)
-- ⬜ 9B.5 — Syslog forwarding to Splunk (ties into CySA+ lab)
-- ⬜ 9B.6 — Validation + evidence
+**Rationale for not building:** Azure VPN (v1.2) closes the cloud-VPN story end-to-end. The WatchGuard IKEv2 VPN guide (`Architecture/WatchGuard-IKEv2-VPN-Guide.md`) covers the on-prem appliance pattern in design. OPNsense would be a third VPN implementation of the same trust chain — diminishing portfolio return for the effort.
+
+**When to revisit:** only if pursuing a specific role that requires demonstrating an air-gapped / non-cloud appliance build with hands-on syslog forwarding into a SIEM (would also satisfy CySA+ Blue Team lab requirements). Until then, the design doc is the portfolio artifact and that's enough.
+
+Sub-phases (kept for reference if ever activated):
+- ⏸️ 9B.1 — Hardware + network prep
+- ⏸️ 9B.2 — OPNsense base install + hardening
+- ⏸️ 9B.3 — Issue server + client certs from your Issuing CA
+- ⏸️ 9B.4 — VPN profile, cert-auth test, negative test (revoked cert)
+- ⏸️ 9B.5 — Syslog forwarding to Splunk (ties into CySA+ lab)
+- ⏸️ 9B.6 — Validation + evidence
 
 ---
 
@@ -253,7 +258,7 @@ Requires: Dell 3080 Micro #2 + OPNsense.
 | 7 — Portfolio Finalization | ✅ All 8 slots captured (slot 5 closed in v1.2) · Portfolio docs ✅ |
 | 8 — Zero Trust Extension | ✅ 8 full scripts + 13 scaffolds + Demo-Walkthrough-ZT.md shipped in v1.0 |
 | 9 — Azure Cloud VPN | ⏳ 9.0 + 9.2 + 9.6 ✅ (v1.2) · 9.1/9.3/9.4/9.5 designed not built |
-| 9B — On-Prem VPN Appliance | ⬜ Design done · decide-don't-default (Azure VPN closes the cloud story) |
+| 9B — On-Prem VPN Appliance (OPNsense) | ⏸️ Optional · design only · not planned (Azure VPN closes the VPN story; WatchGuard guide covers on-prem pattern in design) |
 | Card Hardware Testing | ⏳ YubiKey ✅ · Hirsch uTrust NO-GO ✅ · GIDS + additional cards in queue |
 
 ---
