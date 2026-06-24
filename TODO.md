@@ -131,7 +131,7 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 - ✅ Smart card logon confirmed working on real hardware (RDP to 10.10.20.30, PIN entry, desktop reached)
 - ✅ **Event 4768 Pre-Auth Type 16 captured** — PKINIT confirmed at protocol level (logged in `Lab-Kit/LAB-BUILD-CHANGELOG.md`)
 - ✅ Run SCAP SCC scan with Windows 11 STIG benchmark — **DONE 2026-06-02** — WO02 against `Microsoft_Windows_11_STIG-2.3.9` (MAC-1 Classified profile): **37.00%** compliance (13 CAT I open, 122 CAT II, 8 CAT III). Results staged in `Compliance-Reports/Laptop/After-SmartCard/2026-06-02_104513/`
-- ⬜ Test VPN from physical laptop (EAP-TLS, no password) — *needed to fill Demo-Walkthrough slot 5*
+- ✅ **Test VPN from physical laptop (EAP-TLS, no password) — DONE 2026-06-17 (v1.2)** — WO02 connected to Azure P2S VPN `vnet-cac-lab-phase9` using jdoe's YubiKey-resident slot 9a cert. EAP-TLS authentication via Lab-CA chain. No password prompt anywhere. Slot 5 captured: `Screenshots/05-vpn-azure-eap-cert-auth-no-password.png` (+ `05b` ipconfig 172.16.0.2 proof + `05c` config caption). Full build: `Architecture/Azure-VPN-Guide.md` (ARCH-ICAM-013).
 - ✅ Checkpoint taken — `06-WO02-SmartCard-Working`
 
 ---
@@ -153,8 +153,8 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
     - ✅ Slot 8 — `08-scap-win11-stig-result.png` (SCC Summary Viewer, WO02)
     - ✅ *(v1.1 polish — done early)* parameterized PKI health run captured (13:59:25) — real `[OK]` rows for CRL Endpoint (expires 2026-12-05) + Issuing CA cert (expires 2031-05-26). `Screenshots/06-pki-health-dashboard-parameterized.jpg` is the primary slot 6 image; baseline `[SKIP]` run kept as supplementary.
     - ✅ Supporting evidence (16 session shots + 4 webauthn credential cards + 3 Phase 9 slot-5 captures) — see `Screenshots/` for full set
-- ⬜ Run full Ansible STIG hardening pass — pushes scores up before v1.1
-- ⬜ Final `Scrub-Repo.ps1 -WhatIf` pass before any push
+- ⬜ Run full Ansible STIG hardening pass — would push SCAP scores up significantly (~42.66% → ~70%+). **Deliberately deprioritized** per Lab Discipline: "delta from hardening is the portfolio value, not the absolute number." The existing Before/After-MFA delta is real evidence; absolute number isn't blocking. Run any time; doesn't need its own tag.
+- ✅ Final `Scrub-Repo.ps1 -WhatIf` pass before any push — proven across v1.0, v1.1, v1.2 cycles (clean every time; repo is clean by construction).
 
 ---
 
@@ -170,7 +170,7 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 - ✅ **Slot 1 captured** — `01-lockscreen-smartcard-only.png`
 - ✅ **Slot 1b captured** — `01b-certutil-scinfo-yubikey-chain-validates.png` (cert chain proof)
 - ✅ **Slot 4 captured** — `04-session-lock-on-card-removal.png` (~2-second lock confirmed)
-- ⬜ **Slot 5 — VPN EAP-TLS from WO02** (depends on Phase 9 / Phase 9B VPN config)
+- ✅ **Slot 5 — VPN EAP-TLS from WO02 — DONE 2026-06-17 (v1.2)** — Azure P2S VPN cert auth via YubiKey closed slot 5. See `Architecture/Azure-VPN-Guide.md`.
 - ✅ `Lab-Kit/Reference/Card-Test-Matrix.md` PIV + FIDO2 rows filled in; Hirsch NO-GO finding documented
 - ✅ **`Architecture/Lessons-Learned/2026-06-16-Silent-VSC-Fallback-Discovery.md`** — discovered & published: silent fallback to TPM Virtual Smart Card during enrollment when physical PIV applet is unmanageable. Detection methodology + compensating controls documented. Original DevSecOps finding.
 - ✅ **Enrollment kit staged** — `New-LabUser.ps1`, `New-TokenEnrollment.ps1`, `New-YubiKeyToken.ps1`, `Deploy-ScriptsToDC.ps1` in `Lab-Kit/03-DomainController/`; `RUNBOOK-YubiKey-Enrollment.md` (RUNBOOK-ICAM-001) in `Lab-Kit/Reference/`
@@ -188,7 +188,7 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 - ⬜ **GIDS PKI smart cards** — Generic Identity Device Specification; Windows includes a built-in GIDS minidriver, so PIV enrollment may work without a vendor-specific minidriver install (would be a different procurement story than Hirsch's). Verify: PIV applet present, factory mgmt key state, GIDS minidriver behavior during Enroll-on-Behalf, FIDO2 if applicable.
 - ⬜ **Additional smart-card form factors in queue** — various PKI implementations TBD; add a row to `Card-Test-Matrix.md` per card tested.
 - ⬜ **(Optional) YubiKey 5 NFC FIPS SKU** — separate procurement from the tested 5 NFC. Higher-assurance variant; would validate the same workflow against a FIPS 140-3 Level 2 module. Not on hand; would only add if there's a specific reason (e.g., federal target environment requires FIPS).
-- ⬜ Any future card form factors as they enter the lab — same test pattern: detection via `certutil -scinfo`, FIDO2 via webauthn.io, PIV via Enroll-on-Behalf, smart-card logon to `lab.local`, VPN EAP-TLS once Phase 9 / 9B lands.
+- ⬜ Any future card form factors as they enter the lab — same test pattern: detection via `certutil -scinfo`, FIDO2 via webauthn.io, PIV via Enroll-on-Behalf, smart-card logon to `lab.local`, Azure VPN EAP-TLS (Phase 9 path now proven in v1.2).
 
 **Procurement-question to evaluate each new card against early:** can the card be brought to a known-management-key state using off-the-shelf tooling (ykman, OpenSC, GIDS minidriver), or does it require vendor-specific software + per-card management key? The Hirsch uTrust NO-GO finding turned on exactly this question.
 
@@ -202,10 +202,12 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 - Run order + per-script detail: [`Lab-Kit/07-ZeroTrust/README.md`](Lab-Kit/07-ZeroTrust/README.md)
 - Live demo script: [`Lab-Kit/07-ZeroTrust/Demo-Walkthrough-ZT.md`](Lab-Kit/07-ZeroTrust/Demo-Walkthrough-ZT.md)
 
-**Pending follow-ons (small):**
+**Pending follow-ons (queued as v1.3 candidate — these two go together):**
 
-- ⬜ Extend `Stage-Reports.ps1` with Before-ZT / After-ZT delta
-- ⬜ Snapshot + run shipped scripts on Lab-DC01 to move ZT from "designed" to "operational" (8.1.4 already deployment-tested; lessons #10-#11 captured)
+- ⬜ **Snapshot Lab-DC01 + run the 8 shipped Phase 8 ZT scripts to operationalize** — moves Phase 8 from "8 full scripts shipped as designs in v1.0" to "8 scripts shipped AND run on the DC with logged results." 8.1.4 already deployment-tested in v1.0; lessons #10-#11 captured. This closes the "designed not built" gap on the operational side.
+- ⬜ **Extend `Stage-Reports.ps1` with Before-ZT / After-ZT delta** — small script update that closes the evidence loop for the operationalization above. Bundle WITH the operationalization in v1.3 so the Before-ZT baseline is captured before the scripts run and After-ZT is captured after.
+
+**v1.3 framing:** Phase 8 ZT extension transitions from "designed" to "operational" with full Before/After-ZT evidence. Same Before/After delta pattern as v1.0's SCAP scans (and matches the "delta is the portfolio value" discipline). Pairs nicely with Phase 9.1 Entra baseline + Phase 9.3 Conditional Access if you want a meatier v1.3 release — but the standalone Phase 8 operationalization is a clean v1.3 on its own.
 
 ---
 
