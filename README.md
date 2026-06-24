@@ -4,9 +4,19 @@
 [![PowerShell Lint](https://github.com/glennbyron1/CAC-program/actions/workflows/ps-lint.yml/badge.svg)](https://github.com/glennbyron1/CAC-program/actions/workflows/ps-lint.yml)
 
 **Author:** Glenn Byron | **GitHub:** [@glennbyron1](https://github.com/glennbyron1) | **License:** MIT
-**Releases:** [v1.1](https://github.com/glennbyron1/CAC-program/releases/tag/v1.1) (2026-06-16, latest) · [v1.0](https://github.com/glennbyron1/CAC-program/releases/tag/v1.0) (2026-06-03)
+**Releases:** [v1.2](https://github.com/glennbyron1/CAC-program/releases/tag/v1.2) (2026-06-17, latest) · [v1.1](https://github.com/glennbyron1/CAC-program/releases/tag/v1.1) (2026-06-16) · [v1.0](https://github.com/glennbyron1/CAC-program/releases/tag/v1.0) (2026-06-03)
  
 ---
+
+## What's new in v1.2 (2026-06-17)
+
+- **Same physical YubiKey now unlocks AD AND Azure VPN.** One slot 9a cert, two authentication contexts: Kerberos PKINIT (Event 4768 Pre-Auth Type 16) for Active Directory logon, EAP-TLS for Azure Point-to-Site VPN. The credential never leaves the hardware token; both authentications validate the same chain to the same internal Lab-CA. One possession factor, one knowledge factor, two clouds — without ever provisioning a parallel "VPN credential."
+- **Phase 9 Azure VPN built end-to-end** — Resource group with budget alert, VNet with `GatewaySubnet`, VpnGw1 VPN Gateway, Lab-CA cert uploaded as Azure trust anchor, jdoe's YubiKey-resident smart card cert authenticates EAP-TLS tunnel. P2S client assigned `172.16.0.2`. Full deploy → test → teardown cycle in one session (~$0.40 in gateway hours). Build guide: [`Architecture/Azure-VPN-Guide.md`](Architecture/Azure-VPN-Guide.md) (ARCH-ICAM-013).
+- **Slot 5 of Demo-Walkthrough closed** — `Screenshots/05-vpn-azure-eap-cert-auth-no-password.png` shows `jdoe@lab.local` connected to `vnet-cac-lab-phase9` with EAP-TLS cert auth, no password prompt. All 8 demo-walkthrough slots are now captured.
+- **PKI architecture discovery published** — design says two-tier (offline Root signs Issuing CA), deployment is single-tier (LAB-CA operating as its own root, with `Lab Root CA` cert constrained by `pathlen:0` so it cannot have signed a sub-CA per RFC 5280). Captured honestly in the Azure VPN guide as a "designed vs deployed" delta.
+- **Three Azure VPN docs consolidated to one canonical guide** — the original "starter" guide + the build doc + the roadmap design folded into `Architecture/Azure-VPN-Guide.md`. Parallels the existing `Architecture/WatchGuard-IKEv2-VPN-Guide.md` for on-prem.
+
+Full release notes on the [v1.2 tag](https://github.com/glennbyron1/CAC-program/releases/tag/v1.2).
 
 ## What's new in v1.1 (2026-06-16)
 
@@ -141,7 +151,7 @@ Phase 8 extends the lab to full Zero Trust Architecture: least-privilege RBAC, K
 | `Lab-Kit/Ansible/` | `windows-stig-hardening.yml` — automated STIG remediation playbook; AD health check; cert expiry report |
 | `Lab-Kit/Reference/` | Operator runbooks (scripted RUNBOOK-ICAM-001 + manual GUI walkthrough RUNBOOK-ICAM-002), `Card-Test-Matrix.md` hardware-evaluation methodology, sanitized ONBOARDING + TROUBLESHOOTING synced from the lab |
 | `Tools-Kit/` | Downloads SCAP SCC, STIG Viewer, Nessus Essentials, PSPKI |
-| `Architecture/` | PKI Blueprint, STIG Hardening Guide, regulatory alignment, VPN guide |
+| `Architecture/` | PKI Blueprint, STIG Hardening Guide, regulatory alignment, [`WatchGuard-IKEv2-VPN-Guide.md`](Architecture/WatchGuard-IKEv2-VPN-Guide.md) (on-prem VPN), [`Azure-VPN-Guide.md`](Architecture/Azure-VPN-Guide.md) (cloud VPN with cert auth via YubiKey, ARCH-ICAM-013, v1.2) |
 | `Architecture/RMF-Templates/` | SSP, SAR, POA&M, ATO Letter, STIG deviation rationale, annual rescan SOP |
 | `Architecture/Lessons-Learned/` | DevSecOps incident-response and discovery write-ups — Silent VSC Fallback discovery (Issue #9), stale-clone-after-history-rewrite recovery, full v1.1 enrollment session log |
 | `Architecture/Zero-Trust-Reference/` | 5-paper Zero Trust series + 4 SVG architecture diagrams |

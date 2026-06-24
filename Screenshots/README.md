@@ -19,6 +19,9 @@
 | `02b-incorrect-pin-validation.png` | Lab-WS01, 2026-06-01 15:06 | "An incorrect PIN was presented" dialog - proves PIN validation works | Demo-Walkthrough Step 2 supplement |
 | `03-pkinit-validation-table.png` | DC01 Security log, 2026-06-02 08:25 | Event 4768 fields annotated - labtech, Pre-Auth Type 16, LAB-CA, 10.10.20.30 (WO02), thumbprint match, Result 0x0 | Demo-Walkthrough Step 3 |
 | `04-session-lock-on-card-removal.png` | WO02, 2026-06-16 14:13 | Windows 11 lock screen captured ~2 seconds after YubiKey removal; demonstrates `ScRemoveOption=1` GPO firing under the documented threshold | Demo-Walkthrough Step 4 |
+| `05-vpn-azure-eap-cert-auth-no-password.png` | WO02, 2026-06-17 (Phase 9 build) | Settings → Network & internet → VPN: `jdoe@lab.local`, `vnet-cac-lab-phase9` **Connected** with duration counter running — Azure P2S VPN authenticated via the SAME YubiKey that unlocks AD logon (slot 9a cert, chain to LAB-CA, validated by EAP-TLS against the LAB-CA root uploaded to the Azure VPN Gateway in Step 6) | Demo-Walkthrough Step 5 |
+| `05b-vpn-ipconfig-172-16-0-2.png` | WO02, 2026-06-17 | `ipconfig` showing PPP adapter `vnet-cac-lab-phase9` with IPv4 `172.16.0.2` from the P2S address pool — tunnel-up proof | Demo-Walkthrough Step 5 supplement |
+| `05c-vpn-caption-azure-p2s-eap-tls.png` | WO02, 2026-06-17 | Configuration caption: "Azure VPN P2S — EAP-TLS / Cert auth: jdoe's YubiKey slot 9a (same card as AD logon) / Root: LAB-CA → uploaded to Azure VPN Gateway" | Demo-Walkthrough Step 5 supplement |
 | `06-pki-health-dashboard.png` | DC01, 2026-06-04 12:18:49 | `Monitor-PKIHealth.ps1` baseline run (no parameters) — every row gracefully `[SKIP]`, defensive-defaults proof | Demo-Walkthrough Step 6 supplementary |
 | `06-pki-health-dashboard-parameterized.jpg` | DC01, 2026-06-04 13:59:25 | `Monitor-PKIHealth.ps1` parameterized run — real `[OK]` rows for CRL Endpoint and Issuing CA cert; ALL CHECKS PASSED | Demo-Walkthrough Step 6 |
 | `07-scap-before-after-side-by-side.png` | Hyper-V host, 2026-06-03 | DC01 SCC All-Settings reports side by side: Before-MFA 44.95% (98 Pass / 120 Fail) vs After-MFA 42.66% (93 Pass / 125 Fail). Same target, same benchmark, only delta is the smart card enforcement | Demo-Walkthrough Step 7 |
@@ -70,13 +73,12 @@ These trace the v1.1 enrollment work that produced the headline captures. They s
 
 ## Still Pending
 
-Only one slot in `Demo-Walkthrough.md` still needs a real capture:
-
-| Slot | What to capture | Where | Blocker |
-|---|---|---|---|
-| 5 | **VPN connected** via EAP-TLS, no password prompt | WO02 after Step 7 | Depends on Phase 9 (Azure VPN Gateway) or Phase 9B (OPNsense) — VPN build not yet started |
+All Demo-Walkthrough slots are now captured.
 
 Closed in v1.1 (2026-06-16): slots 1, 4, 6.
+Closed in v1.2 (2026-06-17): slot 5 — Azure P2S VPN with cert auth via YubiKey (`05`, `05b`, `05c`).
+
+If Phase 9B (on-prem OPNsense appliance) is later built, an additional slot 5b screenshot (on-prem VPN with the same cert) would close the loop on the on-prem equivalent.
 
 ---
 

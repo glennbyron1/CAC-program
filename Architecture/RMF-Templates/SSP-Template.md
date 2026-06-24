@@ -142,7 +142,7 @@ from NIST SP 800-53 Rev. 5 at the HIGH baseline, tailored for this system.
 | AC-3 | Access Enforcement | GPO enforces smart card requirement; standard password logon blocked enterprise-wide | `Build-CA-GPO.ps1`; `Group-Policy/Enforce-SmartCard.ps1` |
 | AC-5 | Separation of Duties | Registration Authority and Card Issuer are separate roles; no single administrator can perform both | `Architecture/Blueprint.md §4.1`; enrollment SOP |
 | AC-11 | Session Lock | GPO triggers immediate workstation lock within 2 seconds of smart card removal | `Build-CA-GPO.ps1` (ScRemoveOption = 1); `Group-Policy/README.md` |
-| AC-17 | Remote Access | IKEv2 VPN gateways require EAP-TLS certificate authentication; no password-based VPN tunnels. Lab implementation: WatchGuard Firebox. Federal target: Azure VPN Gateway with Conditional Access (Phase 9). | `Architecture/WatchGuard-IKEv2-VPN-Guide.md`; `Automation-Scripts/Deploy-VPNClient.ps1`; `Architecture/Roadmap/CAC_PIV_Phase9_Azure_VPN_ConditionalAccess.md` |
+| AC-17 | Remote Access | IKEv2 VPN gateways require EAP-TLS certificate authentication; no password-based VPN tunnels. Lab implementation: WatchGuard Firebox. Federal target: Azure VPN Gateway with Conditional Access (Phase 9). | `Architecture/WatchGuard-IKEv2-VPN-Guide.md`; `Automation-Scripts/Deploy-VPNClient.ps1`; `Architecture/Azure-VPN-Guide.md` |
 | AC-17(2) | Remote Access — Protection of Confidentiality/Integrity | IKEv2 tunnel uses AES-256-GCM; all VPN traffic encrypted in transit | `Deploy-VPNClient.ps1` IPsec policy settings |
 
 ### 6.2 Audit and Accountability (AU)
@@ -169,7 +169,7 @@ from NIST SP 800-53 Rev. 5 at the HIGH baseline, tailored for this system.
 | IA-2 | Identification and Authentication | Hardware-backed smart card (PIV/CAC model) required for all interactive logons; FIDO2 security keys for Microsoft 365 | `Build-CAC-Lab.ps1`; `Architecture/Blueprint.md` |
 | IA-2(1) | MFA for Privileged Accounts | Administrative accounts require separate hardware token (YubiKey administrative slot); no shared admin credentials | `Architecture/Blueprint.md §4.2` |
 | IA-2(11) | Workstation Logon Using Hardware Tokens | GPO sets `scforceoption = 1`; standard password logon blocked at the workstation level | `Group-Policy/Enforce-SmartCard.ps1`; `Group-Policy/README.md` |
-| IA-3 | Device Identification and Authentication | VPN EAP-TLS requires both user certificate (smart card) and VPN gateway server certificate from trusted CA — applies to WatchGuard Firebox (current) and Azure VPN Gateway (Phase 9 planned) | `WatchGuard-IKEv2-VPN-Guide.md §3`; `Architecture/Roadmap/CAC_PIV_Phase9_Azure_VPN_ConditionalAccess.md` |
+| IA-3 | Device Identification and Authentication | VPN EAP-TLS requires both user certificate (smart card) and VPN gateway server certificate from trusted CA — applies to WatchGuard Firebox (current) and Azure VPN Gateway (Phase 9 planned) | `WatchGuard-IKEv2-VPN-Guide.md §3`; `Architecture/Azure-VPN-Guide.md` |
 | IA-5 | Authenticator Management | Token lifecycle: RA identity verification → Card Issuer provisioning → mandatory PIN change; revocation via AD CS | `Architecture/Blueprint.md §4`; `Download-IssuingCA-Kit.ps1` |
 | IA-8 | Identification and Authentication (Non-Org. Users) | [FILL IN — document how contractors or visitors authenticate, if applicable] | |
 
@@ -177,7 +177,7 @@ from NIST SP 800-53 Rev. 5 at the HIGH baseline, tailored for this system.
 
 | Control | Title | Implementation | Evidence |
 |---------|-------|----------------|----------|
-| SC-8 | Transmission Confidentiality and Integrity | IKEv2 VPN encrypts all remote traffic with AES-256-GCM; TLS used for AD CS web enrollment. Applies to WatchGuard Firebox (lab) and Azure VPN Gateway (Phase 9 federal target). | `Deploy-VPNClient.ps1`; `WatchGuard-IKEv2-VPN-Guide.md §4.4`; `Architecture/Roadmap/CAC_PIV_Phase9_Azure_VPN_ConditionalAccess.md` |
+| SC-8 | Transmission Confidentiality and Integrity | IKEv2 VPN encrypts all remote traffic with AES-256-GCM; TLS used for AD CS web enrollment. Applies to WatchGuard Firebox (lab) and Azure VPN Gateway (Phase 9 federal target). | `Deploy-VPNClient.ps1`; `WatchGuard-IKEv2-VPN-Guide.md §4.4`; `Architecture/Azure-VPN-Guide.md` |
 | SC-8(1) | Transmission Confidentiality — Cryptographic Protection | IKEv2 Phase 1: AES-256-GCM, SHA-256, DH ECP384; Phase 2: AES-256-GCM, SHA-256, PFS ECP384 | `Deploy-VPNClient.ps1 Set-VpnConnectionIPsecConfiguration` |
 | SC-12 | Cryptographic Key Establishment and Management | RSA 4096 Root CA key; RSA 2048/4096 Issuing CA key; non-exportable smart card keys generated on-token | `Architecture/Blueprint.md §2` |
 | SC-17 | Public Key Infrastructure Certificates | Two-tier PKI with 10-year Root CA and 5-year Issuing CA certificates; SHA-256 signatures | `Download-OfflineCA-Kit.ps1`; `Download-IssuingCA-Kit.ps1` |

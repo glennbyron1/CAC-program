@@ -1,7 +1,7 @@
 # CAC Program — Outstanding Tasks
 
 **Author:** Glenn Byron
-**Last Updated:** June 16, 2026
+**Last Updated:** June 17, 2026 (post-v1.2 ship)
 
 Living task list for the CAC/PIV ICAM portfolio project.
 ✅ Complete · ⬜ Needs hands-on work · ⏳ In progress
@@ -24,7 +24,8 @@ Living task list for the CAC/PIV ICAM portfolio project.
 - ✅ **GitHub repo topics added** — `identity-management`, `pki`, `smart-card`, `fido2`, `active-directory`, `certificate-authority`, `nist-800-53`, `fips-201`, `zero-trust`, `icam`, `ad-cs`, `powershell`, `disa-stig`, `hyper-v`, `rmf`, `cac`
 - ✅ **v1.0 pushed** (2026-06-03) — two-tier PKI + smart card MFA on physical endpoint + SCAP evidence (DC01 42.66% / WS01 42.20% / WO02 37.00%) + Phase 8 Zero Trust extension (8 full scripts + 13 scaffolds + Demo-Walkthrough-ZT.md)
 - ✅ **GitHub release notes published** (2026-06-04) — v1.0 release notes posted on the `v1.0` tag covering PKI, smart card MFA, SCAP evidence, ZT extension, with card-blocked items called out as deferred to v1.1.
-- ⏳ **v1.1 in progress (2026-06-16)** — slot 1 ✅, slot 4 ✅, slot 1b cert chain ✅, slot 5 VPN EAP-TLS ⬜ (only blocker remaining). `Card-Test-Matrix.md` PIV row filled in. Silent VSC fallback discovery published as Lessons-Learned. Enrollment kit (4 scripts + runbook + session log) staged. Optional Ansible STIG hardening pass still queued.
+- ✅ **v1.1 shipped (2026-06-16)** — slot 1 + slot 4 + slot 1b cert chain. `Card-Test-Matrix.md` PIV row filled in. Silent VSC Fallback discovery published as Lessons-Learned. Enrollment kit (4 scripts + scripted runbook + manual GUI walkthrough + session log) staged. Scrub-Repo.ps1 hardening (two bugs caught by -WhatIf). Release notes published on the v1.1 tag.
+- ✅ **v1.2 shipped (2026-06-17)** — **Slot 5 closed: Azure VPN with cert auth via YubiKey** (same physical token unlocks AD AND Azure VPN). Phase 9 fully built: cost guardrail, VNet + GatewaySubnet, VPN Gateway VpnGw1, LAB-CA cert uploaded as Azure trust root, jdoe's slot 9a cert authenticates EAP-TLS tunnel, P2S assigned 172.16.0.2. Three Azure VPN docs consolidated into one canonical `Architecture/Azure-VPN-Guide.md` (ARCH-ICAM-013). PKI architecture discovery: design says two-tier, deployed is single-tier (LAB-CA as root) — captured honestly in the guide. Install pitfall + fix path (`VpnProfileSetup.ps1` from elevated PowerShell + Automatic tunnel type) documented.
 
 ---
 
@@ -41,7 +42,7 @@ The lab is now in **converging mode**, not creating mode. Finish what is in flig
 
 - **8-tool suite is frozen.** No new tools, no 10th repo, no new phases chasing "completeness." Finishing > creating.
 - **Don't chase SCAP score to 90%.** The **delta** from hardening is the portfolio value — not the absolute number.
-- **Phase 9B (on-prem VPN appliance)** is **decide-don't-default** — build only if it shows DoD something Azure VPN doesn't.
+- **Phase 9B (on-prem VPN appliance — OPNsense)** is **decide-don't-default** — build only if it shows DoD something the Azure VPN we just shipped (v1.2) doesn't. Current view: Azure VPN closes the cloud-VPN story; OPNsense would close the on-prem appliance story. Worthwhile if pursuing a defense contractor role that emphasizes air-gapped / non-cloud environments. Otherwise skip.
 - The 13 Phase 8 ZT scaffolds are fine as "designed, not built" — portfolio-positive as designs.
 - All work-lab docs stay **generic** — no employer-identifying details public.
 - Hardware behavior in `Card-Test-Matrix.md` — no vendor pricing, roadmap, or commercial-engagement detail.
@@ -139,19 +140,19 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 
 - ✅ Portfolio Word docs updated with all three After-MFA scores (DC01 42.66% / WS01 42.20% / WO02 37.00%) — "SCAP Compliance Snapshot" section + results table + interpretation paragraph + source citation added to `CAC-Program-Showcase-GlennByron.docx` and `Federal_Upgrade_Path.docx` (2026-06-03)
 - ✅ `SCAP-Workflow-QuickRef.md` promoted from `Dispatch/` to `Lab-Kit/05-Compliance/` — stale `192.168.1.10` fixed to `10.10.10.10` / `Lab-DC01`. Docker `scap-summary` moved to "Optional Enhancements" at bottom (deferred until DC hardening pass)
-- ⏳ **Screenshots — 7 of 8 staged**
+- ✅ **Screenshots — 8 of 8 staged (all slots closed)**
     - ✅ Slot 1 — `01-lockscreen-smartcard-only.png` (jdoe@lab.local, Security device sign-in, no password field)
     - ✅ Slot 1b — `01b-certutil-scinfo-yubikey-chain-validates.png` (cert chain validates on physical YubiKey, Smart Card Logon EKU)
     - ✅ Slot 2 — `02-pin-entry-cert-subject.png` (PIN prompt)
     - ✅ Slot 2b — `02b-incorrect-pin-validation.png` (incorrect PIN dialog)
     - ✅ Slot 3 — `03-pkinit-validation-table.png` (Event 4768 annotated)
     - ✅ Slot 4 — `04-session-lock-on-card-removal.png` (lock screen ~2 seconds after card pull)
+    - ✅ **Slot 5 (v1.2) — `05-vpn-azure-eap-cert-auth-no-password.png`** (Azure VPN P2S Connected, cert auth via same YubiKey, IPv4 172.16.0.2 from P2S pool). Supplements: `05b-vpn-ipconfig-172-16-0-2.png` (tunnel proof) + `05c-vpn-caption-azure-p2s-eap-tls.png` (config caption).
     - ✅ Slot 6 — `06-pki-health-dashboard.png` (Monitor-PKIHealth.ps1 on Lab-DC01, 2026-06-04 12:18:49, ALL CHECKS PASSED)
     - ✅ Slot 7 — `07-scap-before-after-side-by-side.png` (DC01 44.95% → 42.66%)
     - ✅ Slot 8 — `08-scap-win11-stig-result.png` (SCC Summary Viewer, WO02)
-    - ⬜ Slot 5 — VPN connected EAP-TLS (depends on Phase 9 / Phase 9B VPN config)
     - ✅ *(v1.1 polish — done early)* parameterized PKI health run captured (13:59:25) — real `[OK]` rows for CRL Endpoint (expires 2026-12-05) + Issuing CA cert (expires 2031-05-26). `Screenshots/06-pki-health-dashboard-parameterized.jpg` is the primary slot 6 image; baseline `[SKIP]` run kept as supplementary.
-    - ✅ Supporting evidence (16 session shots + 4 webauthn credential cards) — see `Screenshots/` for full set tracing enrollment journey
+    - ✅ Supporting evidence (16 session shots + 4 webauthn credential cards + 3 Phase 9 slot-5 captures) — see `Screenshots/` for full set
 - ⬜ Run full Ansible STIG hardening pass — pushes scores up before v1.1
 - ⬜ Final `Scrub-Repo.ps1 -WhatIf` pass before any push
 
@@ -208,18 +209,18 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 
 ---
 
-## Phase 9 — Azure Cloud VPN + Conditional Access ⬜ Not Started
+## Phase 9 — Azure Cloud VPN + Conditional Access ⏳ Partially Built
 
-Design: `Architecture/Roadmap/CAC_PIV_Phase9_Azure_VPN_ConditionalAccess.md`
+Build guide: `Architecture/Azure-VPN-Guide.md` (ARCH-ICAM-013)
 Requires: Azure for Students + free M365 Developer tenant.
 
-- ⬜ 9.0 — Cost guardrail + resource group (always first)
-- ⬜ 9.1 — Entra tenant + test users + MFA enrollment
-- ⬜ 9.2 — Azure P2S VPN Gateway authenticated by your Issuing CA certs
+- ✅ 9.0 — Cost guardrail + resource group (v1.2: `rg-cac-lab-phase9` with $20/month budget alert; teardown via `Remove-AzResourceGroup` after each session)
+- ⬜ 9.1 — Entra tenant + test users + MFA enrollment (M365 Developer tenant; queued)
+- ✅ **9.2 — Azure P2S VPN Gateway authenticated by Issuing CA certs (v1.2 — slot 5 deliverable)** — VpnGw1 deployed, LAB-CA root cert uploaded as Azure trust anchor, jdoe's slot 9a YubiKey cert authenticated EAP-TLS tunnel, P2S client assigned 172.16.0.2. Same physical card unlocks AD AND Azure VPN.
 - ⬜ 9.3 — Conditional Access policies (MFA + compliant device)
 - ⬜ 9.4 — Device compliance signal (Entra join + Intune)
 - ⬜ 9.5 — Sign-in logs + detections
-- ⬜ 9.6 — Validation + teardown (run `Remove-AzureLabResources.ps1` every session)
+- ✅ 9.6 — Teardown discipline (v1.2: tearing down via `Remove-AzResourceGroup -Force -AsJob` proven; documented in build guide Step 11)
 
 ---
 
@@ -247,11 +248,21 @@ Requires: Dell 3080 Micro #2 + OPNsense.
 | 4 — Lab Execution (SCAP Scans) | ✅ Complete (DC01 + WS01 + WO02 all scanned) |
 | 5 — RMF Authorize | ✅ Templates populated · AO signature pending |
 | 6 — Advanced Automation | ✅ Complete |
-| 7 — Portfolio Finalization | ⏳ Portfolio docs ✅ · 6 of 8 screenshots staged · 3 card-blocked → v1.1 |
+| 7 — Portfolio Finalization | ✅ All 8 slots captured (slot 5 closed in v1.2) · Portfolio docs ✅ |
 | 8 — Zero Trust Extension | ✅ 8 full scripts + 13 scaffolds + Demo-Walkthrough-ZT.md shipped in v1.0 |
-| 9 — Azure Cloud VPN | ⬜ Design done · not started |
-| 9B — On-Prem VPN Appliance | ⬜ Design done · hardware needed |
-| Card Hardware Testing | ⏳ YubiKey ✅ · Hirsch uTrust NO-GO ✅ · GIDS + additional cards in queue · slot 5 VPN pending |
+| 9 — Azure Cloud VPN | ⏳ 9.0 + 9.2 + 9.6 ✅ (v1.2) · 9.1/9.3/9.4/9.5 designed not built |
+| 9B — On-Prem VPN Appliance | ⬜ Design done · decide-don't-default (Azure VPN closes the cloud story) |
+| Card Hardware Testing | ⏳ YubiKey ✅ · Hirsch uTrust NO-GO ✅ · GIDS + additional cards in queue |
+
+---
+
+## Recent Wins (2026-06-17 — v1.2 ship)
+
+- ✅ **Phase 9 Azure VPN built end-to-end (slot 5 closed)** — Resource group with $20/month budget alert (Step 1), VNet `10.20.0.0/16` with `GatewaySubnet` `10.20.255.0/27` (Step 2), VpnGw1 VPN Gateway with Standard Static public IP (Step 3, ~40 min deploy), LAB-CA cert exported from Lab-DC01 via PowerShell Direct (Step 4), jdoe cert verified on YubiKey (Step 5), P2S configured with LAB-CA Base64 + IKEv2/OpenVPN tunnel types + `172.16.0.0/24` client pool (Step 6), `VpnProfileSetup.ps1` install (Step 7 — bypassed the GUI installer's smart-card-required elevation block + the Azure VPN Client app's YubiKey-cert enumeration limitation), connection with cert picker → `CN=Jane Doe` → YubiKey PIN → tunnel up with `172.16.0.2` assigned (Steps 8-9), three slot 5 screenshots captured (Step 10), full teardown via `Remove-AzResourceGroup -Force -AsJob` (Step 11). Single-session deploy → test → teardown cost: ~$0.40 in gateway hours.
+- ✅ **Azure VPN documentation consolidated** — 3 source docs (`Azure-VPN-Lab-Guide.md`, `Phase9-Azure-VPN-Build-Guide.md`, `Roadmap/CAC_PIV_Phase9_Azure_VPN_ConditionalAccess.md`) → one canonical `Architecture/Azure-VPN-Guide.md` (ARCH-ICAM-013, ~570 lines). 7 cross-references updated across Demo-Walkthrough, CSET-Assessment-Guide, SSP-Template, TODO. Zero broken refs after consolidation.
+- ✅ **PKI architecture discovery — designed two-tier, deployed single-tier** — Lab-DC01's Trusted Root store has `CN=LAB-CA` as self-signed (Subject == Issuer). The `CN=Lab Root CA` cert exists (10-year, valid 2026→2036) but has `basicConstraints CA:TRUE, pathlen:0` which per RFC 5280 means it can only sign end-entity certs — so it cannot have signed LAB-CA as a sub-CA. The deployed PKI is operationally single-tier with LAB-CA as the trust anchor. Documented honestly in `Architecture/Azure-VPN-Guide.md` as "designed vs deployed delta" — future remediation queued.
+- ✅ **Three slot 5 screenshots staged + embedded in Demo-Walkthrough** — `05-vpn-azure-eap-cert-auth-no-password.png` (headline: jdoe@lab.local, Connected, duration 3:59), `05b-vpn-ipconfig-172-16-0-2.png` (tunnel-up proof), `05c-vpn-caption-azure-p2s-eap-tls.png` (config caption). Demo-Walkthrough Step 5 "📸 Pending capture" placeholder replaced with the three captures + portfolio-grade "What to say" narrative.
+- ✅ **Same physical YubiKey now unlocks AD AND Azure VPN** — one slot 9a cert, two authentication contexts: Kerberos PKINIT (Event 4768 Pre-Auth Type 16) for AD logon, EAP-TLS for Azure P2S. The credential never leaves the hardware token; both authentications validate the same chain to LAB-CA. This is the v1.2 differentiator and the headline answer to "tell me about something you built."
 
 ---
 

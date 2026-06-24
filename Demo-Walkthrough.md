@@ -167,8 +167,21 @@ AuthenticationMethod : {Eap}
 > two authentication points. This satisfies NIST AC-17, SC-8, and IA-2. Lab implementation
 > uses WatchGuard Firebox; federal target is Azure VPN Gateway with Conditional Access (Phase 9)."
 
-**📸 Pending capture** — VPN connected status, no password prompt visible
-> See `Screenshots/README.md` for the capture checklist.
+**📸 Captured — Azure VPN P2S tunnel up, EAP-TLS authenticated with the SAME YubiKey that unlocked AD**
+
+![Settings - Network and internet - VPN: jdoe@lab.local, vnet-cac-lab-phase9 Connected, duration 00:03:59](Screenshots/05-vpn-azure-eap-cert-auth-no-password.png)
+
+*Tunnel-up proof — `ipconfig` shows the PPP adapter assigned `172.16.0.2` from the P2S address pool:*
+
+![PPP adapter vnet-cac-lab-phase9 with IPv4 172.16.0.2](Screenshots/05b-vpn-ipconfig-172-16-0-2.png)
+
+> **What to say:** "This is the headline of Phase 9 — the same physical YubiKey that unlocked Windows in Step 1 also authenticates this Azure VPN tunnel. No second enrollment. No separate credential. The cert in YubiKey slot 9a was issued by our internal Lab-CA; we uploaded the Lab-CA root cert's public half to the Azure VPN Gateway; Azure's EAP-TLS exchange validated jdoe's smart-card cert against that trust anchor. One possession factor (the card), one knowledge factor (the PIN), used in two different clouds — on-prem AD and the Azure tenant — without ever provisioning a parallel credential. That's the 'hybrid trust' claim federal Zero-Trust roles look for."
+
+*Configuration note — Azure VPN P2S, EAP-TLS, LAB-CA root uploaded to the gateway:*
+
+![Caption: Azure VPN P2S - EAP-TLS / Cert auth: jdoe's YubiKey slot 9a / Root: LAB-CA uploaded to Azure VPN Gateway](Screenshots/05c-vpn-caption-azure-p2s-eap-tls.png)
+
+**Full build documentation:** [`Architecture/Azure-VPN-Guide.md`](Architecture/Azure-VPN-Guide.md) (ARCH-ICAM-013) captures the deploy-test-teardown cycle, the install pitfall (GUI installer → blocked by smart-card-required elevation; `VpnProfileSetup.ps1` from elevated PowerShell + Automatic tunnel type works), and the PKI discovery (LAB-CA operating as the deployed root despite the design-doc two-tier description).
 
 ---
 
