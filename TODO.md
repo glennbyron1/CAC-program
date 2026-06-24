@@ -89,7 +89,7 @@ The lab is now in **converging mode**, not creating mode. Finish what is in flig
 ### Optional Compliance Evidence
 
 - ⬜ Nessus Essentials — credentialed scan (free, up to 16 IPs)
-- ⬜ **CIS Workbench reference materials** — register at [workbench.cisecurity.org](https://workbench.cisecurity.org/) (free for individuals); download the Windows Server 2022 + Windows 11 CIS Benchmarks for reference alongside DISA STIG. Reference only — not a parallel hardening pass (per Lab Discipline). Backs the framework comparison in [`Architecture/Frameworks-Considered.md`](Architecture/Frameworks-Considered.md) and the cross-reference table in `SSP-Template.md` § 6.7.
+Frameworks-Considered.md) and the cross-reference table in `SSP-Template.md` § 6.7.
 - ✅ PKI health check baseline — `Monitor-PKIHealth.ps1` run 7x on 2026-06-04 (audit log + 12:18:49 dashboard screenshot staged in `Compliance-Reports/PKI-Health/2026-06-04/`)
 
 ---
