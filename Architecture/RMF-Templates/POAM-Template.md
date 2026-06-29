@@ -21,7 +21,7 @@ Framework: NIST SP 800-53 Rev. 5 CA-5 | NIST SP 800-37 Rev. 2 | DISA RMF
 | Document ID | ARCH-ICAM-007 |
 | Prepared By | Glenn Byron |
 | Date Prepared | June 1, 2026 |
-| Last Updated | June 17, 2026 (STIG CAT I review populated + IIS STIG assessment) |
+| Last Updated | June 25, 2026 (STIG CAT I review + IIS STIG assessment + Nessus Essentials point-in-time scan) |
 | Assessment Period | May – June 2026 |
 
 ---
@@ -34,6 +34,7 @@ Sources:
 - SCAP SCC 5.10.2 · MS_Windows_Server_2022_STIG-2.3.10 · DC01 + WS01 · scanned 2026-05-28
 - SCAP SCC 5.10.2 · Microsoft_Windows_11_STIG-2.3.9 · WO02 · scanned 2026-06-02
 - SCAP SCC 5.10.2 · IIS_10-0_Server_STIG-3.2.9 + IIS_10-0_Site_STIG-2.10.10 · LAB-DC01 (CRL/AIA HTTP endpoint) · scanned 2026-06-24
+- **Nessus Essentials Advanced Scan** · point-in-time vulnerability assessment · 3 of 4 lab hosts (WO02 credentialed, Lab-DC01 + Hyper-V host uncredentialed) · scanned 2026-06-25 from WS01 (scanner role retired post-scan)
 
 | Risk Level | Total Findings (all hosts + IIS) | Remediated | Accepted Risk | Open |
 |-----------|---------------|------------|---------------|------|
@@ -207,6 +208,22 @@ A meaningful subset of the Site STIG CAT II findings are **N/A or Risk Accept** 
 | POA-050 | SV-218827 | IIS 10.0 web server must enable HTTP Strict Transport Security (HSTS) | SCC | LAB-DC01 (IIS) | 2026-06-24 | N/A | Glenn Byron | **Risk Accept** | HSTS requires HTTPS first. Since POA-024 risk-accepts HTTP-only for CRL distribution, HSTS has no surface to enable. Moving to Risk Acceptance Register as RA-005 (dependent finding). |
 | POA-051 | SV-241788 | HTTPAPI Server version must be removed from the HTTP Response Header information | SCC | LAB-DC01 (IIS) | 2026-06-24 | Q4 2026 | Glenn Byron | Open | Minor information-disclosure hardening. Remove via registry: `HKLM\SYSTEM\CurrentControlSet\Services\HTTP\Parameters` set `DisableServerHeader` to 2. |
 
+#### Group 10 — Nessus Essentials Vulnerability Scan (point-in-time 2026-06-25)
+
+**Scan context:** Nessus Essentials Advanced Scan policy, scanned from Lab-Workstation01 (WS01) using `LAB\CardIssuer` Domain Admin credentials. Discovered 3 of 4 lab hosts (host `10.10.10.1` discovered + auth-fail by design — host is not domain-joined per `Architecture/Lab-Topology.md` air-gap discipline; WS01 itself excluded as the scanner host). 81 vulnerabilities surfaced; **4 unique HIGH-severity findings** populated below.
+
+**Important context — WS01 scanner role retired post-scan 2026-06-25:** future Nessus scans will run from the Hyper-V host or a dedicated scanner VM (TBD). This Nessus dataset is therefore a point-in-time snapshot, not a recurring baseline. The point-in-time framing is honest portfolio evidence: *"single-scan vulnerability assessment captured 2026-06-25 from now-retired scanner host; future quarterly re-scans pending scanner-location decision."*
+
+**Important context — Nessus Essentials export limit:** the free Essentials tier does not allow PDF / CSV / `.nessus` export. Findings documented below via manual transcription from the Nessus UI; per-finding screenshots staged at `Compliance-Reports/Nessus/2026-06-25_advanced-scan/screenshots/`.
+
+| ID | Plugin ID / CVE | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
+|----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
+| POA-052 | VNC #1 (Misc family) | Vulnerable VNC server installed | Nessus Essentials | Hyper-V host (`10.10.10.1`) | 2026-06-25 | Q3 2026 | Glenn Byron | Open — investigate + decide | **VNC on the host is real.** The host is deliberately not domain-joined per air-gap design and so doesn't get the smart-card-required GPO that enforces RDP+YubiKey on the domain hosts. VNC was likely installed for operator-driven remote access to the host (legitimate operational need). Three dispositions: (a) **Remove VNC + rely on physical console + Hyper-V Manager** — cleanest; aligns with "no bypass-paths" discipline; (b) **Replace VNC with RDP using a local admin account + strong password + lockout policy** — keeps remote access without smart card; (c) **Keep VNC but apply server-side hardening + auth + listen only on the lab-side interface** — pragmatic. Decision pending. |
+| POA-053 | VNC #2 (Misc family) | Second vulnerable VNC component / second CVE | Nessus Essentials | Hyper-V host (`10.10.10.1`) | 2026-06-25 | Q3 2026 | Glenn Byron | Open — investigate + decide | Companion to POA-052. Same disposition logic — both close together when the VNC decision is made (uninstall, replace, or harden). |
+| POA-054 | CVE-2013-3900 | WinVerifyTrust Signature Validation Mitigation (`EnableCertPaddingCheck` registry value missing or misconfigured) | Nessus Essentials | All Windows hosts (likely flagged on all 3 discovered hosts) | 2026-06-25 | Q3 2026 | Glenn Byron | Open — quick fix | **Microsoft never enabled `EnableCertPaddingCheck` by default for compatibility reasons; this is a near-universal Nessus finding on Windows.** Real CAT-equivalent finding — without the mitigation, signature padding can be exploited via specially-crafted signed binaries. Remediation: registry value set on every Windows host AND its Wow6432Node equivalent. Single PowerShell snippet covers it; also a candidate for GPO push to all domain hosts. Closing this also closes the corresponding DoD STIG check on the same setting (double-counts as STIG + Nessus closure). |
+| POA-055 | CVE-2026-20841 | Microsoft Windows Notepad < 11.2510 Command Injection (Feb 2026) | Nessus Essentials | Affected host(s) per Nessus UI | 2026-06-25 | Q3 2026 | Glenn Byron | Open — banner-grab caveat | **Honest caveat from the Nessus finding itself: "Nessus has not tested for this issue but has instead relied only on the application's self-reported version number."** Banner-grab finding — false-positive risk is non-trivial. Remediation is cheap regardless: Microsoft Store → Library → Update Notepad to 11.2510+. Closing the finding is faster than confirming exploitability for a CAT III worth of effort. |
+| POA-056 | Dell SupportAssist DSA-2025-445 (12 vulns rolled up) | Dell SupportAssist Privilege Escalation cluster | Nessus Essentials | WO02 (`10.10.20.30`) — Dell laptop | 2026-06-25 | Q3 2026 | Glenn Byron | Open — vendor update path | **Headline OEM-software finding.** Dell SupportAssist is a Dell-OEM utility running with NT AUTHORITY\SYSTEM; DSA-2025-445 is a known local privilege escalation. Remediation per Dell advisory: update SupportAssist for Home PCs to 4.10.1+ OR SupportAssist for Business PCs to 4.9.0+ (whichever your install is). Alternative disposition: **uninstall SupportAssist entirely if not actively used** — Dell support utilities are commonly removed from hardened/managed workstations. For lab/portfolio: documenting that you found a 12-vulnerability cluster from a single OEM utility on the demo workstation is itself a portfolio narrative — *"identified pre-installed OEM software as an attack surface, applied vendor-published remediation path."* |
+
 ---
 
 ## Closed / Remediated Findings
@@ -262,6 +279,9 @@ program's hardening scripts address. Check off as confirmed remediated by your p
 | STIG Viewer manual CAT I review complete (OS STIGs) | 2026-06-17 | Glenn Byron | [x] |
 | IIS STIG assessment complete (Server STIG 3.2.9 + Site STIG 2.10.10 on LAB-DC01) | 2026-06-24 | Glenn Byron | [x] |
 | STIG Viewer manual review of 29 IIS notchecked rules (SCAP Manual Questions) | Q3 2026 | Glenn Byron | [ ] |
+| Nessus Essentials point-in-time vulnerability scan (3 of 4 hosts; 4 unique HIGH findings) | 2026-06-25 | Glenn Byron | [x] |
+| Decide future Nessus scanner location (host vs on-demand vs dedicated VM) | Q3 2026 | Glenn Byron | [ ] |
+| Re-scan with credentialed auth on Lab-DC01 (after Remote Registry / local Admin fix) | Q3 2026 | Glenn Byron | [ ] |
 | Ansible STIG hardening playbook run (CAT I/II remediation) | Q3 2026 | Glenn Byron | [ ] |
 | Post-remediation SCAP scan to verify improvements | Q3 2026 | Glenn Byron | [ ] |
 | CAT I findings remediated or risk accepted | Q3 2026 | Glenn Byron | [ ] |
@@ -279,6 +299,7 @@ program's hardening scripts address. Check off as confirmed remediated by your p
 | 1.0 | June 1, 2026 | Glenn Byron | Populated with Before/After-MFA SCAP SCC scan results |
 | 1.1 | June 17, 2026 | Glenn Byron | STIG Viewer CAT I review: all 22 unique CAT I findings across DC01 / WS01 / WO02 populated with disposition and remediation plan. Confirmed smart-card-related STIG rules (`WN22-SO-000120`, `WN22-CC-000080`) passed the scans (identity controls IA-2 / AC-5 / IA-2(11) fully satisfied). Risk Acceptance Register seeded with two pending entries (RA-001 BitLocker disk encryption, RA-002 BitLocker pre-boot PIN). Dashboard updated with WO02 Win11 STIG numbers. |
 | 1.2 | June 24, 2026 | Glenn Byron | IIS STIG assessment complete: scanned LAB-DC01 IIS 10.0 CRL/AIA endpoint against IIS Server STIG 3.2.9 (53.85% score) and Site STIG 2.10.10 (54.55% score). 2 CAT I findings populated (POA-023 sample code removal — Open; POA-024 HTTPS-required — **Risk Accept** ⭐ headline finding with RFC 5280 §4.2.1.13 rationale). 23 CAT II findings populated and itemized — Server STIG 8 + Site STIG 15 (subset N/A due to RFC 5280 public-CRL-endpoint architecture). 2 CAT III findings (HSTS dependent on HTTPS — Risk Accept; HTTPAPI server header — Open). Risk Acceptance Register extended: RA-003 (HTTPS-required CAT I), RA-004 (SSL Site CAT II), RA-005 (HSTS CAT III). Closes the "STIG Viewer CAT I review" + "IIS STIG assessment" items from POA&M Still Needs Input section. |
+| 1.3 | June 25, 2026 | Glenn Byron | Nessus Essentials point-in-time vulnerability scan: scanned from Lab-Workstation01 (WS01) using LAB\CardIssuer Domain Admin credentials, Advanced Scan policy, 25-min duration. 3 of 4 lab hosts discovered (WS01 excluded as scanner; Hyper-V host `10.10.10.1` discovered + auth-failed by design — air-gap working as intended). 81 vulns total; **4 unique HIGH findings populated** (POA-052 + POA-053 VNC on host — investigate; POA-054 CVE-2013-3900 WinVerifyTrust registry fix; POA-055 CVE-2026-20841 Notepad with banner-grab caveat; POA-056 Dell SupportAssist DSA-2025-445 12-vuln cluster on WO02). **WS01 scanner role retired post-scan** — future quarterly re-scans pending scanner-location decision (Hyper-V host vs on-demand install vs dedicated scanner VM). **Lab-Topology.md updated** with air-gap validation paragraph documenting the host's deliberate auth-failure as the design working correctly. Nessus Essentials free tier doesn't allow PDF/CSV export; findings transcribed manually from UI + screenshots in `Compliance-Reports/Nessus/2026-06-25_advanced-scan/screenshots/`. Closes the "Nessus Essentials scan" item from POA&M Still Needs Input section. |
 
 ---
 

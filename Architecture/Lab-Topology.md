@@ -37,6 +37,7 @@ A federal interviewer who asks "how would you isolate a production network from 
                                ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                       HYPER-V HOST  (the staging host)                  │
+│                       Lab IP: 10.10.10.1                               │
 │                                                                         │
 │   ╔═══════════════════════════════════════════════════════════════╗     │
 │   ║  Wi-Fi NIC                                                    ║     │
@@ -46,16 +47,17 @@ A federal interviewer who asks "how would you isolate a production network from 
 │   ╚═══════════════════════════════════════════════════════════════╝     │
 │                                                                         │
 │   ┌───────────────────────────────────────────────────────────────┐     │
-│   │  Hyper-V Internal vSwitch  (host ↔ Lab-DC01 only, no NAT)     │     │
+│   │  Hyper-V External vSwitch  (bound to physical Ethernet NIC)   │     │
 │   │    Lab-DC01 (Server 2022) — Issuing CA + Domain Controller    │     │
-│   │      NIC 1: 10.10.10.10/24 — Lab Internal                     │     │
-│   │      NIC 2: 10.10.20.10/24 — Lab External (bridged below)     │     │
+│   │      Single NIC: 10.10.20.10/24 — Lab External                │     │
+│   │    Lab-Workstation01 (Server 2022 VM, for SCAP baseline scans)│     │
+│   │      Single NIC: 10.10.10.20/24 — Lab Internal                │     │
 │   └───────────────────────────────────────────────────────────────┘     │
 │                                                                         │
 │   ╔═══════════════════════════════════════════════════════════════╗     │
-│   ║  Physical NIC — Lab External                                  ║     │
-│   ║    • Hyper-V External vSwitch on this NIC                     ║     │
-│   ║    • Lab-DC01's NIC 2 bridges to this through Hyper-V         ║     │
+│   ║  Physical NIC — Ethernet                                      ║     │
+│   ║    • Bound to Hyper-V External vSwitch                        ║     │
+│   ║    • Carries BOTH 10.10.10.x and 10.10.20.x to the lab switch ║     │
 │   ║    • NEVER bridged to the Wi-Fi NIC                           ║     │
 │   ╚═══════════════════════════════════════════════════════════════╝     │
 └──────────────────────────────┬──────────────────────────────────────────┘
@@ -64,6 +66,8 @@ A federal interviewer who asks "how would you isolate a production network from 
                   ┌────────────────────────────┐
                   │  Dumb unmanaged switch     │
                   │  (no VLANs, no management) │
+                  │  Flat layer-2 segment      │
+                  │  carrying both subnets     │
                   └────────────────┬───────────┘
                                    │
                                    ▼
@@ -76,9 +80,11 @@ A federal interviewer who asks "how would you isolate a production network from 
                   └────────────────────────────┘
 ```
 
-**Reading this diagram:** the home Wi-Fi reaches the Hyper-V host. The Hyper-V host has *two NICs that never speak to each other* — the Wi-Fi NIC (staging side) and the physical Ethernet NIC (lab side). The lab-side NIC connects through a dumb unmanaged switch to WO02. Lab-DC01 lives on the host as a Hyper-V VM with two virtual NICs — one on a Hyper-V Internal vSwitch (host-only, no external connectivity) and one on a Hyper-V External vSwitch (bridged to the physical NIC, reachable from WO02 through the dumb switch).
+**Reading this diagram:** the home Wi-Fi reaches the Hyper-V host. The Hyper-V host has *two NICs that never speak to each other* — the Wi-Fi NIC (staging side) and the physical Ethernet NIC (lab side). The host's lab-side IP is `10.10.10.1`. The Ethernet NIC is bound to a Hyper-V External vSwitch and connects through a dumb unmanaged switch to WO02. Lab-DC01 (single NIC at `10.10.20.10`) and Lab-Workstation01 (single NIC at `10.10.10.20`) both live on the host as Hyper-V VMs, attached to that same External vSwitch — so all four devices (host, DC01, WS01, WO02) share one flat layer-2 broadcast domain via the dumb switch and the External vSwitch. The Internal-range and External-range IP labels are operator-mental-model groupings, not L2 isolation.
 
-The Wi-Fi NIC and the physical Ethernet NIC on the host are deliberately not bridged. Windows treats them as completely separate adapters. The host can resolve and reach Azure on the Wi-Fi side; it can resolve and reach Lab-DC01 + WO02 on the Ethernet side; but no packet routes between the two sides.
+The Wi-Fi NIC and the physical Ethernet NIC on the host are deliberately not bridged. Windows treats them as completely separate adapters. The host can resolve and reach Azure on the Wi-Fi side; it can resolve and reach Lab-DC01 + WS01 + WO02 on the Ethernet side; but no packet routes between the two sides.
+
+> **Air-gap validation from Nessus (2026-06-25):** A credentialed Nessus scan from WS01 using `LAB\CardIssuer` (Domain Admin) discovered the Hyper-V host at `10.10.10.1` but the credentialed auth **FAILED** against it. This is the air-gap discipline working as designed — the host is deliberately NOT domain-joined per this topology, so Domain Admin creds cannot authenticate to it. The auth boundary held. Lab-DC01 and WO02 (both domain-joined) authenticated successfully or unsuccessfully based on other factors (Remote Registry, local Administrators group membership), but the **host's "Fail auth" result is the deliberate outcome** — not a configuration error.
 
 ---
 
@@ -97,30 +103,33 @@ The Wi-Fi NIC and the physical Ethernet NIC on the host are deliberately not bri
               │     • Windows routing table: no entry that  │
               │       sends lab traffic via Wi-Fi or vice   │
               │       versa                                 │
+              │     • Host's own lab-side IP: 10.10.10.1   │
               └────────────────────┬───────────────────────┘
-                                   │
+                                   │ Hyper-V External vSwitch
+                                   │ bound to physical Ethernet NIC
                                    ▼
               ┌────────────────────────────────────────────┐
-              │   Lab External   10.10.20.0/24             │
-              │     • Hyper-V External vSwitch              │
-              │     • Lab-DC01 NIC 2                        │
-              │     • WO02 (10.10.20.30)                    │
-              │     • No router, no DHCP server beyond      │
-              │       Hyper-V default                       │
-              └────────────────────┬───────────────────────┘
-                                   │ Lab-DC01 acts as the
-                                   │ bridge between subnets
-                                   ▼
-              ┌────────────────────────────────────────────┐
-              │   Lab Internal   10.10.10.0/24             │
-              │     • Hyper-V Internal vSwitch              │
-              │     • Lab-DC01 NIC 1 (10.10.10.10)          │
-              │     • Reserved for future lab VMs           │
-              │       (database, syslog collector, etc.)    │
+              │   Lab segment (flat layer-2)                │
+              │   Carried over one cable to the dumb switch │
+              │                                             │
+              │   Logical IP groupings on the same wire:    │
+              │     • 10.10.10.0/24 — "Internal" range      │
+              │         host (10.10.10.1), WS01 (.20)      │
+              │     • 10.10.20.0/24 — "External" range      │
+              │         DC01 (10.10.20.10), WO02 (.30)      │
+              │                                             │
+              │   Same broadcast domain; ARP works across   │
+              │   both ranges (devices on either range can  │
+              │   reach devices on the other directly).     │
+              │                                             │
+              │   No router, no DHCP server beyond the      │
+              │   Hyper-V vSwitch default.                  │
               └─────────────────────────────────────────────┘
 ```
 
-**Why two lab subnets?** The original v1.0 build used a single flat subnet. After the smart-card GPO was applied with `scforceoption=1`, an enrollment workflow needs the workstation to reach the DC for Kerberos AND the workstation to be locked out of any non-DC service. The two-subnet design lets the lab simulate enterprise segmentation: the DC bridges both subnets, but workloads on either side don't see each other directly unless the DC explicitly forwards. This is the same pattern enterprises use to separate management traffic from user traffic.
+**Why two IP ranges on one flat segment?** The IP grouping is **logical**, not physical. `10.10.10.x` and `10.10.20.x` share the same broadcast domain via the dumb switch and the Hyper-V External vSwitch — devices can ARP each other directly across the two ranges. The split is for documentation and operator-mental-model purposes ("Internal range" = host + lab VMs; "External range" = DC + physical workstation) rather than for layer-2 isolation. Real enterprise segmentation would use VLANs (a managed switch) or separate physical wires; this lab keeps a single flat L2 segment for simplicity and to avoid the managed-switch attack surface (see "The dumb switch" section below).
+
+> **Honest caveat on partitioning:** an earlier draft of this document claimed Lab-DC01 had dual NICs bridging two physically isolated subnets (an SC-32 "system partitioning" claim). That was design-doc thinking — the deployed reality is a single flat L2 segment with logical IP grouping. The control-rationale section below has been updated to reflect this honestly. Future work could promote the design to true partitioning by adding a managed switch with VLANs OR by giving Lab-DC01 a second NIC and routing — both are conceptually consistent with the "designed but not yet built" pattern used elsewhere in this lab portfolio.
 
 ---
 
@@ -129,10 +138,10 @@ The Wi-Fi NIC and the physical Ethernet NIC on the host are deliberately not bri
 | Segment | Address | Devices | Internet egress | Notes |
 |---|---|---|---|---|
 | **Home Wi-Fi** | (resident's home network) | The Hyper-V host's Wi-Fi adapter only | ✅ Yes (residential ISP) | Used for: Windows Updates on the host, Azure Portal access, vendor portal downloads, repo cloning, software staging. **Never bridged to lab.** |
-| **Lab External** | `10.10.20.0/24` | Hyper-V host Ethernet NIC, Hyper-V External vSwitch, Lab-DC01 NIC 2 (`10.10.20.10`), WO02 (`10.10.20.30`) | ❌ None | This is where the workstation lives. Smart-card GPO enforced. No Wi-Fi on WO02. No outbound to home Wi-Fi (host doesn't route). |
-| **Lab Internal** | `10.10.10.0/24` | Lab-DC01 NIC 1 (`10.10.10.10`), Hyper-V Internal vSwitch | ❌ None | Reserved for future lab VMs (Wazuh SIEM, syslog collector, secondary DC, etc.) — air-gapped from both Wi-Fi AND from WO02 unless the DC explicitly forwards. |
+| **Lab segment (flat L2)** — "Internal" IP range | `10.10.10.0/24` | Hyper-V host (`10.10.10.1`) · Lab-Workstation01 VM (`10.10.10.20`) | ❌ None | Host's own lab-side IP and any VMs that the operator considers "infrastructure" (WS01 used for SCAP baseline scans; future Wazuh / syslog / database VMs would land here). |
+| **Lab segment (flat L2)** — "External" IP range | `10.10.20.0/24` | Lab-DC01 single NIC (`10.10.20.10`) · WO02 physical laptop (`10.10.20.30`) | ❌ None | Where the DC and the physical workstation live. Smart-card GPO enforced on WO02. No Wi-Fi on WO02. Both ranges share the same broadcast domain via the dumb switch; the "Internal" / "External" labels are operator-mental-model groupings, not L2 isolation. |
 
-**The single chokepoint:** the Hyper-V host. Information can move between the home Wi-Fi side and the lab side *only* via deliberate operator action on the host — drag-and-drop into a Hyper-V VM via Enhanced Session, PowerShell Direct file copy, or USB transfer. There is no automated background path.
+**The single chokepoint:** the Hyper-V host. Information can move between the home Wi-Fi side and the lab side *only* via deliberate operator action on the host — drag-and-drop into a Hyper-V VM via Enhanced Session, PowerShell Direct file copy, or USB transfer. There is no automated background path. (The lab-side flat L2 segment is fully accessible from any device on the segment, so this chokepoint is at the Wi-Fi/Lab boundary on the host, NOT at the Internal/External range boundary inside the lab.)
 
 ---
 
@@ -144,9 +153,9 @@ The host plays three roles that would, in a less disciplined design, get smeared
 |---|---|---|
 | **Staging machine** | Downloads software, browses to vendor portals, accesses Azure Portal, clones the repo, runs operator-only tools | Connect any of its downloaded content to lab VMs automatically (no shared folders that auto-sync; no bridged interfaces) |
 | **Hypervisor** | Runs Lab-DC01 as a Gen2 VM, manages vSwitches, snapshots, checkpoints | Provide internet routing FROM the lab VMs back through its Wi-Fi (that would defeat the air-gap) |
-| **Lab-side gateway to WO02** | Bridges the physical Ethernet NIC to the External vSwitch so WO02 (on the dumb switch) can reach Lab-DC01 | Translate or NAT between lab traffic and Wi-Fi traffic |
+| **Member of the lab segment at `10.10.10.1`** | Connects its physical Ethernet NIC to the Hyper-V External vSwitch and joins the flat L2 lab segment alongside DC01, WS01, and WO02. Reaches Lab-DC01 directly via ARP on the shared broadcast domain. | Translate or NAT between lab traffic and Wi-Fi traffic |
 
-The discipline is enforced by **not configuring any of the routing behaviors that would blur the roles**. Windows ICS (Internet Connection Sharing) is not enabled. The Hyper-V host's Windows routing table has no static routes from the Wi-Fi side into the lab subnets. The "Default Switch" Hyper-V built-in is not used (it provides NAT to internet, which is exactly what we don't want lab VMs to have). Lab-DC01's NIC 1 is on an **Internal** vSwitch (host-only, no NAT, no external) — not a Default/External vSwitch.
+The discipline is enforced by **not configuring any of the routing behaviors that would blur the roles**. Windows ICS (Internet Connection Sharing) is not enabled. The Hyper-V host's Windows routing table has no static routes from the Wi-Fi side into the lab segment. The "Default Switch" Hyper-V built-in is not used (it provides NAT to internet, which is exactly what we don't want lab VMs to have). The Hyper-V External vSwitch the lab uses is bound to the physical Ethernet NIC — NOT to the Default Switch and NOT in NAT mode.
 
 These are negative-space controls: the discipline is what's **not** configured. That's what makes the design defensible — the misconfigurations that would break the air-gap are all explicit operator actions, not defaults.
 
@@ -198,7 +207,7 @@ This is also how classified development environments operate at scale — conten
 | **SC-7 (Boundary Protection)** | Two hardware boundaries: (1) the Hyper-V host's separation of Wi-Fi NIC and Ethernet NIC; (2) the dumb switch as a physical layer-2 isolation between WO02 and any other physical network. No layer-3 routing between zones; no proxied access from lab to internet. |
 | **AC-4 (Information Flow Enforcement)** | All flows between the staging side and the lab side are operator-driven (Enhanced Session, PowerShell Direct, USB). No automated background flows. Each flow produces an explicit operator action that can be logged. |
 | **CM-7 (Least Functionality)** | Hyper-V Default Switch (which provides NAT to internet) is deliberately not used for any lab VM. Internet Connection Sharing is not enabled. The Hyper-V host's routing table has no static routes that would connect the two sides. Each of these is a configuration NOT made — the design is enforced by negative space. |
-| **SC-32 (System Partitioning)** | Lab Internal (`10.10.10.0/24`) and Lab External (`10.10.20.0/24`) are partitioned via separate Hyper-V vSwitches. Lab-DC01 is the only device with NICs on both — and that bridging is explicit, not implicit, with a documented control rationale (the DC needs to issue Kerberos tickets to workstations on the External subnet while having additional internal infrastructure on the Internal subnet). |
+| **SC-32 (System Partitioning) — partial / logical only** | The lab side is a **single flat L2 segment** with two logical IP ranges (`10.10.10.x` and `10.10.20.x`) sharing the same broadcast domain via the dumb switch. The IP grouping is an operator-mental-model partition, not an L2 partition. **True system partitioning** (VLANs on a managed switch, or a routed L3 boundary at the host) is a queued enhancement — design-documented here, not yet deployed. The honest portfolio framing is: "I documented what an SC-32-compliant partitioning would look like AND noted the current deployment is single-segment with logical IP grouping. The remediation path (managed switch + VLANs, or host-side routing) is the next iteration." This is consistent with the "designed vs deployed" honesty pattern used elsewhere in the portfolio (Phase 8 ZT scaffolds, two-tier PKI design vs single-tier deployment). |
 | **PE-3 (Physical Access Control)** | The dumb switch and the physical workstation are in a single physical location under operator control. No external port-forward exposes the lab. No exposed service on any non-loopback interface of any lab VM. |
 | **SC-39 (Process Isolation)** | Hyper-V provides type-1 hypervisor isolation between Lab-DC01 (guest VM) and the host. The host's staging-machine role runs in the host OS process space; the lab VMs run in their own VM process spaces. A compromise of the host's browser does not directly compromise Lab-DC01. |
 | **CISA Zero-Trust Maturity Model — Networks pillar** | Partitioned segments with explicit ingress/egress rationale. Not "trust the network because it's behind a firewall"; rather, "every flow has been documented as a control decision." |

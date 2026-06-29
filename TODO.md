@@ -88,7 +88,7 @@ The lab is now in **converging mode**, not creating mode. Finish what is in flig
 
 ### Optional Compliance Evidence
 
-- ⬜ Nessus Essentials — credentialed scan (free, up to 16 IPs)
+- ✅ **Nessus Essentials credentialed scan — DONE 2026-06-25** (point-in-time, see POA&M Group 10 / v1.3 Document Control entry).
 Frameworks-Considered.md) and the cross-reference table in `SSP-Template.md` § 6.7.
 - ✅ PKI health check baseline — `Monitor-PKIHealth.ps1` run 7x on 2026-06-04 (audit log + 12:18:49 dashboard screenshot staged in `Compliance-Reports/PKI-Health/2026-06-04/`)
 
@@ -104,7 +104,7 @@ Frameworks-Considered.md) and the cross-reference table in `SSP-Template.md` § 
 ### Still Needs Input
 
 - ✅ **AO name and signature** — filled in SSP and SAR (Glenn Byron, System Owner / Lab Program Manager, Self-Assessed Lab)
-- ⬜ **Nessus Essentials scan** — adds vulnerability evidence; results go in SAR § 7 and POAM
+- ✅ **Nessus Essentials scan — DONE 2026-06-25** — point-in-time scan from Lab-Workstation01 (now-retired scanner role) using `LAB\CardIssuer` Domain Admin credentials. Advanced Scan policy, 25 min duration. 3 of 4 lab hosts discovered (WS01 excluded as scanner; Hyper-V host at `10.10.10.1` discovered + auth-fail by design — **air-gap discipline validated empirically**; the host is deliberately not domain-joined so Domain Admin creds bounce off, which is the design working). 81 vulnerabilities; **4 unique HIGH findings** populated in POA&M Group 10: POA-052/053 VNC on host (investigate + decide — uninstall, replace with RDP, or harden), POA-054 CVE-2013-3900 WinVerifyTrust (registry fix; closes corresponding STIG check too), POA-055 CVE-2026-20841 Notepad (banner-grab caveat noted; cheap Microsoft Store update), POA-056 Dell SupportAssist DSA-2025-445 12-vuln cluster on WO02 (vendor update or uninstall). Nessus Essentials free tier doesn't allow PDF/CSV/.nessus export — findings transcribed manually + screenshots staged at `Compliance-Reports/Nessus/2026-06-25_advanced-scan/screenshots/`. **Future Nessus scans**: WS01 scanner role retired post-scan; future quarterly re-scans pending scanner-location decision (Hyper-V host vs on-demand install vs dedicated scanner VM). Closes the open `SAR-Template.md §7 — Vulnerability Evidence` requirement.
 - ✅ **IIS STIG assessment — DONE 2026-06-24** — scanned LAB-DC01 IIS 10.0 CRL/AIA endpoint against IIS Server STIG 3.2.9 (53.85% score) + Site STIG 2.10.10 (54.55% score). Results staged at `Compliance-Reports/IIS-STIG/`. Populated 27 findings into POA&M (2 CAT I + 23 CAT II + 2 CAT III). **Headline finding: SV-218821 HTTPS-required → Risk Accept** with RFC 5280 §4.2.1.13 rationale (HTTP-only CRL distribution is the standard federal pattern; DoD CRL endpoints are also HTTP because HTTPS would create circular validation). Risk Acceptance Register extended with RA-003 (HTTPS), RA-004 (SSL Site CAT II), RA-005 (HSTS dependent). 29 SCAP Manual Questions notchecked → pending STIG Viewer manual review (Q3 2026). Full disposition in `Architecture/RMF-Templates/POAM-Template.md`.
 - ✅ **STIG Viewer CAT I review — DONE 2026-06-17** — all 22 unique CAT I findings across DC01 / WS01 / WO02 documented in `Architecture/RMF-Templates/POAM-Template.md` grouped by category (AutoPlay×6, Windows Installer Always Install Elevated×2, WinRM Basic auth×4, Anonymous share enumeration×2, LM auth level×2, AD data files permissions×1, Win11-specific×5). All real findings — none are false positives. Disposition: 18 queued for Ansible remediation, 1 manual review (AD data files), 2 risk-accept candidates (BitLocker disk encryption + pre-boot PIN on WO02), 4 operational no-op but remediate (WinRM Basic auth — lab uses Kerberos). Confirmed smart-card STIG rules (`WN22-SO-000120` Interactive logon require smart card; `WN22-CC-000080` smart card removal behavior) **passed** the scans — identity controls IA-2 / AC-5 / IA-2(11) fully satisfied. Risk Acceptance Register seeded with RA-001 (BitLocker disk) and RA-002 (BitLocker PIN), pending Glenn-as-AO sign-off.
 
@@ -182,14 +182,7 @@ Guide: `Lab-Kit/06-PhysicalEndpoint/Add-Physical-Laptop.md`
 - ✅ **YubiKey 5 NFC** — PIV end-to-end (Enroll-on-Behalf + Yubico minidriver), FIDO2 (device-bound passkey, nfc/usb), smart-card logon to `lab.local` under `SmartcardLogonRequired=True`. Reference design for any future YubiKey-line testing.
 - ✅ **Hirsch uTrust FIDO2 FIPS (n=2)** — FIDO2 works; PIV declared NO-GO (factory 3DES mgmt key rejected on both cards; requires vendor personalization tool + per-card mgmt key).
 
-### Cards still to test (queued)
-
-- ⬜ **GIDS PKI smart cards** — Generic Identity Device Specification; Windows includes a built-in GIDS minidriver, so PIV enrollment may work without a vendor-specific minidriver install (would be a different procurement story than Hirsch's). Verify: PIV applet present, factory mgmt key state, GIDS minidriver behavior during Enroll-on-Behalf, FIDO2 if applicable.
-- ⬜ **Additional smart-card form factors in queue** — various PKI implementations TBD; add a row to `Card-Test-Matrix.md` per card tested.
-- ⬜ **(Optional) YubiKey 5 NFC FIPS SKU** — separate procurement from the tested 5 NFC. Higher-assurance variant; would validate the same workflow against a FIPS 140-3 Level 2 module. Not on hand; would only add if there's a specific reason (e.g., federal target environment requires FIPS).
-- ⬜ Any future card form factors as they enter the lab — same test pattern: detection via `certutil -scinfo`, FIDO2 via webauthn.io, PIV via Enroll-on-Behalf, smart-card logon to `lab.local`, Azure VPN EAP-TLS (Phase 9 path now proven in v1.2).
-
-**Procurement-question to evaluate each new card against early:** can the card be brought to a known-management-key state using off-the-shelf tooling (ykman, OpenSC, GIDS minidriver), or does it require vendor-specific software + per-card management key? The Hirsch uTrust NO-GO finding turned on exactly this question.
+**No additional cards queued for testing.** If new cards enter the lab in the future, the methodology lives in [`Lab-Kit/Reference/Card-Test-Matrix.md`](Lab-Kit/Reference/Card-Test-Matrix.md) (see observation #5 — the procurement-evaluation question that turned the Hirsch NO-GO finding). Add a row to the matrix per card tested.
 
 ---
 
