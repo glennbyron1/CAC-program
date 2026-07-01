@@ -132,7 +132,7 @@ The Wi-Fi NIC and the physical Ethernet NIC on the host are deliberately not bri
 
 **Why two IP ranges on one flat segment?** The IP grouping is **logical**, not physical. `10.10.10.x` and `10.10.20.x` share the same broadcast domain via the dumb switch and the Hyper-V External vSwitch — devices can ARP each other directly across the two ranges. The split is for documentation and operator-mental-model purposes ("Internal range" = host + lab VMs; "External range" = DC + physical workstation) rather than for layer-2 isolation. Real enterprise segmentation would use VLANs (a managed switch) or separate physical wires; this lab keeps a single flat L2 segment for simplicity and to avoid the managed-switch attack surface (see "The dumb switch" section below).
 
-> **Topology change log — v1.4 (2026-06-30):** Lab-DC01 gained a second NIC at `10.10.10.10` (Lab Internal) so the WSL Ansible control node on the host could reach it without crossing range boundaries. **This is still NOT SC-32 partitioning** — the two ranges share the same flat L2 segment via the External vSwitch + dumb switch. The change is purely an administrative reachability convenience for the Ansible STIG remediation work in `Lab-Kit/08-Ansible-STIG/`; the lab segment is still a single broadcast domain with logical IP groupings.
+> **Topology change log — v1.4 (2026-06-30):** Lab-DC01 gained a second NIC at `10.10.10.10` (Lab Internal) so the WSL Ansible control node on the host could reach it without crossing range boundaries. **Both DC NICs are Hyper-V virtual adapters attached to the same External vSwitch, which is bound to the single physical Ethernet NIC on the host.** In other words: this is a second IP address on an existing L2 broadcast domain via a second virtual adapter — it is NOT a second physical network path. The physical wire, the vSwitch, and the L2 segment are unchanged. **This is still NOT SC-32 partitioning** — the two ranges share the same flat L2 segment via the External vSwitch + dumb switch. The change is purely an administrative reachability convenience for the Ansible STIG remediation work in `Lab-Kit/08-Ansible-STIG/`; the lab segment is still a single broadcast domain with logical IP groupings. **The lab-plane air-gap (host Wi-Fi NIC ↔ host physical Ethernet NIC, deliberately not bridged) is unaffected by adding virtual adapters inside the lab plane.**
 >
 > **Host-IP conflict during the v1.4 change:** the host's `vEthernet (External)` adapter was holding `10.10.10.10`, so traffic from WSL to the DC's new NIC looped back to the host. Resolved by `Remove-NetIPAddress -IPAddress 10.10.10.10 -InterfaceAlias 'vEthernet (External)' -Confirm:$false`. After that, the host reaches the DC via `10.10.20.10` (DC NIC1, original) AND via `10.10.10.10` (DC NIC2, new), and WSL/Ansible specifically uses `10.10.10.10`. The host's own lab-side IP stayed `10.10.10.1`.
 >
@@ -275,10 +275,10 @@ These are queued, not blocking:
 - [`Architecture/Blueprint.md`](Blueprint.md) — PKI design that runs on top of this topology
 - [`Architecture/Azure-VPN-Guide.md`](Azure-VPN-Guide.md) — the one sanctioned cloud egress, with its own trust path
 - [`Architecture/WatchGuard-IKEv2-VPN-Guide.md`](WatchGuard-IKEv2-VPN-Guide.md) — on-prem VPN pattern (design only)
-- [`Architecture/RMF-Templates/SSP-Template.md`](RMF-Templates/SSP-Template.md) — SC-7, AC-4, CM-7 control mappings consolidated
-- [`Architecture/Lessons-Learned/2026-06-13-Stale-Clone-After-History-Rewrite.md`](Lessons-Learned/2026-06-13-Stale-Clone-After-History-Rewrite.md) — what happens when transfer discipline slips
-- [`Lab-Kit/START-HERE.md`](../Lab-Kit/START-HERE.md) — the build sequence that produces this topology
-- [`Lab-Kit/LAB-DAY-CHECKLIST.md`](../Lab-Kit/LAB-DAY-CHECKLIST.md) — daily operator checklist that enforces the discipline
+- [`Architecture/RMF-Templates/SSP-Template.md`](RMF-Templates/SSP-Template.md) — SC-7, AC-4, CM-7 control mappings for the boundary controls this topology satisfies
+- [`Architecture/RMF-Templates/POAM-Template.md`](RMF-Templates/POAM-Template.md) — POA&M closures tied to the After-Ansible SCAP scan
+- [`Compliance-Reports/After-Ansible/`](../Compliance-Reports/After-Ansible/) — raw scan evidence for LAB-DC01 v1.4 hardening (44.95% → 86.7%)
+CHECKLIST.md`](../Lab-Kit/LAB-DAY-CHECKLIST.md) — daily operator checklist that enforces the discipline
 
 ---
 
