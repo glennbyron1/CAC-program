@@ -88,7 +88,9 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
 # Refuse to run if the machine is already a domain controller
 try {
     $role = (Get-CimInstance -ClassName Win32_ComputerSystem).DomainRole
-    # DomainRole 4 or 5 = backup/primary domain controller
+    # DomainRole values: 0=Standalone WS, 1=Member WS, 2=Standalone Srv, 3=Member Srv,
+    # 4=Backup DC, 5=Primary DC. Anything >=4 means we're pointed at an existing DC -
+    # bail out before Install-ADDSForest overwrites an already-provisioned domain.
     if ($role -eq 4 -or $role -eq 5) {
         Write-Error "This machine is already a domain controller. Aborting to protect an existing domain."
         Stop-Transcript
@@ -130,6 +132,11 @@ Write-Host "      The server will reboot automatically when promotion completes.
 if ($PSCmdlet.ShouldProcess($DomainName, "Create new AD forest and promote to DC")) {
     try {
         Import-Module ADDSDeployment -ErrorAction Stop
+        # DomainMode/ForestMode "WinThreshold" = functional level Windows Server 2016.
+        # Chose 2016 rather than "Default" (2022+) so the forest supports the widest
+        # range of member OS versions in the lab - a 2022-mode forest refuses older
+        # member servers, and we sometimes reuse older test VMs. Bump this to
+        # "WinServer2022" (or later) if all members will be current.
         Install-ADDSForest `
             -DomainName $DomainName `
             -DomainNetbiosName $NetBIOSName `

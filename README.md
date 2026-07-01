@@ -12,6 +12,42 @@ A self-built CAC/PIV smart-card authentication lab — the same model the U.S. D
 
 ---
 
+## How this was built — real bugs, real fixes, real evidence
+
+This isn't a paper design. It was built, broken, debugged, and rebuilt over six weeks of hands-on lab time. The messy parts are documented on purpose:
+
+- **[`Architecture/Lessons-Learned/`](Architecture/Lessons-Learned/)** — dated incident write-ups: the **Silent TPM Virtual Smart Card Fallback discovery** (enrollment "succeeded" but silently landed on a TPM VSC instead of the physical YubiKey — hardware-factor failure with no error), a **stale-clone-after-git-history-rewrite** recovery, and the full v1.1 enrollment session log.
+- **[`Lab-Kit/03-DomainController/Bug-Fix-Logs/`](Lab-Kit/03-DomainController/Bug-Fix-Logs/)** — real debugging output from actual runs. Example excerpt from the **PKI Health Monitor** parameterized session on 2026-06-04 (five distinct bugs surfaced in one afternoon):
+
+  ```text
+  FIX 1 — CA cert store filter too broad (false positive: expired VeriSign cert)
+  ------------------------------------------------------------------------------
+  Problem:
+    The Where-Object filter used '$_.Issuer -like "*CA*"' which matched any cert
+    with "CA" anywhere in the issuer field — including old Windows built-in
+    intermediates (VeriSign, Microsoft, etc.) in LocalMachine\CA since OS
+    installation. This caused CRITICAL false positives for certs expired
+    since 2002 and 2016.
+
+  Fix:
+    Filter now matches on the first AD domain label (e.g. "DC=lab") derived
+    from $env:USERDNSDOMAIN. Scopes results to internal PKI certs only.
+  ```
+
+  Four more like it in the same file: OCSP null-guard under StrictMode, CRL binary corruption via ASCII re-encode, certutil regex mismatch (`NextUpdate:` vs `Next Update:`), and certutil `-config` format + invalid verb. All battle-tested against the live lab and fixed in one session.
+
+- **[`Lab-Kit/Reference/Card-Test-Matrix.md`](Lab-Kit/Reference/Card-Test-Matrix.md)** — hardware evaluation with real outcomes, including the **Hirsch uTrust FIDO2 FIPS NO-GO** finding (PIV interface requires vendor-only management key; procurement blocker documented).
+
+- **[`Project-Narrative.md`](Project-Narrative.md)** — first-person Q&A covering design decisions, hardest bug (Silent VSC Fallback), what I'd do differently (line-endings, benchmark version commitment, network topology planning), and "things I learned the hard way" that aren't elsewhere in the repo.
+
+- **[`TODO.md`](TODO.md) Recent Wins log** — dated chronological development record from v1.0 through v1.4.
+
+- **Operator gotchas** — [`Lab-Kit/Reference/TROUBLESHOOTING.md`](Lab-Kit/Reference/TROUBLESHOOTING.md) for the "why isn't this working?" catalog, [`WALKTHROUGH.md`](WALKTHROUGH.md) §Gotchas for build-time surprises (UTF-8 BOM on scripts, LabInternal vs External switch pitfalls, unblock-file), [`FAQ.md`](FAQ.md) §Troubleshooting for the quick-answer version.
+
+If the docs read as too clean elsewhere, that's the federal documentation register (SSPs, SARs, POA&Ms have to look like this — those are the standards). The messy human work is in the folders above.
+
+---
+
 ## What's new in v1.4 (2026-07-01)
 
 **Headline: LAB-DC01 SCAP score climbed from 44.95% → 86.7% via Ansible STIG remediation. 8 CAT I findings verified closed.**
