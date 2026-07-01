@@ -10,6 +10,8 @@
 
 A self-built CAC/PIV smart-card authentication lab — the same model the U.S. Department of Defense uses for identity and access management — automated end-to-end and documented to federal RMF standards. Three virtual machines, a two-tier PKI, hardware-backed passwordless logon, certificate-based VPN, and a full SCAP/STIG/Nessus compliance workflow. Designed as a job-portfolio demonstration of federal ICAM, RMF, DevSecOps, and Zero Trust capability — useful in any enterprise that wants to retire passwords. **New to this repo? Start with [`Project-Narrative.md`](Project-Narrative.md) for the story, or [`Portfolio/CAC-Program-Plain-English-Overview.docx`](Portfolio/CAC-Program-Plain-English-Overview.docx) for a 2-page non-technical overview.**
 
+> 🗺️ **Where do I go first?** → **[`MAP.md`](MAP.md)** has role-based paths (**hiring manager / engineer / ISSO / deep-dive auditor**), a 2-minute quick-proof review path, project status/maturity table, and a "where's X?" lookup table for every major deliverable.
+
 ---
 
 ## How this was built — real bugs, real fixes, real evidence
