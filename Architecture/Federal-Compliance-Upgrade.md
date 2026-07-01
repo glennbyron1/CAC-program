@@ -18,7 +18,8 @@ it frames the upgrade and points to the deep-dive documents:
 | Regulatory mapping (ZTMM, NIST CSF 2.0, CPGs, SB 871, incident reporting) | [`Regulatory-Alignment.md`](./Regulatory-Alignment.md) |
 | Federal tool setup (SCAP, STIG Viewer, SCT, Nessus, CSET) | [`FedGov-Tools-Setup-Guide.md`](./FedGov-Tools-Setup-Guide.md) |
 | STIG hardening + ACAS scanning runbook | [`STIG-Hardening-Guide.md`](./STIG-Hardening-Guide.md) |
-| Before/after compliance evidence | [`../Compliance-Reports/`](../Compliance-Reports/) |
+| **Automated STIG remediation pipeline (Ansible)** | [`../Lab-Kit/08-Ansible-STIG/`](../Lab-Kit/08-Ansible-STIG/) — ansible-lockdown Windows-2022-STIG role driven from WSL2; **applied to LAB-DC01 in v1.4: 44.95% → 86.7% SCAP** |
+| Before/after compliance evidence | [`../Compliance-Reports/`](../Compliance-Reports/) (including [`After-Ansible/`](../Compliance-Reports/After-Ansible/) for the v1.4 hardening pass) |
 
 ---
 

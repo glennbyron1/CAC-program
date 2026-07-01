@@ -15,19 +15,19 @@ are already fixed in these steps.
    ```
 
 2. **Windows Server 2025 ISO** saved at:
-   `D:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\Server 2025 Standard.iso`
+   `C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\Server 2025 Standard.iso`
    (or pass `-ISOPath` to `New-LabVMs.ps1` if yours is elsewhere)
 
 3. **Unblock all scripts** — files from GitHub are flagged as internet downloads and
    will be blocked from running. Run this once on the Hyper-V host:
    ```powershell
-   Get-ChildItem -Path "C:\CAC-Lab-Kit-20260526" -Recurse -Filter *.ps1 | Unblock-File
+   Get-ChildItem -Path "C:\path\to\CAC-program" -Recurse -Filter *.ps1 | Unblock-File
    ```
 
 4. **Fix UTF-8 BOM on all scripts** — PowerShell 5.1 misreads scripts without BOM,
    causing parse errors. Run this once on the Hyper-V host before anything else:
    ```powershell
-   Get-ChildItem -Path "C:\CAC-Lab-Kit-20260526" -Recurse -Filter *.ps1 | ForEach-Object {
+   Get-ChildItem -Path "C:\path\to\CAC-program" -Recurse -Filter *.ps1 | ForEach-Object {
        $bytes = [System.IO.File]::ReadAllBytes($_.FullName)
        if ($bytes[0] -ne 0xEF) {
            [System.IO.File]::WriteAllBytes($_.FullName, [byte[]](0xEF,0xBB,0xBF) + $bytes)
@@ -48,7 +48,7 @@ are already fixed in these steps.
 ## PHASE 1 — Create the VMs
 
 ```powershell
-cd C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\
+cd C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\
 .\New-LabVMs.ps1 -ExternalSwitchName "LabInternal"
 ```
 
@@ -59,7 +59,7 @@ cd C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\
 ## PHASE 2 — Download Tools
 
 ```powershell
-cd C:\CAC-Lab-Kit-20260526\Tools-Kit\
+cd C:\path\to\CAC-program\Tools-Kit\
 .\Get-LabTools.ps1
 ```
 
@@ -102,7 +102,7 @@ Run from the **Hyper-V host** after each VM is at the desktop.
 $cred = Get-Credential   # Administrator / <LAB-ADMIN-PASSWORD>
 $s = New-PSSession -VMName "Lab-DC01" -Credential $cred
 Invoke-Command -Session $s -ScriptBlock { New-Item -ItemType Directory -Path "C:\Scripts" -Force | Out-Null }
-Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
+Copy-Item -Path "C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
           -ToSession $s -Destination "C:\Scripts\"
 Remove-PSSession $s
 ```
@@ -117,7 +117,7 @@ Restart-Computer -Force
 $cred = Get-Credential
 $s = New-PSSession -VMName "Lab-OfflineRootCA" -Credential $cred
 Invoke-Command -Session $s -ScriptBlock { New-Item -ItemType Directory -Path "C:\Scripts" -Force | Out-Null }
-Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
+Copy-Item -Path "C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
           -ToSession $s -Destination "C:\Scripts\"
 Remove-PSSession $s
 ```
@@ -132,7 +132,7 @@ Restart-Computer -Force
 $cred = Get-Credential
 $s = New-PSSession -VMName "Lab-Workstation01" -Credential $cred
 Invoke-Command -Session $s -ScriptBlock { New-Item -ItemType Directory -Path "C:\Scripts" -Force | Out-Null }
-Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
+Copy-Item -Path "C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
           -ToSession $s -Destination "C:\Scripts\"
 Remove-PSSession $s
 ```
@@ -144,7 +144,7 @@ Restart-Computer -Force
 
 ### Baseline snapshot (after all three rebooted):
 ```powershell
-cd C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\
+cd C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\
 .\New-LabSnapshot.ps1 -Mode Create -Label "00-BaseOS"
 ```
 
@@ -163,7 +163,7 @@ Add-VMNetworkAdapter -VMName "Lab-OfflineRootCA" -SwitchName "OfflineCA-Loopback
 $cred = Get-Credential   # Administrator / <LAB-ADMIN-PASSWORD>
 $s = New-PSSession -VMName "Lab-OfflineRootCA" -Credential $cred
 Invoke-Command -Session $s -ScriptBlock { New-Item -ItemType Directory -Path "C:\Scripts" -Force | Out-Null }
-Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\02-OfflineRootCA" `
+Copy-Item -Path "C:\path\to\CAC-program\Lab-Kit\02-OfflineRootCA" `
           -ToSession $s -Destination "C:\Scripts\" -Recurse
 Copy-Item -Path "C:\FedCompliance-Tools\09-OfflineRootCA-Kit" `
           -ToSession $s -Destination "C:\" -Recurse
@@ -212,7 +212,7 @@ Invoke-Command -Session $s -ScriptBlock {
     New-Item -ItemType Directory -Path "C:\Scripts\03-DomainController" -Force | Out-Null
     New-Item -ItemType Directory -Path "C:\CA-Transfer" -Force | Out-Null
 }
-Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\03-DomainController" `
+Copy-Item -Path "C:\path\to\CAC-program\Lab-Kit\03-DomainController" `
           -ToSession $s -Destination "C:\Scripts\" -Recurse -Force
 Copy-Item -Path "C:\CA-Transfer\OfflineCA-Export" `
           -ToSession $s -Destination "C:\CA-Transfer\" -Recurse -Force
@@ -361,7 +361,7 @@ The "DNS server is incorrect" warning from the dns command is harmless — setti
 $cred = Get-Credential   # Administrator / <LAB-ADMIN-PASSWORD>  (local)
 $s = New-PSSession -VMName "Lab-Workstation01" -Credential $cred
 Invoke-Command -Session $s -ScriptBlock { New-Item -ItemType Directory -Path "C:\Scripts\04-Workstation" -Force | Out-Null }
-Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\04-Workstation" `
+Copy-Item -Path "C:\path\to\CAC-program\Lab-Kit\04-Workstation" `
           -ToSession $s -Destination "C:\Scripts\" -Recurse -Force
 Remove-PSSession $s
 ```
@@ -444,7 +444,7 @@ Restart-Computer -Force
 ### Step 1 — Snapshot before scanning
 
 ```powershell
-cd C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\
+cd C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\
 .\New-LabSnapshot.ps1 -Mode Create -Label "03-Before-Scan"
 ```
 
@@ -500,9 +500,9 @@ net use \\10.10.10.1\LabShare /delete
 
 **On Hyper-V host** (move to repo):
 ```powershell
-New-Item -ItemType Directory -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\05-Compliance\Before-MFA" -Force | Out-Null
+New-Item -ItemType Directory -Path "C:\path\to\CAC-program\Lab-Kit\05-Compliance\Before-MFA" -Force | Out-Null
 Copy-Item "C:\LabShare\Before-MFA-DC01-Results.zip" `
-          -Destination "C:\CAC-Lab-Kit-20260526\Lab-Kit\05-Compliance\Before-MFA\" -Force
+          -Destination "C:\path\to\CAC-program\Lab-Kit\05-Compliance\Before-MFA\" -Force
 ```
 
 > **Note:** `Stage-Reports.ps1` only works when run on the same machine that ran SCC
@@ -516,7 +516,7 @@ Copy-Item "C:\LabShare\Before-MFA-DC01-Results.zip" `
 | Lab-DC01 | **44.95% [RED]** | `C:\Users\Administrator\SCC\Sessions\2026-05-27_084947\` | `Before-MFA-DC01-Results.zip` |
 | Lab-Workstation01 | **42.2% [RED]** | `C:\Users\Administrator.LAB\SCC\Sessions\2026-05-27_092002\` | `Before-MFA-WS01-Results.zip` |
 
-Both staged at: `C:\CAC-Lab-Kit-20260526\Lab-Kit\05-Compliance\Before-MFA\`
+Both staged at: `C:\path\to\CAC-program\Lab-Kit\05-Compliance\Before-MFA\`
 
 Scores are expected — IA-2 smart card controls are not yet enforced. These are the
 pre-hardening baselines. The After-MFA scans will show the delta after smart card

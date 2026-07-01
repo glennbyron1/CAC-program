@@ -1,0 +1,19 @@
+---
+# Phase 8 add-on - Galaxy content for STIG remediation of LAB-DC01.
+# Install with:  ansible-galaxy install -r requirements.yml
+# (bootstrap-wsl.sh does this for you inside the WSL control node.)
+
+roles:
+  # Community ansible-lockdown Windows Server 2022 STIG role.
+  # There is NO official DISA Ansible for Windows; this is the de-facto content
+  # and maps to the same Server 2022 STIG benchmark your SCAP scans use.
+  # Pin -version to a release tag for reproducibility once you've chosen one;
+  # 'devel' tracks the latest benchmark revision.
+  - name: Windows-2022-STIG
+    src: https://github.com/ansible-lockdown/Windows-2022-STIG.git
+    scm: git
+    version: devel
+
+collections:
+  - name: ansible.windows
+  - name: community.windows

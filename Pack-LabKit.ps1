@@ -12,8 +12,9 @@
     Output zip is date-stamped and placed next to the kit root by default.
 
 .PARAMETER KitRoot
-    Path to the inner CAC-Lab-Kit-20260526 folder (the one that contains
-    Lab-Kit\, Tools-Kit\, Architecture\, etc.).
+    Path to the kit root — the folder that contains Lab-Kit\, Tools-Kit\,
+    Architecture\, etc. (e.g. your CAC-program clone, or whatever date-stamped
+    extraction folder you're packaging from).
     Defaults to the folder this script lives in.
 
 .PARAMETER OutputDir
@@ -78,7 +79,7 @@ if (-not (Test-Path $KitRoot)) {
 $expectedFolders = @('Lab-Kit', 'Tools-Kit', 'Architecture')
 foreach ($f in $expectedFolders) {
     if (-not (Test-Path (Join-Path $KitRoot $f))) {
-        Write-Fatal "Expected subfolder '$f' not found in KitRoot: $KitRoot`nAre you running this from inside the CAC-Lab-Kit-20260526 folder?"
+        Write-Fatal "Expected subfolder '$f' not found in KitRoot: $KitRoot`nAre you running this from inside the kit-root folder (the one that contains Lab-Kit\, Tools-Kit\, Architecture\, etc.)?"
     }
 }
 
@@ -188,7 +189,7 @@ $zipStream   = [System.IO.File]::Create($zipPath)
 $zipArchive  = [System.IO.Compression.ZipArchive]::new($zipStream, [System.IO.Compression.ZipArchiveMode]::Create)
 
 # Get the folder name that will be the root inside the zip
-$kitFolderName = Split-Path $KitRoot -Leaf   # e.g. "CAC-Lab-Kit-20260526"
+$kitFolderName = Split-Path $KitRoot -Leaf   # e.g. "CAC-program" or a date-stamped extraction folder
 
 $totalBytes = 0
 $fileCount  = 0

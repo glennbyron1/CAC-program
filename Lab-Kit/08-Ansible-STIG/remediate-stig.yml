@@ -1,0 +1,39 @@
+---
+# Phase 8 add-on - ENFORCING remediation against LAB-DC01.
+#
+# DO NOT run this until you have:
+#   1. Taken a checkpoint:  New-LabSnapshot.ps1 -Mode Create -Label "08-Before-Ansible"
+#   2. Reviewed the audit-stig.yml --check output.
+#
+# Phase the rollout by severity. ALWAYS include prelim_tasks, or CAT tasks hit
+# undefined prelim variables. Verify the DC is still reachable after EACH phase:
+#
+#   # CAT I (high) only:
+#   ansible-playbook remediate-stig.yml --tags prelim_tasks,CAT1
+#   # ...verify DC health (win_ping, RDP, domain services), then CAT II:
+#   ansible-playbook remediate-stig.yml --tags prelim_tasks,CAT2
+#   # ...verify again, then CAT III:
+#   ansible-playbook remediate-stig.yml --tags prelim_tasks,CAT3
+#
+# Risk toggles (win2022stig_audit_disruptive/_complex) are set in group_vars.
+# Exclude a specific control once you identify it as breaking:
+#   ansible-playbook remediate-stig.yml --tags prelim_tasks,CAT2 --skip-tags V-254XXX
+#
+# After each phase, re-run the SCAP SCC scan (Phase 5/Compliance) and stage the
+# result to chart the score moving up from 44.95%.
+
+- name: "STIG remediation (ENFORCING) - LAB-DC01"
+  hosts: dc
+  gather_facts: true
+  any_errors_fatal: false
+  roles:
+    - role: Windows-2022-STIG
+
+  post_tasks:
+    - name: Reminder - re-validate after remediation
+      ansible.builtin.debug:
+        msg: >-
+          Remediation phase applied. Now: (1) confirm smart-card logon still
+          works, (2) run Invoke-ZeroTrustValidation.ps1 / Invoke-LabValidation.ps1,
+          (3) re-run the SCAP SCC scan and stage the new score. Roll back from the
+          '08-Before-Ansible' checkpoint if logon or DC services broke.

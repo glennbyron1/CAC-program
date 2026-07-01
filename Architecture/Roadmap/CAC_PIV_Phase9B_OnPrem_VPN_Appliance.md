@@ -1,5 +1,14 @@
-# Phase 9B — On-Prem VPN Appliance (Dell OptiPlex 3080 Micro) ⬜
+# Phase 9B — On-Prem VPN Appliance (Dell OptiPlex 3080 Micro) ⏸️
 ### The physical counterpart to Phase 9's cloud VPN — a certificate-authenticated VPN gateway on real hardware, tied to your PKI and logging into Splunk
+
+> **Status (v1.4, 2026-06-30): DEFERRED / NOT PLANNED.**
+> Phase 9 (Azure VPN) shipped in v1.2 and closes the certificate-authenticated VPN story
+> end-to-end ([`Architecture/Azure-VPN-Guide.md`](../Azure-VPN-Guide.md) — same YubiKey
+> certificate unlocks AD logon and Azure P2S EAP-TLS, validated 2026-06-17). The on-prem
+> hardware variant below remains as **design-only** for reference; the pattern is also
+> covered architecturally in [`Architecture/WatchGuard-IKEv2-VPN-Guide.md`](../WatchGuard-IKEv2-VPN-Guide.md).
+> No further development is planned for this lab. Preserved here as portfolio evidence of
+> the design path that was considered.
 
 *Built in the same phased, scripted style as the rest. This repurposes a refurb Dell 3080 Micro into a lab VPN appliance whose client/server certs come from **your existing two-tier PKI** (Phase 2 Issuing CA). It pairs with the cloud Phase 9: together you can show cert-based remote access done **both on-prem and in Azure**. Its logs also feed the **CySA+ lab's Splunk**, giving you real auth/VPN events to hunt instead of only synthetic data.*
 

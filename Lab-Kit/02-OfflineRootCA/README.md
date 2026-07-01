@@ -31,7 +31,7 @@ PowerShell 5.1 requires UTF-8 with BOM. Without it, Unicode characters in the sc
 (em dashes, box-drawing characters) are misread and the script fails to parse.
 
 ```powershell
-$file = "C:\CAC-Lab-Kit-20260526\Lab-Kit\02-OfflineRootCA\Initialize-OfflineRootCA.ps1"
+$file = "C:\path\to\CAC-program\Lab-Kit\02-OfflineRootCA\Initialize-OfflineRootCA.ps1"
 $bytes = [System.IO.File]::ReadAllBytes($file)
 if ($bytes[0] -ne 0xEF) {
     [System.IO.File]::WriteAllBytes($file, [byte[]](0xEF,0xBB,0xBF) + $bytes)
@@ -51,7 +51,7 @@ Invoke-Command -Session $s -ScriptBlock { New-Item -ItemType Directory -Path "C:
 
 # Copy the Lab-Kit OfflineRootCA folder and the staged tools into the VM
 # (Get-LabTools.ps1 already downloaded the CA kit to C:\FedCompliance-Tools\09-OfflineRootCA-Kit)
-Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\02-OfflineRootCA" `
+Copy-Item -Path "C:\path\to\CAC-program\Lab-Kit\02-OfflineRootCA" `
           -ToSession $s -Destination "C:\Scripts\" -Recurse
 Copy-Item -Path "C:\FedCompliance-Tools\09-OfflineRootCA-Kit" `
           -ToSession $s -Destination "C:\" -Recurse

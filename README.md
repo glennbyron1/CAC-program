@@ -4,9 +4,27 @@
 [![PowerShell Lint](https://github.com/glennbyron1/CAC-program/actions/workflows/ps-lint.yml/badge.svg)](https://github.com/glennbyron1/CAC-program/actions/workflows/ps-lint.yml)
 
 **Author:** Glenn Byron | **GitHub:** [@glennbyron1](https://github.com/glennbyron1) | **License:** MIT
-**Releases:** [v1.2](https://github.com/glennbyron1/CAC-program/releases/tag/v1.2) (2026-06-17, latest) · [v1.1](https://github.com/glennbyron1/CAC-program/releases/tag/v1.1) (2026-06-16) · [v1.0](https://github.com/glennbyron1/CAC-program/releases/tag/v1.0) (2026-06-03)
- 
+**Releases:** [v1.4](https://github.com/glennbyron1/CAC-program/releases/tag/v1.4) (2026-06-30, latest) · [v1.2](https://github.com/glennbyron1/CAC-program/releases/tag/v1.2) (2026-06-17) · [v1.1](https://github.com/glennbyron1/CAC-program/releases/tag/v1.1) (2026-06-16) · [v1.0](https://github.com/glennbyron1/CAC-program/releases/tag/v1.0) (2026-06-03)
+
 ---
+
+A self-built CAC/PIV smart-card authentication lab — the same model the U.S. Department of Defense uses for identity and access management — automated end-to-end and documented to federal RMF standards. Three virtual machines, a two-tier PKI, hardware-backed passwordless logon, certificate-based VPN, and a full SCAP/STIG/Nessus compliance workflow. Designed as a job-portfolio demonstration of federal ICAM, RMF, DevSecOps, and Zero Trust capability — useful in any enterprise that wants to retire passwords. **New to this repo? Start with [`Project-Narrative.md`](Project-Narrative.md) for the story, or [`Portfolio/CAC-Program-Plain-English-Overview.docx`](Portfolio/CAC-Program-Plain-English-Overview.docx) for a 2-page non-technical overview.**
+
+---
+
+## What's new in v1.4 (2026-07-01)
+
+**Headline: LAB-DC01 SCAP score climbed from 44.95% → 86.7% via Ansible STIG remediation. 8 CAT I findings verified closed.**
+
+- **Ansible STIG remediation applied to LAB-DC01 — 44.95% → 86.7% SCAP.** New module at [`Lab-Kit/08-Ansible-STIG/`](Lab-Kit/08-Ansible-STIG/) using the community `ansible-lockdown/Windows-2022-STIG` role driven from a WSL2 control node on the Hyper-V host. Three severity-tagged phases (CAT I → II → III) applied with VM snapshot + `win_ping` verification between each. Per-CAT closures: CAT I Fail 9→1 · CAT II Fail 105→27 · CAT III Fail 6→1. Visual evidence in `Screenshots/08a/08b/08c-stig-dc01-*pct.png`; full SCC scan archives at [`Compliance-Reports/After-Ansible/`](Compliance-Reports/After-Ansible/).
+- **8 CAT I findings verified closed in the POA&M** — POA-001/002/003 (AutoPlay), POA-007 (Windows Installer elevated), POA-009/010 (WinRM Basic), POA-013 (anonymous shares), POA-015 (LM auth) — all confirmed passing in the post-Ansible SCAP scan. POA&M Document Control updated to v1.4 with full closure narrative.
+- **Phase 8 Zero Trust extension: 13 scaffolds → full implementations.** Every previously-scaffolded ZT script in `Lab-Kit/07-ZeroTrust/` shipped as a full, idempotent, parse-clean PowerShell module. Phase 8 goes from "8 full + 13 scaffolds" (v1.0) to **21 full scripts** in v1.4. Coverage spans all ZT pillars: Authorization & Least Privilege, Device Trust, Continuous & Conditional Access, Workload Identity, Network Segmentation, Visibility & Decisioning. Per-script summary: [`Lab-Kit/07-ZeroTrust/CHANGELOG-Phase8.md`](Lab-Kit/07-ZeroTrust/CHANGELOG-Phase8.md).
+- **Defensive cert-audit tool — [`security/scripts/Check-SelfSignedCerts.ps1`](security/scripts/Check-SelfSignedCerts.ps1).** Scans LocalMachine + CurrentUser cert stores and optional remote TLS endpoints, with SHA-1 thumbprint protection for the offline Root CA so the known-good self-signed root is excluded from the unprotected count. Tags `PROTECTED (Offline CA)` / `SELF-SIGNED` / `CA-ISSUED`. CSV + pipeline output. Hardened pre-ship (BeginConnect/EndConnect pairing, `[CmdletBinding()]`, `-OutputPath` defaulting to `$env:TEMP`).
+- **Topology change recorded: LAB-DC01 now dual-NIC** (`10.10.20.10` External + `10.10.10.10` Internal). The second NIC was added for the WSL Ansible reach path; the lab segment remains flat L2 (the "honest caveat on partitioning" framing is preserved). See [`Architecture/Lab-Topology.md`](Architecture/Lab-Topology.md).
+- **Portfolio refreshed + new plain-English explainer.** All 5 active Portfolio docx files refreshed with a v1.4 milestone callout on page 1. New [`Portfolio/CAC-Program-Plain-English-Overview.docx`](Portfolio/CAC-Program-Plain-English-Overview.docx) — 2-page non-technical overview for hiring managers + recruiters.
+- **Honest framing throughout.** The remaining 29 CAT-fails on LAB-DC01 are exactly what the role's `disruption_high: false` + `complexity_high: false` safety guards exclude, plus manual AUDIT items, plus four Server-2025 vs. 2022-benchmark mismatches disabled in `group_vars`. ZT extension scripts are "designed → built (parse-clean), not yet built → run." Federal documentation pattern.
+
+Full release notes on the [v1.4 tag](https://github.com/glennbyron1/CAC-program/releases/tag/v1.4).
 
 ## What's new in v1.2 (2026-06-17)
 
@@ -94,7 +112,7 @@ Tool: SCAP Compliance Checker (SCC) 5.10.2 · Benchmark: MS_Windows_Server_2022_
 | Lab-Workstation01 | Before-MFA (baseline) | 42.20% | 9 | 111 |
 | Lab-Workstation01 | After-MFA (smart card enforced) | 42.20% | 9 | 111 |
 
-The Before/After-MFA scans establish the STIG compliance baseline. The smart card phase addressed the Identity authentication pillar — not a full STIG hardening pass. A full STIG hardening pass using `Lab-Kit/Ansible/windows-stig-hardening.yml` is the next compliance phase and would move these scores significantly. Full scan evidence is in `Compliance-Reports/`.
+The Before/After-MFA scans establish the STIG compliance baseline. The smart card phase addressed the Identity authentication pillar — not a full STIG hardening pass. **The full STIG hardening pass shipped in v1.4** via `Lab-Kit/08-Ansible-STIG/` (ansible-lockdown Windows-2022-STIG role from a WSL2 control node), moving LAB-DC01 from **44.95% → 86.7%** in three severity-tagged phases. Full scan evidence in `Compliance-Reports/` (Before-MFA, After-MFA, After-Ansible).
 
 ---
 
@@ -148,7 +166,7 @@ Phase 8 extends the lab to full Zero Trust Architecture: least-privilege RBAC, K
 | `Lab-Kit/05-Compliance/` | 7-layer pre-scan validator; SCAP SCC Before/After-MFA staging; `Invoke-SCAPWorkflow.ps1` automation; SCAP workflow quick reference |
 | `Lab-Kit/06-PhysicalEndpoint/` | Physical laptop onboarding (WO02): domain join, vTPM/VSC creation, smart card cert enrollment, full Add-Physical-Laptop guide |
 | `Lab-Kit/07-ZeroTrust/` | Phase 8 Zero Trust extension: tiered admin model, auth policy silos, device certs, Kerberos lifetime hardening, microsegmentation, ZT validator (8 full + 13 scaffolds + ZT demo walkthrough) |
-| `Lab-Kit/Ansible/` | `windows-stig-hardening.yml` — automated STIG remediation playbook; AD health check; cert expiry report |
+| `Lab-Kit/08-Ansible-STIG/` | **v1.4 module.** ansible-lockdown Windows-2022-STIG role driven from a WSL2 control node, severity-tagged remediation, WinRM/HTTPS target prep. Applied to LAB-DC01: **44.95% → 86.7% SCAP**. Includes `utilities/` (AD health check, cert expiry report, v1.0-era hand-rolled scaffold preserved as `windows-stig-hardening_SUPERSEDED.yml`). |
 | `Lab-Kit/Reference/` | Operator runbooks (scripted RUNBOOK-ICAM-001 + manual GUI walkthrough RUNBOOK-ICAM-002), `Card-Test-Matrix.md` hardware-evaluation methodology, sanitized ONBOARDING + TROUBLESHOOTING synced from the lab |
 | `Tools-Kit/` | Downloads SCAP SCC, STIG Viewer, Nessus Essentials, PSPKI |
 | `Architecture/` | PKI Blueprint, STIG Hardening Guide, regulatory alignment, [`WatchGuard-IKEv2-VPN-Guide.md`](Architecture/WatchGuard-IKEv2-VPN-Guide.md) (on-prem VPN), [`Azure-VPN-Guide.md`](Architecture/Azure-VPN-Guide.md) (cloud VPN with cert auth via YubiKey, ARCH-ICAM-013, v1.2), [`Lab-Topology.md`](Architecture/Lab-Topology.md) (air-gap design with NIST SC-7 / AC-4 / CM-7 mapping, ARCH-ICAM-014) |

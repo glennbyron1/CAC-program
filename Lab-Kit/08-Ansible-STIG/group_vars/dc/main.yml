@@ -1,0 +1,57 @@
+---
+# Phase 8 add-on - non-secret connection + role tuning for the [dc] group.
+# The password is kept separately in vault.yml (encrypted). See README.md.
+
+# ---------------------------------------------------------------------------
+# WinRM connection (set up by Enable-WinRM-ForAnsible.ps1 on LAB-DC01)
+# ---------------------------------------------------------------------------
+ansible_connection: winrm
+ansible_port: 5986
+ansible_winrm_transport: ntlm           # ntlm works without Kerberos realm config
+ansible_winrm_server_cert_validation: ignore   # lab self-signed listener cert
+ansible_user: "LAB\\Administrator"      # domain admin on LAB-DC01
+# ansible_password is provided by the encrypted vault.yml in this same folder.
+
+# ---------------------------------------------------------------------------
+# ansible-lockdown Windows-2022-STIG role tuning
+# ---------------------------------------------------------------------------
+# This role is REMEDIATION-ONLY (no --check/goss audit mode in this version).
+# Measure results with the SCAP SCC scan, not Ansible. Phase enforcement by
+# severity tags: prelim_tasks,CAT1  ->  prelim_tasks,CAT2  ->  prelim_tasks,CAT3.
+# (prelim_tasks must be included or CAT tasks hit undefined prelim variables.)
+
+# --- Safety toggles (real semantics from roles/.../defaults/main.yml) --------
+# LAB-DC01 does NOT use smart-card logon (only WO02 does), so cert-logon breakage
+# is not a concern. The remaining risk is severing our own WinRM/RDP path, so we
+# do NOT auto-remediate the items the role flags as disruptive or complex:
+win2022stig_disruption_high: false    # do NOT apply service-disrupting remediations (the real guard)
+win2022stig_complexity_high: false    # do NOT attempt complex auto-remediations
+#
+# Leave the audit_* DISPLAY flags at their defaults (true). They only control
+# whether non-remediated disruptive/complex items show as "changed" so they
+# stand out for manual review. Setting them false skips the role's state-gather
+# tasks and breaks downstream references (e.g. TPM .stderr_lines). Do not set them.
+
+# --- Control overrides for Server 2025 compatibility ------------------------
+# WN22-00-000090 (TPM readiness) runs `wmic`, which was REMOVED from Windows
+# Server 2025. The command can't execute, so the role's downstream conditional
+# crashes on a missing .stderr_lines. It is a manual AUDIT-only control (no
+# remediation, no SCAP impact), so disable just this one. Re-enable on a build
+# that still ships wmic.
+wn22_00_000090: false
+
+# WN22-00-000340 removes the PNRP (Peer Name Resolution Protocol) feature, which
+# does not exist on Server 2025, so the task errors on an unknown feature name.
+# The desired state (PNRP absent) is already true here, so disable the control.
+wn22_00_000340: false
+
+# WN22-00-000420 (FTP anonymous logons) is a manual AUDIT control. FTP/IIS is not
+# installed, so its regex_search returns None and the role's `'Installed' in None`
+# check crashes. Not applicable here, so disable it.
+wn22_00_000420: false
+wn22_00_000430: false   # companion FTP audit control; same not-applicable None pattern
+
+# Severity gates (the role defaults all to true; tags are the cleaner control).
+# win2022stig_cat1_patch: true
+# win2022stig_cat2_patch: true
+# win2022stig_cat3_patch: true

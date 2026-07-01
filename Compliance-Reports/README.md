@@ -59,12 +59,14 @@ Compliance-Reports/
 
 Tools: SCAP Compliance Checker (SCC) 5.10.2
 Benchmarks: `MS_Windows_Server_2022_STIG-2.3.10` (DC01/WS01) · `Microsoft_Windows_11_STIG-2.3.9` (WO02 laptop)
-Scan dates: Before-MFA 2026-05-27 · After-MFA 2026-05-28 · WO02 Laptop 2026-06-02
+Scan dates: Before-MFA 2026-05-27 · After-MFA 2026-05-28 · WO02 Laptop 2026-06-02 · After-Ansible 2026-06-30
 
 | Host | Benchmark | Audit Stage | SCAP Score | CAT I Fail | CAT II Fail | CAT III Fail |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | DC01 | Server 2022 STIG 2.3.10 | Before-MFA (baseline) | 44.95% | 9 | 105 | 6 |
 | DC01 | Server 2022 STIG 2.3.10 | After-MFA (smart card enforced) | 42.66% | 9 | 110 | 6 |
+| DC01 | Server 2022 STIG 2.3.10 | **After-Ansible CAT II (interim)** | **84.40%** | **1** | **27** | **6** |
+| DC01 | Server 2022 STIG 2.3.10 | **After-Ansible CAT III (final, v1.4)** | **86.70%** | **1** | **27** | **1** |
 | WS01 | Server 2022 STIG 2.3.10 | Before-MFA (baseline) | 42.20% | 9 | 111 | 6 |
 | WS01 | Server 2022 STIG 2.3.10 | After-MFA (smart card enforced) | 42.20% | 9 | 111 | 6 |
 | WO02 | **Windows 11 STIG 2.3.9** | **After-SmartCard (laptop, domain-joined)** | **37.00%** | **13** | **122** | **8** |
@@ -73,7 +75,7 @@ Scan dates: Before-MFA 2026-05-27 · After-MFA 2026-05-28 · WO02 Laptop 2026-06
 
 **DC01 / WS01 (VMs, Server 2022 STIG):** The Before/After-MFA scans establish the STIG compliance baseline and confirm the state of the lab before and after smart-card enforcement was applied. The scores are similar across both stages because the smart-card hardening phase targeted the **Identity authentication pillar** (NIST IA-2, IA-5) — not a full STIG hardening pass.
 
-The CAT I failures remaining (9 per VM) are a mix of authentication-adjacent and broader server hardening findings. A full STIG hardening pass using `Lab-Kit/Ansible/windows-stig-hardening.yml` would address the CAT II/III findings systematically. That is scoped as the next compliance phase.
+The CAT I failures remaining (9 per VM) are a mix of authentication-adjacent and broader server hardening findings. **The full STIG hardening pass shipped in v1.4** via `Lab-Kit/08-Ansible-STIG/` (ansible-lockdown Windows-2022-STIG role from a WSL2 control node), moving LAB-DC01 from **44.95% baseline → 86.7%** in three severity-tagged phases. Scan archives at `Compliance-Reports/After-Ansible/`.
 
 > **POA&M CAT I review complete (2026-06-17):** All 22 unique CAT I findings across DC01 / WS01 / WO02 are populated in [`Architecture/RMF-Templates/POAM-Template.md`](../Architecture/RMF-Templates/POAM-Template.md) grouped into 7 categories (AutoPlay ×6, Windows Installer elevated ×2, WinRM Basic auth ×4, Anonymous share enumeration ×2, LM auth level ×2, AD data files permissions ×1, Win11-specific ×5). Disposition: 18 queued for Ansible remediation, 1 manual review (AD data files — DC-specific), 2 risk-accept candidates (BitLocker on WO02), 4 operational no-op but remediate anyway (WinRM Basic — lab uses Kerberos). **Smart-card STIG rules `WN22-SO-000120` and `WN22-CC-000080` passed the scans — the identity authentication controls (IA-2 / IA-2(11) / AC-5) are fully satisfied and are NOT in the open-findings list.**
 

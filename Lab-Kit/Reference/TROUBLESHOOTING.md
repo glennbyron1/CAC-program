@@ -341,7 +341,7 @@ After a scan, copy results with:
 ```powershell
 $session = "2026-05-28_113752"   # replace with actual timestamp
 Copy-Item "C:\Users\Administrator\SCC\Sessions\$session" `
-    -Destination "C:\CAC-Lab-Kit-20260526\Lab-Kit\05-Compliance\After-MFA\DC01\" `
+    -Destination "C:\path\to\CAC-program\Lab-Kit\05-Compliance\After-MFA\DC01\" `
     -Recurse -Force
 ```
 
@@ -355,7 +355,7 @@ Copy-Item "C:\Users\Administrator\SCC\Sessions\$session" `
 
 **Fix:**
 ```powershell
-$base = "C:\CAC-Lab-Kit-20260526\Lab-Kit\05-Compliance"
+$base = "C:\path\to\CAC-program\Lab-Kit\05-Compliance"
 Rename-Item -Path "$base\After-MFA" -NewName "After-MFA-WS01-2026-05-27.zip"
 New-Item -ItemType Directory -Path "$base\After-MFA\DC01" -Force | Out-Null
 New-Item -ItemType Directory -Path "$base\After-MFA\WS01" -Force | Out-Null

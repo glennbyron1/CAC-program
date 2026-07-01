@@ -3,6 +3,8 @@
 
 *Assessment of the CAC/PIV smart-card logon program (two-tier PKI lab) against Zero Trust requirements. Frameworks: NIST SP 800-207, DoD Zero Trust "User" pillar, CISA ZTMM, EO 14028 / OMB M-22-09 (phishing-resistant MFA), and FIPS 201 / NIST SP 800-63 for identity assurance.*
 
+> **v1.4 update (2026-06-30) — Phase 8 ZT extension shipped.** The "authorization, device, and continuous-evaluation layers" identified as the gap below have been built out in [`Lab-Kit/07-ZeroTrust/`](../Lab-Kit/07-ZeroTrust/) — 21 full, parse-clean PowerShell modules covering Authorization & Least Privilege, Device Trust, Continuous & Conditional Access, Workload Identity, Network Segmentation, and Visibility → Decisioning. **Honest framing: scripts are "designed → built" (parse-clean implementations targeting Lab-DC01 / gateway / endpoints), not yet "built → run."** Operational execution + Before-ZT/After-ZT evidence is not on the roadmap. The hardened OS substrate the ZT overlays assume was materialized in v1.4 via [`Lab-Kit/08-Ansible-STIG/`](../Lab-Kit/08-Ansible-STIG/) — LAB-DC01 SCAP 44.95% → 86.7%.
+
 ---
 
 ## Bottom line up front

@@ -414,7 +414,7 @@ can't drift between steps. See `03-DomainController\README.md` for full command.
 **STIG content:** MS_Windows_Server_2022_STIG (used with "Run content regardless of
 applicability" — Windows Server 2025 does not have its own CPE in this content version)  
 **Session folder:** `C:\Users\Administrator\SCC\Sessions\2026-05-27_084947\` (on Lab-DC01)  
-**Staged at:** `C:\CAC-Lab-Kit-20260526\Lab-Kit\05-Compliance\Before-MFA\Before-MFA-DC01-Results.zip`
+**Staged at:** `C:\path\to\CAC-program\Lab-Kit\05-Compliance\Before-MFA\Before-MFA-DC01-Results.zip`
 
 **SCC CPE applicability override:** SCC reported "content is not applicable to this
 platform" for Windows Server 2025. Fix: open Content Details panel in SCC, check
@@ -465,7 +465,7 @@ passthrough (reliable but slower).
 **SCC version:** 5.10.2  
 **STIG content:** MS_Windows_Server_2022_STIG (CPE override — same as DC01)  
 **Session folder:** `C:\Users\Administrator.LAB\SCC\Sessions\2026-05-27_092002\` (on Lab-Workstation01)  
-**Staged at:** `C:\CAC-Lab-Kit-20260526\Lab-Kit\05-Compliance\Before-MFA\Before-MFA-WS01-Results.zip`
+**Staged at:** `C:\path\to\CAC-program\Lab-Kit\05-Compliance\Before-MFA\Before-MFA-WS01-Results.zip`
 
 **Note:** Domain-joined workstation profile path is `Administrator.LAB` (not `Administrator`).
 SCC writes results to `C:\Users\Administrator.LAB\SCC\Sessions\` — use this path for
@@ -491,11 +491,11 @@ cannot auto-locate the scan folder from the host.
 
 **Workaround for DC scans:** Manually zip the SCC session folder on Lab-DC01, transfer
 the zip to the host, extract to
-`C:\CAC-Lab-Kit-20260526\Lab-Kit\05-Compliance\Before-MFA\`, and commit directly.
+`C:\path\to\CAC-program\Lab-Kit\05-Compliance\Before-MFA\`, and commit directly.
 The zip approach preserves all raw output (HTML, XML, ARF) for review and archiving.
 
 For scans run on Lab-Workstation01 (which may support PowerShell Direct), `Stage-Reports.ps1`
-can be run normally from `C:\CAC-Lab-Kit-20260526\Lab-Kit\05-Compliance\`.
+can be run normally from `C:\path\to\CAC-program\Lab-Kit\05-Compliance\`.
 
 ---
 
@@ -1072,7 +1072,7 @@ Export ZIP: `CAC-Lab-Export-20260601.zip` (97.8 MB) — includes all docs + comp
 
 ### TROUBLESHOOTING.md Created
 
-New file: `C:\CAC-Lab-Kit-20260526\TROUBLESHOOTING.md`
+New file: `C:\path\to\CAC-program\TROUBLESHOOTING.md`
 
 Running FAQ covering every real problem encountered in the lab:
 - Smart card lockout (two-mechanism root cause)
@@ -1182,7 +1182,7 @@ labtech is a standard domain user. Temporary local admin during enrollment only 
 
 ### ONBOARDING.md Created
 
-New file: `C:\CAC-Lab-Kit-20260526\ONBOARDING.md`
+New file: `C:\path\to\CAC-program\ONBOARDING.md`
 
 Complete start-to-finish enrollment guide including:
 - Lab environment map and account table

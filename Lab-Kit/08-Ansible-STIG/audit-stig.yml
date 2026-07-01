@@ -1,0 +1,30 @@
+---
+# Phase 8 add-on - AUDIT-ONLY pass against LAB-DC01.
+#
+# Run with check mode so NOTHING is changed - Ansible reports every task that
+# WOULD change as a "changed" item with a diff. That changed-list IS your STIG
+# gap report against the current 44.95% baseline.
+#
+#   ansible-playbook audit-stig.yml --check --diff --ask-vault-pass
+#
+# Notes:
+#  - A few STIG tasks are not fully check-mode safe and may show as skipped or
+#    error in --check; that is expected. The bulk produce a usable gap list.
+#  - For a scored compliance report, optionally enable the role's goss audit
+#    (setup_audit/run_audit) in group_vars/dc/main.yml after verifying the var
+#    names against the installed role.
+
+- name: "STIG audit (no changes) - LAB-DC01"
+  hosts: dc
+  gather_facts: true
+  any_errors_fatal: false
+  roles:
+    - role: Windows-2022-STIG
+
+  post_tasks:
+    - name: Audit summary
+      ansible.builtin.debug:
+        msg: >-
+          Audit complete. Review the 'changed' items above and ./ansible-run.log -
+          each is a control the role would remediate. Decide which to enforce,
+          then use remediate-stig.yml with severity tags (CAT1 first).

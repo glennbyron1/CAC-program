@@ -62,7 +62,7 @@ The primary controls are `IA-2`, `IA-2(11)`, `IA-5`, `IA-5(2)`, `AC-5`, `AC-11`,
 ## Zero Trust
 
 **Is this a Zero Trust implementation?**
-It implements the **authentication leg of the Identity pillar** at an Advanced/Optimal level. Full Zero Trust additionally requires least-privilege authorization, device trust, conditional/continuous access, and microsegmentation — those layers are documented in `Phase-8-Zero-Trust-Extension.md` as the roadmap. The lab is honest about what it does and doesn't cover.
+It implements the **authentication leg of the Identity pillar** at an Advanced/Optimal level. Full Zero Trust additionally requires least-privilege authorization, device trust, conditional/continuous access, and microsegmentation — the design lives at [`Architecture/Roadmap/CAC_PIV_Phase8_ZeroTrust_Extension.md`](Architecture/Roadmap/CAC_PIV_Phase8_ZeroTrust_Extension.md), and as of **v1.4 (2026-06-30) the extension shipped as 21 full PowerShell modules** in [`Lab-Kit/07-ZeroTrust/`](Lab-Kit/07-ZeroTrust/). Honest framing: scripts are "designed → built" (parse-clean), not yet "built → run." The lab is honest about what it does and doesn't cover.
 
 **What's the difference between phishing-resistant MFA and regular MFA?**
 Regular MFA (SMS codes, authenticator app push notifications) can be phished — an attacker can trick you into approving a fake login. Phishing-resistant MFA (hardware PIV certificates, FIDO2 keys) uses public-key cryptography tied to a specific hardware device, so there's no code to intercept. This is the baseline EO 14028 and OMB M-22-09 require for federal systems.

@@ -48,9 +48,11 @@ A federal interviewer who asks "how would you isolate a production network from 
 │                                                                         │
 │   ┌───────────────────────────────────────────────────────────────┐     │
 │   │  Hyper-V External vSwitch  (bound to physical Ethernet NIC)   │     │
-│   │    Lab-DC01 (Server 2022) — Issuing CA + Domain Controller    │     │
-│   │      Single NIC: 10.10.20.10/24 — Lab External                │     │
-│   │    Lab-Workstation01 (Server 2022 VM, for SCAP baseline scans)│     │
+│   │    Lab-DC01 (Server 2025) — Issuing CA + Domain Controller    │     │
+│   │      NIC 1: 10.10.20.10/24 — Lab External (v1.0)              │     │
+│   │      NIC 2: 10.10.10.10/24 — Lab Internal (added v1.4 for     │     │
+│   │              the WSL-Ansible reach path)                      │     │
+│   │    Lab-Workstation01 (Server 2025 VM, for SCAP baseline scans)│     │
 │   │      Single NIC: 10.10.10.20/24 — Lab Internal                │     │
 │   └───────────────────────────────────────────────────────────────┘     │
 │                                                                         │
@@ -80,7 +82,7 @@ A federal interviewer who asks "how would you isolate a production network from 
                   └────────────────────────────┘
 ```
 
-**Reading this diagram:** the home Wi-Fi reaches the Hyper-V host. The Hyper-V host has *two NICs that never speak to each other* — the Wi-Fi NIC (staging side) and the physical Ethernet NIC (lab side). The host's lab-side IP is `10.10.10.1`. The Ethernet NIC is bound to a Hyper-V External vSwitch and connects through a dumb unmanaged switch to WO02. Lab-DC01 (single NIC at `10.10.20.10`) and Lab-Workstation01 (single NIC at `10.10.10.20`) both live on the host as Hyper-V VMs, attached to that same External vSwitch — so all four devices (host, DC01, WS01, WO02) share one flat layer-2 broadcast domain via the dumb switch and the External vSwitch. The Internal-range and External-range IP labels are operator-mental-model groupings, not L2 isolation.
+**Reading this diagram:** the home Wi-Fi reaches the Hyper-V host. The Hyper-V host has *two NICs that never speak to each other* — the Wi-Fi NIC (staging side) and the physical Ethernet NIC (lab side). The host's lab-side IP is `10.10.10.1`. The Ethernet NIC is bound to a Hyper-V External vSwitch and connects through a dumb unmanaged switch to WO02. **Lab-DC01 (dual-NIC as of v1.4 — `10.10.20.10` on Lab External + `10.10.10.10` on Lab Internal)** and Lab-Workstation01 (single NIC at `10.10.10.20`) both live on the host as Hyper-V VMs, attached to that same External vSwitch — so all four devices (host, DC01, WS01, WO02) share one flat layer-2 broadcast domain via the dumb switch and the External vSwitch. The Internal-range and External-range IP labels are operator-mental-model groupings, not L2 isolation.
 
 The Wi-Fi NIC and the physical Ethernet NIC on the host are deliberately not bridged. Windows treats them as completely separate adapters. The host can resolve and reach Azure on the Wi-Fi side; it can resolve and reach Lab-DC01 + WS01 + WO02 on the Ethernet side; but no packet routes between the two sides.
 
@@ -114,9 +116,10 @@ The Wi-Fi NIC and the physical Ethernet NIC on the host are deliberately not bri
               │                                             │
               │   Logical IP groupings on the same wire:    │
               │     • 10.10.10.0/24 — "Internal" range      │
-              │         host (10.10.10.1), WS01 (.20)      │
+              │         host (.1), DC01 NIC2 (.10, v1.4),   │
+              │         WS01 (.20)                          │
               │     • 10.10.20.0/24 — "External" range      │
-              │         DC01 (10.10.20.10), WO02 (.30)      │
+              │         DC01 NIC1 (.10), WO02 (.30)         │
               │                                             │
               │   Same broadcast domain; ARP works across   │
               │   both ranges (devices on either range can  │
@@ -129,7 +132,11 @@ The Wi-Fi NIC and the physical Ethernet NIC on the host are deliberately not bri
 
 **Why two IP ranges on one flat segment?** The IP grouping is **logical**, not physical. `10.10.10.x` and `10.10.20.x` share the same broadcast domain via the dumb switch and the Hyper-V External vSwitch — devices can ARP each other directly across the two ranges. The split is for documentation and operator-mental-model purposes ("Internal range" = host + lab VMs; "External range" = DC + physical workstation) rather than for layer-2 isolation. Real enterprise segmentation would use VLANs (a managed switch) or separate physical wires; this lab keeps a single flat L2 segment for simplicity and to avoid the managed-switch attack surface (see "The dumb switch" section below).
 
-> **Honest caveat on partitioning:** an earlier draft of this document claimed Lab-DC01 had dual NICs bridging two physically isolated subnets (an SC-32 "system partitioning" claim). That was design-doc thinking — the deployed reality is a single flat L2 segment with logical IP grouping. The control-rationale section below has been updated to reflect this honestly. Future work could promote the design to true partitioning by adding a managed switch with VLANs OR by giving Lab-DC01 a second NIC and routing — both are conceptually consistent with the "designed but not yet built" pattern used elsewhere in this lab portfolio.
+> **Topology change log — v1.4 (2026-06-30):** Lab-DC01 gained a second NIC at `10.10.10.10` (Lab Internal) so the WSL Ansible control node on the host could reach it without crossing range boundaries. **This is still NOT SC-32 partitioning** — the two ranges share the same flat L2 segment via the External vSwitch + dumb switch. The change is purely an administrative reachability convenience for the Ansible STIG remediation work in `Lab-Kit/08-Ansible-STIG/`; the lab segment is still a single broadcast domain with logical IP groupings.
+>
+> **Host-IP conflict during the v1.4 change:** the host's `vEthernet (External)` adapter was holding `10.10.10.10`, so traffic from WSL to the DC's new NIC looped back to the host. Resolved by `Remove-NetIPAddress -IPAddress 10.10.10.10 -InterfaceAlias 'vEthernet (External)' -Confirm:$false`. After that, the host reaches the DC via `10.10.20.10` (DC NIC1, original) AND via `10.10.10.10` (DC NIC2, new), and WSL/Ansible specifically uses `10.10.10.10`. The host's own lab-side IP stayed `10.10.10.1`.
+>
+> **Honest caveat on partitioning (preserved):** an earlier draft of this document claimed Lab-DC01 had dual NICs bridging two physically isolated subnets (an SC-32 "system partitioning" claim). That was design-doc thinking. The deployed reality before v1.4 was single-NIC + flat L2; the deployed reality at v1.4 is dual-NIC + still flat L2 (both NICs sit on the same broadcast domain). Real SC-32 partitioning would require a managed switch with VLANs OR an L3 router between segments — neither is in this build.
 
 ---
 
@@ -138,8 +145,8 @@ The Wi-Fi NIC and the physical Ethernet NIC on the host are deliberately not bri
 | Segment | Address | Devices | Internet egress | Notes |
 |---|---|---|---|---|
 | **Home Wi-Fi** | (resident's home network) | The Hyper-V host's Wi-Fi adapter only | ✅ Yes (residential ISP) | Used for: Windows Updates on the host, Azure Portal access, vendor portal downloads, repo cloning, software staging. **Never bridged to lab.** |
-| **Lab segment (flat L2)** — "Internal" IP range | `10.10.10.0/24` | Hyper-V host (`10.10.10.1`) · Lab-Workstation01 VM (`10.10.10.20`) | ❌ None | Host's own lab-side IP and any VMs that the operator considers "infrastructure" (WS01 used for SCAP baseline scans; future Wazuh / syslog / database VMs would land here). |
-| **Lab segment (flat L2)** — "External" IP range | `10.10.20.0/24` | Lab-DC01 single NIC (`10.10.20.10`) · WO02 physical laptop (`10.10.20.30`) | ❌ None | Where the DC and the physical workstation live. Smart-card GPO enforced on WO02. No Wi-Fi on WO02. Both ranges share the same broadcast domain via the dumb switch; the "Internal" / "External" labels are operator-mental-model groupings, not L2 isolation. |
+| **Lab segment (flat L2)** — "Internal" IP range | `10.10.10.0/24` | Hyper-V host (`10.10.10.1`) · **Lab-DC01 NIC2 (`10.10.10.10`, v1.4)** · Lab-Workstation01 VM (`10.10.10.20`) | ❌ None | Host's own lab-side IP, the DC's secondary NIC (v1.4 — added for the WSL/Ansible reach path), and any VMs that the operator considers "infrastructure" (WS01 used for SCAP baseline scans; future Wazuh / syslog / database VMs would land here). |
+| **Lab segment (flat L2)** — "External" IP range | `10.10.20.0/24` | **Lab-DC01 NIC1 (`10.10.20.10`)** · WO02 physical laptop (`10.10.20.30`) | ❌ None | Where the DC's primary NIC and the physical workstation live. Smart-card GPO enforced on WO02. No Wi-Fi on WO02. Both ranges share the same broadcast domain via the dumb switch; the "Internal" / "External" labels are operator-mental-model groupings, not L2 isolation. As of v1.4, Lab-DC01 appears in **both** range rows because it has one NIC in each range. |
 
 **The single chokepoint:** the Hyper-V host. Information can move between the home Wi-Fi side and the lab side *only* via deliberate operator action on the host — drag-and-drop into a Hyper-V VM via Enhanced Session, PowerShell Direct file copy, or USB transfer. There is no automated background path. (The lab-side flat L2 segment is fully accessible from any device on the segment, so this chokepoint is at the Wi-Fi/Lab boundary on the host, NOT at the Internal/External range boundary inside the lab.)
 

@@ -43,9 +43,11 @@ and 105–111 CAT II failures. Nessus Essentials scan: pending.
 Following deployment of the lab build scripts and smart card enforcement GPOs (`scforceoption=1`,
 `ScRemoveOption`, session lock), post-hardening scans showed 42.66% (DC01) and 42.20% (WS01).
 The CAT I failure count remained at 9 per VM. The smart card phase addressed the Identity
-authentication pillar (NIST IA-2, IA-5) — not a full STIG hardening pass. A full STIG
-hardening pass using `Lab-Kit/Ansible/windows-stig-hardening.yml` is the next compliance phase.
-Nessus Essentials scan: pending.
+authentication pillar (NIST IA-2, IA-5) — not a full STIG hardening pass. **The full STIG
+hardening pass shipped in v1.4** via `Lab-Kit/08-Ansible-STIG/` (ansible-lockdown Windows-2022-STIG
+role from a WSL2 control node), moving LAB-DC01 from **44.95% → 86.7%** in three severity-tagged
+phases. Scan evidence at `Compliance-Reports/After-Ansible/`. Nessus Essentials scan: completed
+2026-06-25 — see `Compliance-Reports/Nessus/`.
 
 **Overall Risk Determination:** Moderate
 
@@ -60,19 +62,22 @@ open CAT I findings require POA&M remediation schedule before full ATO.
 
 | System | Hostname | OS | Assessment Date |
 |--------|----------|----|-----------------|
-| Domain Controller / Issuing CA | LAB-DC01 | Windows Server 2022 | 2026-05-27 (Before) / 2026-05-28 (After) |
-| Test Workstation | LAB-WORKSTATION01 | Windows Server 2022 | 2026-05-27 (Before) / 2026-05-28 (After) |
+| Domain Controller / Issuing CA | LAB-DC01 | Windows Server 2022 | 2026-05-27 (Before) / 2026-05-28 (After-MFA) / 2026-06-30 (After-Ansible) |
+| Server VM Test Workstation | LAB-WORKSTATION01 | Windows Server 2022 | 2026-05-27 (Before) / 2026-05-28 (After-MFA) |
+| **Physical Windows 11 Endpoint** | **WO02** | **Windows 11 Pro** | **2026-06-02 (After-SmartCard, domain-joined)** |
 | Offline Root CA | LAB-OFFLINEROOOTCA | Windows Server 2022 | Not scanned (air-gapped, no network) |
-| HTTP CRL / AIA Server | N/A | IIS 10.0 | Pending — IIS not deployed in current phase |
+| HTTP CRL / AIA Server | LAB-DC01 (IIS 10.0) | Windows Server 2022 | 2026-06-24 (IIS Server STIG + Site STIG) |
 
 ### 3.2 STIGs Assessed
 
-| STIG | Version | Assessment Method | Checklist File |
-|------|---------|------------------|----------------|
-| Microsoft Windows Server 2022 STIG | V2R2 (or current) | SCAP SCC + STIG Viewer manual review | `Compliance-Reports/After-MFA/WinServer2022-STIG.ckl` |
-| Active Directory Domain Services STIG | V3R2 (or current) | STIG Viewer manual review | `Compliance-Reports/After-MFA/AD-DS-STIG.ckl` |
-| PKI / Certificate Services STIG | V2R1 (or current) | STIG Viewer manual review | `Compliance-Reports/After-MFA/PKI-CS-STIG.ckl` |
-| IIS 10.0 Site STIG | V3R1 (or current) | STIG Viewer manual review | `Compliance-Reports/After-MFA/IIS10-STIG.ckl` |
+| STIG | Version | Target System | Assessment Method | Checklist File |
+|------|---------|---------------|------------------|----------------|
+| Microsoft Windows Server 2022 STIG | 2.3.10 | LAB-DC01 + LAB-WORKSTATION01 | SCAP SCC + STIG Viewer manual review | `Compliance-Reports/After-MFA/*-Checklist_MS_Windows_Server_2022_STIG-2.3.10.ckl` |
+| **Microsoft Windows 11 STIG** | **2.3.9** | **WO02** | **SCAP SCC + STIG Viewer manual review** | **`Compliance-Reports/Laptop/After-SmartCard/2026-06-02_104513/Results/SCAP/Checklists/*.ckl`** |
+| **IIS 10.0 Server STIG** | **3.2.9** | **LAB-DC01 (CRL/AIA endpoint)** | **SCAP SCC** | **`Compliance-Reports/IIS-STIG/2026-06-24_123720/.../Checklist_IIS_10-0_Server_STIG-3.2.9.ckl`** |
+| **IIS 10.0 Site STIG** | **2.10.10** | **LAB-DC01 (CRL/AIA site)** | **SCAP SCC** | **`Compliance-Reports/IIS-STIG/2026-06-24_124708/.../Checklist_IIS_10-0_Site_STIG-2.10.10.ckl`** |
+| Active Directory Domain Services STIG | V3R2 (or current) | LAB-DC01 | STIG Viewer manual review (queued) | Pending Q3 2026 |
+| PKI / Certificate Services STIG | V2R1 (or current) | LAB-DC01 | STIG Viewer manual review (queued) | Pending Q3 2026 |
 
 ### 3.3 Vulnerability Scanner
 
@@ -105,24 +110,28 @@ and `Architecture/STIG-Hardening-Guide.md`.
 
 Tool: SCAP Compliance Checker (SCC) 5.10.2 · Benchmark: MS_Windows_Server_2022_STIG-2.3.10
 
-| System | STIG | Before Score | After Score | Delta |
-|--------|------|-------------|------------|-------|
-| LAB-DC01 | Windows Server 2022 | 44.95% | 42.66% | -2.29% |
-| LAB-WORKSTATION01 | Windows Server 2022 | 42.20% | 42.20% | 0.00% |
-| IIS 10.0 | — | Pending | Pending | — |
+| System | STIG | Before-MFA | After-MFA | After-Ansible (v1.4) | Delta |
+|--------|------|-----------|-----------|----------------------|-------|
+| LAB-DC01 | Windows Server 2022 2.3.10 | 44.95% | 42.66% | **86.70%** | **+41.75 pts** (vs baseline) |
+| LAB-WORKSTATION01 | Windows Server 2022 2.3.10 | 42.20% | 42.20% | — (not in v1.4 scope) | 0.00% |
+| **WO02** | **Windows 11 STIG 2.3.9** | **—** (no baseline) | **37.00%** (After-SmartCard) | — (not in v1.4 scope) | n/a |
+| LAB-DC01 (IIS Server STIG) | IIS 10.0 Server 3.2.9 | — | **53.85%** | — | n/a |
+| LAB-DC01 (IIS Site STIG) | IIS 10.0 Site 2.10.10 | — | **54.55%** | — | n/a |
 
-> Note: DC01 score decreased slightly after hardening. The smart card GPO settings
-> caused some previously passing STIG items to fail (settings that conflict with
-> scforceoption requirements). This is expected and documented. The authentication
-> controls are satisfied; the score delta reflects STIG items unrelated to authentication.
+> **Why DC01 dipped slightly After-MFA (42.66% < 44.95%):** the smart card GPO settings caused some previously passing STIG items to fail (settings that conflict with `scforceoption` requirements). Expected and documented; the authentication controls are satisfied. The After-Ansible **86.7%** result represents the v1.4 full STIG hardening pass via `Lab-Kit/08-Ansible-STIG/` — see `Compliance-Reports/After-Ansible/` for scan archives.
+>
+> **WO02 baseline note:** WO02 was scanned once after domain join + smart-card GPO application. No pre-enrollment baseline exists because the laptop was scanned only after the full configuration was applied. The 37.00% score against the Windows 11 STIG (MAC-1 Classified profile, 258 rules) is consistent with a Win11 endpoint that has received only the smart card GPO — no broader STIG-aligned hardening yet.
 
 ### 5.2 Findings by Category (Post-Hardening, After-MFA)
 
-| System | STIG | CAT I Open | CAT II Open | CAT III Open | Pass |
-|--------|------|-----------|------------|-------------|------|
-| LAB-DC01 | Windows Server 2022 | 9 | 110 | 6 | 93 |
-| LAB-WORKSTATION01 | Windows Server 2022 | 9 | 111 | 6 | 92 |
-| IIS 10.0 | — | Pending | Pending | Pending | — |
+| System | STIG | CAT I Open | CAT II Open | CAT III Open | Pass | Stage |
+|--------|------|-----------|------------|-------------|------|-------|
+| LAB-DC01 | Windows Server 2022 | 9 | 110 | 6 | 93 | After-MFA (2026-05-28) |
+| LAB-DC01 | Windows Server 2022 | **1** | **27** | **1** | **189** | **After-Ansible (v1.4, 2026-06-30)** |
+| LAB-WORKSTATION01 | Windows Server 2022 | 9 | 111 | 6 | 92 | After-MFA (2026-05-28) |
+| **WO02** | **Windows 11 STIG 2.3.9** | **13** | **122** | **8** | — | **After-SmartCard (2026-06-02)** |
+| LAB-DC01 (IIS Server) | IIS 10.0 Server STIG 3.2.9 | 2 | 8 | 0 | — | 2026-06-24 |
+| LAB-DC01 (IIS Site) | IIS 10.0 Site STIG 2.10.10 | 0 | 15 | 2 | — | 2026-06-24 |
 
 ---
 
@@ -166,7 +175,7 @@ Summary of SP 800-53 control testing results from the assessment activities.
 | Control | Title | Assessment Result | Method | Notes |
 |---------|-------|------------------|--------|-------|
 | IA-2 | Identification and Authentication | Satisfied | SCAP SCC + Manual | Smart card enforced via scforceoption=1 GPO; domain will not issue Kerberos ticket without valid cert |
-| IA-2(11) | Workstation Hardware Token Logon | Satisfied | SCAP SCC + GPO review | scforceoption=1 confirmed on Workstation01; smart card logon tested and confirmed |
+| IA-2(11) | Workstation Hardware Token Logon | Satisfied | SCAP SCC + GPO review + physical-endpoint test | `scforceoption=1` confirmed on the **WO02 physical Windows 11 laptop**; smart-card-required GPO scoped to the Workstations OU; smart card logon tested end-to-end with YubiKey 5 NFC; 2-second lock-on-removal confirmed (`ScRemoveOption=1`). Smart-card-specific STIG rules `WN22-SO-000120` (Interactive logon: Require smart card) and `WN22-CC-000080` (Smart card removal behavior) PASSED on all scanned systems |
 | IA-5 | Authenticator Management | Satisfied | Manual | Two-person enrollment ceremony (RA + Issuer phases); cert lifecycle managed via AD CS |
 | IA-5(2) | PKI-Based Authentication | Satisfied | Manual — OCSP test | OCSP responder operational; AIA extension on all issued certs; CRL validated |
 | AC-5 | Separation of Duties | Satisfied | Manual / Procedural | New-TokenEnrollment.ps1 enforces RA/Issuer split; same account blocked from both phases |
@@ -184,18 +193,21 @@ Summary of SP 800-53 control testing results from the assessment activities.
 
 ### 9.1 Overall Risk Rating
 
-| Category | Finding Count (DC01 / WS01) | Risk Contribution |
-|---------|--------------|------------------|
-| CAT I (Critical) — Unmitigated | 9 / 9 | HIGH |
-| CAT II (High) — Unmitigated | 110 / 111 | MODERATE |
+| Category | Finding Count (DC01 After-Ansible / WS01 / WO02) | Risk Contribution |
+|---------|---------|------------------|
+| CAT I (Critical) — Unmitigated | **1** / 9 / 13 | HIGH on WS01 + WO02 (Win11) ; **LOW on DC01 post-v1.4 Ansible pass** |
+| CAT II (High) — Unmitigated | **27** / 111 / 122 | MODERATE — LAB-DC01 bulk-remediated in v1.4 (down from 110); WS01 + WO02 pending |
 | CAT III (Medium/Low) — Unmitigated | 6 / 6 | LOW |
 
 **Overall Residual Risk:** Moderate
 
 Residual risk is acceptable because the authentication controls (IA-2, AC-5, AC-11, AC-17,
-SC-17) are fully satisfied. The open CAT I/II findings are STIG hardening items unrelated to
-the identity authentication mechanism — they represent a full STIG hardening pass, which is
-scoped as the next phase (`Lab-Kit/Ansible/windows-stig-hardening.yml`).
+SC-17) are fully satisfied. The remaining open findings are STIG hardening items unrelated to
+the identity authentication mechanism — the v1.4 Ansible STIG remediation pass
+(`Lab-Kit/08-Ansible-STIG/`) closed the bulk of CAT II / CAT III findings on LAB-DC01 (86.7%
+post-Ansible), with the residual gap being controls left off by design (`win2022stig_disruption_high:
+false`, `win2022stig_complexity_high: false`) plus manual AUDIT controls and a few Server-2025
+vs. 2022-benchmark mismatches.
 
 ### 9.2 Key Risk Factors
 
@@ -218,7 +230,7 @@ scoped as the next phase (`Lab-Kit/Ansible/windows-stig-hardening.yml`).
 
 | Priority | Recommendation | Target Completion | Owner |
 |---------|---------------|------------------|-------|
-| 1 | Run full STIG hardening pass using `Lab-Kit/Ansible/windows-stig-hardening.yml` to address CAT I/II open findings | Q3 2026 | Glenn Byron |
+| 1 | ~~Run full STIG hardening pass~~ **Completed 2026-06-30 (v1.4)**: ansible-lockdown Windows-2022-STIG role via `Lab-Kit/08-Ansible-STIG/` applied to LAB-DC01 — 44.95% → 86.7% across CAT I/II/III tiers | 2026-06-30 ✅ | Glenn Byron |
 | 2 | Run Nessus Essentials credentialed scan on DC01 and WS01; document Critical/High findings | Q3 2026 | Glenn Byron |
 | 3 | Complete IIS 10.0 STIG assessment for CRL/AIA distribution point | Q3 2026 | Glenn Byron |
 | 4 | Migrate CA private keys to FIPS 140-3 Level 3 HSM | Federal upgrade path | TBD |

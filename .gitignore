@@ -116,3 +116,9 @@ Run-HistoryScrub.ps1
 # never published - keeps the scrub workflow private)
 security/scripts/Scan-LocalRepo.ps1
 security/scripts/SCAN-README.md
+
+# Cert-scan CSV output from Check-SelfSignedCerts.ps1 — may contain internal
+# subjects/thumbprints. The script defaults output to $env:TEMP; this rule is
+# a belt-and-suspenders catch if -OutputPath is pointed at the repo.
+security/scripts/cert-scan-*.csv
+**/cert-scan-*.csv

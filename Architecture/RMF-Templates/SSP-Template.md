@@ -251,8 +251,11 @@ For a discussion of framework choice and when each applies, see `Architecture/Fr
 | Windows Server 2022 STIG — WS01 (Before MFA) | SCAP SCC 5.10.2 | 2026-05-27 | 42.20% compliance · CAT I fail: 9 · CAT II fail: 111 |
 | Windows Server 2022 STIG — DC01 (After MFA) | SCAP SCC 5.10.2 | 2026-05-28 | 42.66% compliance · CAT I fail: 9 · CAT II fail: 110 |
 | Windows Server 2022 STIG — WS01 (After MFA) | SCAP SCC 5.10.2 | 2026-05-28 | 42.20% compliance · CAT I fail: 9 · CAT II fail: 111 |
-| Nessus Essentials (Before hardening) | Nessus | Pending | Pending |
-| Nessus Essentials (After hardening) | Nessus | Pending | Pending |
+| **Windows 11 STIG — WO02 (After-SmartCard)** | **SCAP SCC 5.10.2** | **2026-06-02** | **37.00% compliance · CAT I fail: 13 · CAT II fail: 122 · CAT III fail: 8** |
+| **IIS 10.0 Server STIG — DC01 (CRL/AIA endpoint)** | **SCAP SCC 5.10.2** | **2026-06-24** | **53.85% compliance · CAT I fail: 2 · CAT II fail: 8** |
+| **IIS 10.0 Site STIG — DC01 (CRL/AIA site)** | **SCAP SCC 5.10.2** | **2026-06-24** | **54.55% compliance · CAT I fail: 0 · CAT II fail: 15 · CAT III fail: 2** |
+| **Windows Server 2022 STIG — DC01 (After-Ansible, v1.4)** | **SCAP SCC 5.10.2** | **2026-06-30** | **86.70% compliance · CAT I fail: 1 · CAT II fail: 27 · CAT III fail: 1** |
+| Nessus Essentials (point-in-time scan from WS01) | Nessus Essentials | 2026-06-25 | 3 of 4 lab hosts scanned · 81 vulns · 4 unique HIGH findings populated in POA&M Group 10 |
 
 Detailed findings are in the Security Assessment Report (`SAR-Template.md`) and
 the Plan of Action & Milestones (`POAM-Template.md`).

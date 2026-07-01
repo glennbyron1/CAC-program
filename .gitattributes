@@ -1,6 +1,55 @@
+# =============================================================================
+# Line-ending normalization
+# =============================================================================
+# Default for text files: let git auto-detect text vs binary and store with LF.
+# Windows checkouts get CRLF on disk because core.autocrlf=true is the platform
+# default; macOS/Linux checkouts get LF. Stored form in git is always LF.
+* text=auto
 
-*.html linguist-documentation=true
-*.md linguist-documentation=true
-Compliance-Reports/* linguist-documentation=true
-Screenshots/* linguist-documentation=true
+# PowerShell scripts: keep CRLF on Windows checkouts (the platform convention)
+# and make that explicit so editors that strip CRLF don't generate spurious
+# diffs. Stored form in git is normalized to LF; checkouts get CRLF.
+*.ps1   text eol=crlf working-tree-encoding=UTF-8
+*.psd1  text eol=crlf
+*.psm1  text eol=crlf
+*.cmd   text eol=crlf
+*.bat   text eol=crlf
 
+# Shell scripts: LF only (Unix convention) on both stored and checked-out forms.
+*.sh    text eol=lf
+*.bash  text eol=lf
+
+# Generic text formats — let git auto-detect; LF in storage.
+*.md    text
+*.txt   text
+*.yml   text
+*.yaml  text
+*.json  text
+*.xml   text
+*.html  text
+*.css   text
+*.js    text
+
+# =============================================================================
+# Binary formats — never touch line endings
+# =============================================================================
+*.docx  binary
+*.xlsx  binary
+*.pptx  binary
+*.pdf   binary
+*.zip   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.svg   binary
+*.ico   binary
+*.vhdx  binary
+*.iso   binary
+
+# =============================================================================
+# GitHub linguist hints (so the language breakdown on the repo page is sane)
+# =============================================================================
+*.html                       linguist-documentation=true
+*.md                         linguist-documentation=true
+Compliance-Reports/*         linguist-documentation=true
+Screenshots/*                linguist-documentation=true

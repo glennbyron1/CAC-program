@@ -5,6 +5,18 @@ Author: Glenn Byron
 Framework: DISA RMF | NIST SP 800-53 CA-2, CA-7 | DISA STIG
 
 This runbook covers the end-to-end process for running DISA STIG compliance scans against lab VMs using free, publicly available DoD tools — before and after applying the hardening scripts. The goal is a documented before/after evidence trail for the RMF Assess phase.
+
+> **v1.4 milestone (2026-06-30):** the manual SCAP scan workflow below produces the
+> baseline evidence. The automated remediation pipeline that drives scores up is
+> in [`Lab-Kit/08-Ansible-STIG/`](../Lab-Kit/08-Ansible-STIG/) — the
+> ansible-lockdown Windows-2022-STIG role driven from a WSL2 control node on
+> the Hyper-V host. Applied to LAB-DC01 in three severity-tagged phases
+> (CAT I → II → III) with snapshot + `win_ping` verification between each.
+> Result: **44.95% baseline → 86.7% post-remediation.** Scan archives at
+> [`Compliance-Reports/After-Ansible/`](../Compliance-Reports/After-Ansible/).
+> See `Lab-Kit/08-Ansible-STIG/GUIDE.md` for the step-by-step runbook and
+> `Lab-Kit/08-Ansible-STIG/CHANGELOG.md` for the four Server-2025 + ansible-core
+> 2.21 compatibility patches that were required.
 ________________________________________
 🛰️ Step 1: Procurement of Authoritative DoD Tools
 Always pull STIG benchmarks and scanning tools directly from DISA. This keeps the files authoritative and ensures the chain of custody is clean.

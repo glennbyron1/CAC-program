@@ -1,5 +1,21 @@
 ---
 # =============================================================================
+# SUPERSEDED 2026-06-30 (v1.4) — kept for reference only.
+#
+# This hand-rolled playbook was the v1.0 scaffold for STIG remediation. The
+# v1.4 implementation uses the community ansible-lockdown/Windows-2022-STIG
+# role driven by ../remediate-stig.yml. The role maps to the same Server 2022
+# STIG benchmark this scaffold targeted and ships ~250+ controls vs. the ~8
+# sections here.
+#
+# Preserved as portfolio evidence of the design before the role was found
+# ("designed → built → superseded with a better tool" honesty pattern).
+#
+# DO NOT run this file. Use ../remediate-stig.yml instead.
+# =============================================================================
+#
+# Original playbook follows:
+# -----------------------------------------------------------------------------
 # windows-stig-hardening.yml — Windows Server 2022 STIG Automation
 # Author: Glenn Byron
 # Frameworks: DISA STIG WN22-* | NIST SP 800-53 Rev. 5 | DoD RMF

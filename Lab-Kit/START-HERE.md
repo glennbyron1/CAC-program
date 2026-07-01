@@ -50,7 +50,7 @@ Before running anything:
 4. **Unblock all scripts** — files downloaded from the internet are flagged by Windows as untrusted and
    will be blocked from running. Run this once on the Hyper-V host before starting:
    ```powershell
-   Get-ChildItem -Path "C:\CAC-Lab-Kit-20260526" -Recurse -Filter *.ps1 | Unblock-File
+   Get-ChildItem -Path "C:\path\to\CAC-program" -Recurse -Filter *.ps1 | Unblock-File
    ```
    Only needed on the Hyper-V host. Scripts transferred into VMs via PowerShell
    Direct do not carry the block flag, and `Set-VMPostConfig.ps1` sets
@@ -63,7 +63,7 @@ Before running anything:
 ### PHASE 1 — Hyper-V Host: Create the VMs
 
 ```powershell
-cd C:\CAC-Lab-Kit-20260526
+cd C:\path\to\CAC-program
 cd .\Lab-Kit\01-HyperV-Host\
 
 # Creates all three lab VMs with VHDX disks and ISO attached.
@@ -82,7 +82,7 @@ cd .\Lab-Kit\01-HyperV-Host\
 
 ```powershell
 # Downloads all tools to C:\FedCompliance-Tools\
-cd C:\CAC-Lab-Kit-20260526\Tools-Kit\
+cd C:\path\to\CAC-program\Tools-Kit\
 .\Get-LabTools.ps1
 
 # Or run individually:
@@ -125,7 +125,7 @@ isn't already open and focused, you'll miss it.
 $cred = Get-Credential   # Administrator / <LAB-ADMIN-PASSWORD>
 $s = New-PSSession -VMName "Lab-DC01" -Credential $cred
 Invoke-Command -Session $s -ScriptBlock { New-Item -ItemType Directory -Path "C:\Scripts" -Force | Out-Null }
-Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
+Copy-Item -Path "C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
           -ToSession $s -Destination "C:\Scripts\"
 Remove-PSSession $s
 # Then inside Lab-DC01:
@@ -137,7 +137,7 @@ C:\Scripts\Set-VMPostConfig.ps1 -VMRole DomainController -IPAddress 10.10.10.10
 $cred = Get-Credential   # Administrator / <LAB-ADMIN-PASSWORD>
 $s = New-PSSession -VMName "Lab-OfflineRootCA" -Credential $cred
 Invoke-Command -Session $s -ScriptBlock { New-Item -ItemType Directory -Path "C:\Scripts" -Force | Out-Null }
-Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
+Copy-Item -Path "C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
           -ToSession $s -Destination "C:\Scripts\"
 Remove-PSSession $s
 # Then inside Lab-OfflineRootCA:
@@ -149,7 +149,7 @@ C:\Scripts\Set-VMPostConfig.ps1 -VMRole OfflineRootCA
 $cred = Get-Credential   # Administrator / <LAB-ADMIN-PASSWORD>
 $s = New-PSSession -VMName "Lab-Workstation01" -Credential $cred
 Invoke-Command -Session $s -ScriptBlock { New-Item -ItemType Directory -Path "C:\Scripts" -Force | Out-Null }
-Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
+Copy-Item -Path "C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
           -ToSession $s -Destination "C:\Scripts\"
 Remove-PSSession $s
 # Then inside Lab-Workstation01:

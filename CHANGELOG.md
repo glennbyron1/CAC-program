@@ -8,6 +8,51 @@ This log covers every artifact produced across the life of the project — scrip
 
 ---
 
+## [Phase 8 — Session 17] — 2026-06-30 (v1.4 ship)
+
+### Ansible STIG Remediation Applied to LAB-DC01 — 44.95% → 86.7% SCAP
+
+#### Added
+
+**`Lab-Kit/08-Ansible-STIG/`** (new module — 13 files + `utilities/`)
+Production-grade STIG remediation driven by the community `ansible-lockdown/Windows-2022-STIG` role from a WSL2 control node on the Hyper-V host. Control-node bootstrap: `Setup-AnsibleControlNode.ps1` (WSL2 + Ubuntu install) and `bootstrap-wsl.sh` (Python venv + Ansible + pywinrm + Galaxy role). Target prep: `Enable-WinRM-ForAnsible.ps1` (HTTPS WinRM listener on 5986, NTLM auth, firewall scoped to lab subnets). Plays: `audit-stig.yml` (--check) and `remediate-stig.yml` (severity-tagged enforcement). Tuning: `group_vars/dc/main.yml` documents the safety guards (`disruption_high: false`, `complexity_high: false`) and four Server-2025-vs-2022 N/A control disables. NIST controls: CA-2, CA-7, CM-3, CM-6, RA-5. Author: Glenn Byron.
+
+**`Compliance-Reports/After-Ansible/`** (new scan archive folder)
+Two SCC scan archives capturing the score climb: `LAB-DC01_SCAP_CAT-II_84.4pct.zip` (interim after CAT II remediation) and `LAB-DC01_SCAP_CAT-III_86.7pct.zip` (final after CAT III). Each archive is a full SCC session folder with All-Settings + Non-Compliance HTML reports, .ckl checklist, and XCCDF/OVAL/OCIL XML. Per-CAT closures verified: CAT I Fail 9 → 1, CAT II Fail 105 → 27, CAT III Fail 6 → 1. Total 91 of 120 baseline CAT-fails closed.
+
+**`Screenshots/08a-stig-dc01-CAT1-45.41pct.png`**, **`08b-stig-dc01-CAT2-84.4pct.png`**, **`08c-stig-dc01-CAT3-86.7pct.png`**
+Visual evidence of the score climb captured directly from the SCC Summary Viewer at each remediation checkpoint. Match the Compliance-Reports/After-Ansible/ scan archives exactly.
+
+#### Phase 8 Zero Trust extension — 13 scaffolds → full implementations
+
+Every previously-scaffolded ZT script in `Lab-Kit/07-ZeroTrust/` shipped as a full, idempotent, parse-clean PowerShell module. Phase 8 ZT goes from "8 full + 13 scaffolds" (v1.0) to **21 full scripts**. House-style discipline preserved across all 13: `#Requires -Version 5.1`, comment-based help, `[CmdletBinding(SupportsShouldProcess)]`, `Set-StrictMode`, `Write-Step/OK/Warn/Skip/Fatal` helpers, banner + summary blocks, `-DryRun`/`-WhatIf` preview paths. All 13 validated via `[System.Management.Automation.Language.Parser]`. Coverage spans the full ZT pillar set; per-script summary at `Lab-Kit/07-ZeroTrust/CHANGELOG-Phase8.md`. NIST controls: AC-2, AC-3, AC-5, AC-6, AC-16, CM-7, IA-3, SC-7, SI-4.
+
+#### Defensive cert-audit tool — `security/scripts/Check-SelfSignedCerts.ps1`
+
+Scans LocalMachine + CurrentUser cert stores plus optional remote TLS endpoints, with **SHA-1 thumbprint protection for the offline Root CA** so the known-good self-signed root is excluded from the unprotected count. Tags `PROTECTED (Offline CA)` / `SELF-SIGNED` / `CA-ISSUED` / `UNREACHABLE` / `NO CERT` / `ERROR`. CSV + pipeline output. Hardened pre-ship: `-Host` → `-Hostname` (PowerShell `$Host` reserved-name fix), proper `BeginConnect`/`EndConnect` pairing + `try/finally` socket disposal, `#Requires -Version 5.1`, `[CmdletBinding()]`, expanded comment-based help, `-OutputPath` defaulting to `$env:TEMP`. NIST controls: IA-5(2), SC-12, SC-17.
+
+#### Topology change — `Architecture/Lab-Topology.md` (ARCH-ICAM-014)
+
+LAB-DC01 gained a second NIC at `10.10.10.10` (Lab Internal) for the WSL Ansible reach path. Host-IP conflict (`vEthernet (External)` was holding `10.10.10.10`) resolved via `Remove-NetIPAddress`. The lab segment remains a flat L2 broadcast domain — the "honest caveat on partitioning" framing is preserved. NIST controls: SC-7, AC-4, CM-7.
+
+#### POA&M Document Control v1.4
+
+Eight CAT I findings verified closed by the post-Ansible SCAP scan, each with direct evidence links: POA-001 (SV-254352 AutoPlay non-volume), POA-002 (SV-254353 AutoRun behavior), POA-003 (SV-254354 AutoPlay all drives), POA-007 (SV-254374 Windows Installer elevated), POA-009 (SV-254378 WinRM client Basic), POA-010 (SV-254381 WinRM service Basic), POA-013 (SV-254467 anonymous shares), POA-015 (SV-254475 LM auth). POA-017 (AD data files permissions, manual review) correctly remains open as expected. Dashboard updated to ~91 closed / ~309 open.
+
+#### Portfolio refresh + new plain-English explainer
+
+All 5 active Portfolio docx files refreshed with a v1.4 milestone callout on page 1: `CAC-Program-Showcase-GlennByron.docx`, `CAC_Program_Manager_Brief.docx`, `CAC_Lab_Build_Guide.docx`, `Federal_Upgrade_Path.docx`, `Zero_Trust_Architecture_Reference.docx`. New `Portfolio/CAC-Program-Plain-English-Overview.docx` — 2-page non-technical overview for hiring managers + recruiters. New `Project-Narrative.md` at the repo root — interview prep + future-self orientation.
+
+#### Honest framing — what was left off by design
+
+Remaining 29 CAT-fails on LAB-DC01 after v1.4 are exactly what the role's `win2022stig_disruption_high: false` + `win2022stig_complexity_high: false` safety guards exclude, plus 55 manual AUDIT items deferred to a future STIG Viewer pass, plus four Server-2025-vs-2022-benchmark mismatches disabled in `group_vars/dc/main.yml` (`wn22_00_000090` TPM/wmic, `wn22_00_000340` PNRP, `wn22_00_000420`/`_000430` FTP). This is the federal disposition pattern: explain the gap, don't fake the score.
+
+#### Retired
+
+**`Lab-Kit/Ansible/`** — legacy folder removed; contents migrated to `Lab-Kit/08-Ansible-STIG/utilities/`. The hand-rolled `windows-stig-hardening.yml` from v1.0 is preserved as `utilities/windows-stig-hardening_SUPERSEDED.yml` with a "designed → built → superseded with a better tool" pointer to the new `remediate-stig.yml`.
+
+---
+
 ## [Lab — Session 14] — 2026-06-04
 
 ### SCAP Workflow Automation

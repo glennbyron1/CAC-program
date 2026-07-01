@@ -88,7 +88,7 @@ be delivered on a virtual DVD drive, and the filename must be `autounattend.xml`
 
 ```powershell
 $VMName      = "Lab-DC01"        # change per VM
-$UnattendSrc = "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\Unattend-Server.xml"
+$UnattendSrc = "C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\Unattend-Server.xml"
 $AnswerDir   = "C:\Temp\AnswerISO-Source"
 $AnswerISO   = "C:\HyperV-Lab\Answer.iso"
 
@@ -228,7 +228,7 @@ $s = New-PSSession -VMName "Lab-DC01" -Credential $cred
 # if not wrapped in Invoke-Command, and Copy-Item will fail with "path not found"
 Invoke-Command -Session $s -ScriptBlock { New-Item -ItemType Directory -Path "C:\Scripts" -Force | Out-Null }
 
-Copy-Item -Path "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
+Copy-Item -Path "C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\Set-VMPostConfig.ps1" `
           -ToSession $s -Destination "C:\Scripts\"
 Remove-PSSession $s
 ```
@@ -258,7 +258,7 @@ Before running any CAC scripts, take a checkpoint of each VM at its clean post-c
 
 ```powershell
 # Run from the Hyper-V host
-cd C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\
+cd C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\
 .\New-LabSnapshot.ps1 -Mode Create -Label "00-BaseOS"
 ```
 

@@ -26,6 +26,9 @@
 | `06-pki-health-dashboard-parameterized.jpg` | DC01, 2026-06-04 13:59:25 | `Monitor-PKIHealth.ps1` parameterized run — real `[OK]` rows for CRL Endpoint and Issuing CA cert; ALL CHECKS PASSED | Demo-Walkthrough Step 6 |
 | `07-scap-before-after-side-by-side.png` | Hyper-V host, 2026-06-03 | DC01 SCC All-Settings reports side by side: Before-MFA 44.95% (98 Pass / 120 Fail) vs After-MFA 42.66% (93 Pass / 125 Fail). Same target, same benchmark, only delta is the smart card enforcement | Demo-Walkthrough Step 7 |
 | `08-scap-win11-stig-result.png` | SCC Summary Viewer, 2026-06-02 | WO02 scan: Microsoft_Windows_11_STIG, Score 37, 0 errors, 1 warning, links to All Settings / Non-Compliance / XCCDF / OVAL / OCIL / CKL | Demo-Walkthrough Step 7 supplement |
+| `08a-stig-dc01-CAT1-45.41pct.png` | SCC Summary Viewer, 2026-06-30 | LAB-DC01 post-Ansible CAT I scan: Server 2022 STIG benchmark, **45.41%** (Pass 99 / Fail 119 / 273 total, status RED). Up from 44.95% baseline. CAT I remediation alone moves the needle modestly (most remaining failures are CAT II). | v1.4 Ansible STIG ship — proof of the climb (1/3) |
+| `08b-stig-dc01-CAT2-84.4pct.png` | SCC Summary Viewer, 2026-06-30 | LAB-DC01 post-Ansible CAT II scan: **84.4%** (Pass 184 / Fail 34 / 273 total, status YELLOW). The big jump — 96 CAT II controls remediated in this tier. | v1.4 Ansible STIG ship — proof of the climb (2/3) |
+| `08c-stig-dc01-CAT3-86.7pct.png` | SCC Summary Viewer, 2026-06-30 | LAB-DC01 post-Ansible CAT III scan: **86.7%** (Pass 189 / Fail 29 / 273 total, status YELLOW). Final tier; closes 9 more CAT III controls. **Headline number: 44.95% → 86.7% = +41.75 points** via the ansible-lockdown Windows-2022-STIG role with disruption/complex safety guards engaged. | v1.4 Ansible STIG ship — proof of the climb (3/3) |
 
 ### Lessons-Learned / discovery evidence
 

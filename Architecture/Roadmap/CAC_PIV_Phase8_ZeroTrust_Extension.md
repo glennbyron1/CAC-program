@@ -1,5 +1,18 @@
-# Phase 8 — Zero Trust Extension ⬜
+# Phase 8 — Zero Trust Extension ✅
 ### Extends the CAC/PIV lab from strong authentication to end-to-end Zero Trust
+
+> **Status (v1.4, 2026-06-30): SHIPPED as 21 full PowerShell modules** in
+> [`Lab-Kit/07-ZeroTrust/`](../../Lab-Kit/07-ZeroTrust/). The original roadmap below was
+> design-complete (8 full + 13 scaffolds in v1.0); the v1.4 ship promoted all 13 scaffolds
+> to full implementations with house-style discipline (`#Requires`, comment-based help,
+> `[CmdletBinding(SupportsShouldProcess)]`, `Set-StrictMode`, banner+summary blocks,
+> `-DryRun`/`-WhatIf` paths). All 21 validated parse-clean via the PowerShell AST parser.
+> Per-script summary: [`Lab-Kit/07-ZeroTrust/CHANGELOG-Phase8.md`](../../Lab-Kit/07-ZeroTrust/CHANGELOG-Phase8.md).
+>
+> **Honest framing:** scripts are "designed → built" (parse-clean implementations targeting
+> Lab-DC01 / gateway / endpoints), not yet "built → run." Operational execution +
+> Before-ZT/After-ZT evidence is not on the roadmap. The hardened OS substrate the ZT
+> overlays assume was materialized in v1.4 via [`Lab-Kit/08-Ansible-STIG/`](../../Lab-Kit/08-Ansible-STIG/) — LAB-DC01 SCAP 44.95% → 86.7%.
 
 *Built in the same scripted/automated style as Phases 1–7. Each script follows your existing Verb-Noun convention and your pattern of guided, idempotent, logged execution. Sub-phases map to gaps A–G from the Zero Trust gap analysis, and to the NIST SP 800-53 control families you're already tracking — so new controls drop straight into the SSP. This is design-complete and ready to script; like Phase 4, it expects running VMs to execute against.*
 

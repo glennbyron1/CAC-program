@@ -33,13 +33,13 @@ contractor must have in place to pass a formal security assessment.
 ### What Was Built
 
 ```
-Hyper-V Host (Windows 10/11 Pro)
+Hyper-V Host (Windows 10/11 Pro)        (10.10.10.1, Lab Internal)
   │
-  ├── Lab-OfflineRootCA   (air-gapped, no network)
+  ├── Lab-OfflineRootCA   (air-gapped, no network adapter)
   │     └── Issues the Root CA certificate
   │         Keeps private key offline — highest security
   │
-  ├── Lab-DC01            (10.10.10.10)
+  ├── Lab-DC01            (10.10.20.10 External + 10.10.10.10 Internal as of v1.4)
   │     ├── Active Directory Domain: lab.local
   │     ├── Enterprise Issuing CA (signs end-user certs)
   │     ├── Certificate Templates (SmartCardLogon, AdminSmartCardLogon)
@@ -50,8 +50,21 @@ Hyper-V Host (Windows 10/11 Pro)
   └── Lab-Workstation01   (10.10.10.20)
         ├── Joined to lab.local
         ├── Smart card enforcement via GPO
-        └── Test workstation for CAC logon
+        └── Test workstation for CAC logon (Server 2022 VM)
+
+WO02 — physical Dell laptop  (10.10.20.30, External)
+  ├── Windows 11 Pro, domain-joined to lab.local
+  ├── Hardware-backed smart-card enrollment (YubiKey 5 NFC)
+  ├── Smart-card-required GPO enforced (no password logon)
+  ├── 2-second lock-on-removal (ScRemoveOption=1)
+  ├── Azure P2S VPN client with EAP-TLS cert auth (same YubiKey)
+  └── SCAP scan target — Windows 11 STIG benchmark
 ```
+
+WO02 is the **physical endpoint** in the lab. The two server VMs (DC01, WS01)
+live on the Hyper-V host; WO02 is a real laptop on the lab switch via the
+External vSwitch. It's where the user-facing demos happen — lock screen,
+PIN entry, lock-on-removal, Azure VPN connect.
 
 ### Why the Two-CA Hierarchy?
 
@@ -781,7 +794,7 @@ Get-Service W32Time            # Service name is W32Time, not w32tm
 
 | Item | Path |
 |------|------|
-| Lab kit (host) | `C:\CAC-Lab-Kit-20260526\` |
+| Lab kit (host) | `C:\path\to\CAC-program\` |
 | Downloaded tools (host) | `C:\FedCompliance-Tools\` |
 | Scripts on DC | `C:\Scripts\` |
 | SCC install (DC) | `C:\Program Files\SCAP Compliance Checker 5.10.2\` |

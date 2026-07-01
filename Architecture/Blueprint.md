@@ -14,29 +14,35 @@ The baseline architecture satisfies commercial high-security requirements using 
 ________________________________________
 2. Public Key Infrastructure (PKI) Topology
 To ensure security boundaries are maintained, a two-tier Public Key Infrastructure topology is mandated. Software-isolated environments are utilized for testing, with hardware integration planned for the federal target state.
-                  +--------------------------------+
 
-                  |       Offline Root CA          |
-                  |   (Standalone / Non-Domain)   |
-                  +---------------+----------------+
-
+```
+                +-----------------------------------+
+                |        Offline Root CA            |
+                |   (Standalone / Non-Domain)       |
+                |   RSA 4096 · 10-year validity     |
+                |   No network adapter              |
+                +-----------------+-----------------+
                                   |
                    Sneakernet Root Certificate
+                   (Issuing CA cert renewal only)
                                   |
-                  +---------------v----------------+
-
-                  |     Enterprise Sub-CA          |
-                  |     (Domain-Joined / Issuing)  |
-                  +---------------+----------------+
-
+                                  v
+                +-----------------------------------+
+                |       Enterprise Sub-CA           |
+                |   (Domain-Joined / Issuing)       |
+                |   RSA 2048-4096 · Online AD CS    |
+                |   HTTP CRL + OCSP + AIA           |
+                +-----------------+-----------------+
                                   |
-         +------------------------+------------------------+
-         |                                                 |
-+--------v--------+                               +--------v--------+
-
-| Workstation Auth|                               |  VPN / Network  |
-| Certificates    |                               |  Certificates   |
-+-----------------+                               +-----------------+
+        +-------------------------+-------------------------+
+        |                                                   |
+        v                                                   v
++-------------------+                            +----------------------+
+|  Workstation Auth |                            |   VPN / Network      |
+|  Certificates     |                            |   Certificates       |
+|  (SmartCardLogon) |                            |   (EAP-TLS / IKEv2)  |
++-------------------+                            +----------------------+
+```
 2.1 Tier 1: Standalone Offline Root CA
 •	Role: Root of Trust anchor.
 •	Operating Status: Permanently Offline. The host virtual machine is powered down and disconnected from virtual switches except during scheduled Issuing CA certificate renewals (every 5–10 years).

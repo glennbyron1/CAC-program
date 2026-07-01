@@ -38,11 +38,11 @@ Sources:
 
 | Risk Level | Total Findings (all hosts + IIS) | Remediated | Accepted Risk | Open |
 |-----------|---------------|------------|---------------|------|
-| CAT I (Critical) | 24 unique rules (OS: 22 across 3 hosts + IIS: 2 on DC01) | 0 | 2 pending (BitLocker WO02) + 1 pending (HTTPS-required IIS SV-218821 — RFC 5280 risk-accept) | 21 (after risk-accepts applied) |
-| CAT II (High) | 366 total (OS: 343 + IIS: 23 across Server + Site) | 0 | ~6 pending Risk Accept (SSL/HTTPS-related IIS findings — N/A on HTTP CRL endpoint per RFC 5280) | ~360 |
-| CAT III (Medium/Low) | 22 total (OS: 20 + IIS: 2) | 0 | 1 pending (HSTS — depends on HTTPS) | ~19 |
+| CAT I (Critical) | 24 unique rules (OS: 22 across 3 hosts + IIS: 2 on DC01) | **8 closed (v1.4 Ansible STIG, LAB-DC01)** | 2 pending (BitLocker WO02) + 1 pending (HTTPS-required IIS SV-218821 — RFC 5280 risk-accept) | 13 (after closures + risk-accepts) |
+| CAT II (High) | 366 total (OS: 343 + IIS: 23 across Server + Site) | **~78 closed (v1.4 Ansible STIG, LAB-DC01 only — CAT II Fail dropped 105 → 27 on this host)** | ~6 pending Risk Accept (SSL/HTTPS-related IIS findings — N/A on HTTP CRL endpoint per RFC 5280) | ~282 |
+| CAT III (Medium/Low) | 22 total (OS: 20 + IIS: 2) | **~5 closed (v1.4 Ansible STIG, LAB-DC01)** | 1 pending (HSTS — depends on HTTPS) | ~14 |
 | **NotChecked (SCAP Manual Questions)** | 29 IIS rules pending STIG Viewer manual answer | — | — | 29 |
-| **Total open** | **~408** | **0** | **~10 pending** | **~400** |
+| **Total open** | **~408** | **~91 closed (v1.4)** | **~10 pending** | **~309** |
 
 > **STIG reviews complete (2026-06-17 OS / 2026-06-24 IIS):** all CAT I rules across the OS STIGs (DC01 / WS01 / WO02) AND the IIS STIGs (Server + Site on LAB-DC01) are populated below with dispositions. Smart-card-related STIG rules **passed** — identity authentication controls IA-2 / IA-2(11) / AC-5 are satisfied. The **headline IIS finding (SV-218821 — HTTPS required)** is **Risk Accept** with RFC 5280 §4.2.1.13 rationale: HTTP-only CRL distribution is the standard federal pattern (DoD CRL endpoints also use HTTP) because TLS would create circular validation (TLS cert needs CRL which is served over TLS which needs CRL...).
 
@@ -63,7 +63,8 @@ One row per finding. Copy and add rows as needed. Findings come from three sourc
 
 | Disposition | Count | Notes |
 |---|---|---|
-| Open — Ansible remediation queued | 18 | Will close via `Lab-Kit/Ansible/windows-stig-hardening.yml` |
+| **Closed (v1.4) — verified by post-Ansible SCAP scan 2026-06-30** | **8** | ✅ POA-001, 002, 003, 007, 009, 010, 013, 015 — confirmed passing in `Compliance-Reports/After-Ansible/` CAT III scan |
+| Open — Win11/IIS STIG (Ansible remediation queued, not in Server 2022 scan scope) | 10 | Will close via `Lab-Kit/08-Ansible-STIG/` or successor IIS pass |
 | Open — manual review required | 1 | AD data files permissions (DC-specific) |
 | Open — risk-accept candidate | 2 | BitLocker disk encryption + BitLocker PIN (lab usability tradeoff) |
 | Open — operational no-op, remediate anyway | 4 | WinRM Basic auth (lab uses Kerberos PSRemoting; disabling Basic has no operational impact) |
@@ -77,9 +78,9 @@ Common to all platforms. Real findings; registry/GPO-deliverable; remediable via
 
 | ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
 |----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
-| POA-001 | SV-254352 | Windows Server 2022 Autoplay must be turned off for nonvolume devices | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | Q3 2026 | Glenn Byron | Open | Ansible remediation queued (`HKLM\...\NoAutoplayfornonVolume` = 1) |
-| POA-002 | SV-254353 | Windows Server 2022 default AutoRun behavior must be configured to prevent AutoRun commands | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | Q3 2026 | Glenn Byron | Open | Ansible remediation queued (`NoAutorun` = 1) |
-| POA-003 | SV-254354 | Windows Server 2022 AutoPlay must be disabled for all drives | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | Q3 2026 | Glenn Byron | Open | Ansible remediation queued (`NoDriveTypeAutoRun` = 0xFF) |
+| POA-001 | SV-254352 | Windows Server 2022 Autoplay must be turned off for nonvolume devices | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | 2026-06-30 ✅ | Glenn Byron | **Closed — v1.4** | ✅ Verified passing in post-Ansible SCAP scan 2026-06-30 (`Compliance-Reports/After-Ansible/`). Was: Ansible remediation queued (`HKLM\...\NoAutoplayfornonVolume` = 1) |
+| POA-002 | SV-254353 | Windows Server 2022 default AutoRun behavior must be configured to prevent AutoRun commands | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | 2026-06-30 ✅ | Glenn Byron | **Closed — v1.4** | ✅ Verified passing in post-Ansible SCAP scan 2026-06-30 (`Compliance-Reports/After-Ansible/`). Was: Ansible remediation queued (`NoAutorun` = 1) |
+| POA-003 | SV-254354 | Windows Server 2022 AutoPlay must be disabled for all drives | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | 2026-06-30 ✅ | Glenn Byron | **Closed — v1.4** | ✅ Verified passing in post-Ansible SCAP scan 2026-06-30 (`Compliance-Reports/After-Ansible/`). Was: Ansible remediation queued (`NoDriveTypeAutoRun` = 0xFF) |
 | POA-004 | SV-253386 | Windows 11 Autoplay must be turned off for non-volume devices | SCC | WO02 | 2026-06-02 | Q3 2026 | Glenn Byron | Open | Ansible remediation queued (Win11 STIG variant of POA-001) |
 | POA-005 | SV-253387 | Windows 11 default autorun behavior must be configured to prevent autorun commands | SCC | WO02 | 2026-06-02 | Q3 2026 | Glenn Byron | Open | Ansible remediation queued (Win11 STIG variant of POA-002) |
 | POA-006 | SV-253388 | Windows 11 Autoplay must be disabled for all drives | SCC | WO02 | 2026-06-02 | Q3 2026 | Glenn Byron | Open | Ansible remediation queued (Win11 STIG variant of POA-003) |
@@ -88,7 +89,7 @@ Common to all platforms. Real findings; registry/GPO-deliverable; remediable via
 
 | ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
 |----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
-| POA-007 | SV-254374 | Windows Server 2022 Windows Installer "Always install with elevated privileges" must be disabled | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | Q3 2026 | Glenn Byron | Open | Ansible remediation queued (`AlwaysInstallElevated` = 0). Privilege-escalation vector if enabled. |
+| POA-007 | SV-254374 | Windows Server 2022 Windows Installer "Always install with elevated privileges" must be disabled | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | 2026-06-30 ✅ | Glenn Byron | **Closed — v1.4** | ✅ Verified passing in post-Ansible SCAP scan 2026-06-30 (`Compliance-Reports/After-Ansible/`). Was: Ansible remediation queued (`AlwaysInstallElevated` = 0). Privilege-escalation vector if enabled. |
 | POA-008 | SV-253411 | Windows 11 "Always install with elevated privileges" must be disabled | SCC | WO02 | 2026-06-02 | Q3 2026 | Glenn Byron | Open | Ansible remediation queued (Win11 STIG variant of POA-007) |
 
 #### Group 3 — WinRM Basic Authentication (4 findings — operational no-op)
@@ -97,8 +98,8 @@ The lab uses **Kerberos** for PowerShell Remoting (proven during the v1.2 build 
 
 | ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
 |----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
-| POA-009 | SV-254378 | Windows Server 2022 WinRM client must not use Basic authentication | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | Q3 2026 | Glenn Byron | Open | Ansible remediation queued (`AllowBasic` = 0). No operational impact — lab uses Kerberos. |
-| POA-010 | SV-254381 | Windows Server 2022 WinRM service must not use Basic authentication | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | Q3 2026 | Glenn Byron | Open | Same as POA-009 (service-side counterpart) |
+| POA-009 | SV-254378 | Windows Server 2022 WinRM client must not use Basic authentication | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | 2026-06-30 ✅ | Glenn Byron | **Closed — v1.4** | ✅ Verified passing in post-Ansible SCAP scan 2026-06-30 (`Compliance-Reports/After-Ansible/`). Was: Ansible remediation queued (`AllowBasic` = 0). No operational impact — lab uses Kerberos. |
+| POA-010 | SV-254381 | Windows Server 2022 WinRM service must not use Basic authentication | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | 2026-06-30 ✅ | Glenn Byron | **Closed — v1.4** | ✅ Verified passing in post-Ansible SCAP scan 2026-06-30 (`Compliance-Reports/After-Ansible/`). Was: Same as POA-009 (service-side counterpart) |
 | POA-011 | SV-253416 | Windows 11 WinRM client must not use Basic authentication | SCC | WO02 | 2026-06-02 | Q3 2026 | Glenn Byron | Open | Win11 STIG variant of POA-009 |
 | POA-012 | SV-253418 | Windows 11 WinRM service must not use Basic authentication | SCC | WO02 | 2026-06-02 | Q3 2026 | Glenn Byron | Open | Win11 STIG variant of POA-010 |
 
@@ -106,14 +107,14 @@ The lab uses **Kerberos** for PowerShell Remoting (proven during the v1.2 build 
 
 | ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
 |----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
-| POA-013 | SV-254467 | Windows Server 2022 must not allow anonymous enumeration of shares | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | Q3 2026 | Glenn Byron | Open | Ansible remediation queued (`RestrictNullSessAccess` = 1) |
+| POA-013 | SV-254467 | Windows Server 2022 must not allow anonymous enumeration of shares | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | 2026-06-30 ✅ | Glenn Byron | **Closed — v1.4** | ✅ Verified passing in post-Ansible SCAP scan 2026-06-30 (`Compliance-Reports/After-Ansible/`). Was: Ansible remediation queued (`RestrictNullSessAccess` = 1) |
 | POA-014 | SV-253454 | Windows 11 anonymous enumeration of shares must be restricted | SCC | WO02 | 2026-06-02 | Q3 2026 | Glenn Byron | Open | Win11 STIG variant of POA-013 |
 
 #### Group 5 — LAN Manager Authentication Level (2 findings)
 
 | ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
 |----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
-| POA-015 | SV-254475 | Windows Server 2022 LAN Manager authentication level must be configured to send NTLMv2 response only / refuse LM and NTLM | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | Q3 2026 | Glenn Byron | Open | Ansible remediation queued (`LmCompatibilityLevel` = 5). Modern Windows is NTLMv2-by-default but STIG checks explicit policy. |
+| POA-015 | SV-254475 | Windows Server 2022 LAN Manager authentication level must be configured to send NTLMv2 response only / refuse LM and NTLM | SCC | LAB-DC01 / LAB-WS01 | 2026-05-28 | 2026-06-30 ✅ | Glenn Byron | **Closed — v1.4** | ✅ Verified passing in post-Ansible SCAP scan 2026-06-30 (`Compliance-Reports/After-Ansible/`). Was: Ansible remediation queued (`LmCompatibilityLevel` = 5). Modern Windows is NTLMv2-by-default but STIG checks explicit policy. |
 | POA-016 | SV-253462 | Windows 11 LanMan authentication level must be set to send NTLMv2 response only, and to refuse LM and NTLM | SCC | WO02 | 2026-06-02 | Q3 2026 | Glenn Byron | Open | Win11 STIG variant of POA-015 |
 
 #### Group 6 — AD Data Files Permissions (1 finding — DC-specific manual review)
@@ -150,7 +151,7 @@ Site STIG returned **zero CAT I FAIL** for the Default Web Site on LAB-DC01 (1 C
 #### OS STIGs (Server 2022 + Windows 11) — bulk row
 
 > DC01: 110 open · WS01: 111 open · WO02: 122 open. Full list in STIG Viewer from .ckl files.
-> Bulk remediation via `Lab-Kit/Ansible/windows-stig-hardening.yml`.
+> Bulk remediation via `Lab-Kit/08-Ansible-STIG/` (ansible-lockdown role driven from WSL2). **Status: applied to LAB-DC01 2026-06-30 (v1.4) — 44.95% → 86.7% SCAP, 8 CAT I closed (see closures above), CAT II/III bulk improvements pending per-finding reconciliation in v1.4.x.**
 
 | ID | STIG Rule ID | Finding Title | Source | System | Discovery Date | Scheduled Completion | Responsible Party | Status | Notes |
 |----|-----------------|---------------|--------|--------|----------------|---------------------|------------------|--------|-------|
@@ -300,6 +301,13 @@ program's hardening scripts address. Check off as confirmed remediated by your p
 | 1.1 | June 17, 2026 | Glenn Byron | STIG Viewer CAT I review: all 22 unique CAT I findings across DC01 / WS01 / WO02 populated with disposition and remediation plan. Confirmed smart-card-related STIG rules (`WN22-SO-000120`, `WN22-CC-000080`) passed the scans (identity controls IA-2 / AC-5 / IA-2(11) fully satisfied). Risk Acceptance Register seeded with two pending entries (RA-001 BitLocker disk encryption, RA-002 BitLocker pre-boot PIN). Dashboard updated with WO02 Win11 STIG numbers. |
 | 1.2 | June 24, 2026 | Glenn Byron | IIS STIG assessment complete: scanned LAB-DC01 IIS 10.0 CRL/AIA endpoint against IIS Server STIG 3.2.9 (53.85% score) and Site STIG 2.10.10 (54.55% score). 2 CAT I findings populated (POA-023 sample code removal — Open; POA-024 HTTPS-required — **Risk Accept** ⭐ headline finding with RFC 5280 §4.2.1.13 rationale). 23 CAT II findings populated and itemized — Server STIG 8 + Site STIG 15 (subset N/A due to RFC 5280 public-CRL-endpoint architecture). 2 CAT III findings (HSTS dependent on HTTPS — Risk Accept; HTTPAPI server header — Open). Risk Acceptance Register extended: RA-003 (HTTPS-required CAT I), RA-004 (SSL Site CAT II), RA-005 (HSTS CAT III). Closes the "STIG Viewer CAT I review" + "IIS STIG assessment" items from POA&M Still Needs Input section. |
 | 1.3 | June 25, 2026 | Glenn Byron | Nessus Essentials point-in-time vulnerability scan: scanned from Lab-Workstation01 (WS01) using LAB\CardIssuer Domain Admin credentials, Advanced Scan policy, 25-min duration. 3 of 4 lab hosts discovered (WS01 excluded as scanner; Hyper-V host `10.10.10.1` discovered + auth-failed by design — air-gap working as intended). 81 vulns total; **4 unique HIGH findings populated** (POA-052 + POA-053 VNC on host — investigate; POA-054 CVE-2013-3900 WinVerifyTrust registry fix; POA-055 CVE-2026-20841 Notepad with banner-grab caveat; POA-056 Dell SupportAssist DSA-2025-445 12-vuln cluster on WO02). **WS01 scanner role retired post-scan** — future quarterly re-scans pending scanner-location decision (Hyper-V host vs on-demand install vs dedicated scanner VM). **Lab-Topology.md updated** with air-gap validation paragraph documenting the host's deliberate auth-failure as the design working correctly. Nessus Essentials free tier doesn't allow PDF/CSV export; findings transcribed manually from UI + screenshots in `Compliance-Reports/Nessus/2026-06-25_advanced-scan/screenshots/`. Closes the "Nessus Essentials scan" item from POA&M Still Needs Input section. |
+| 1.4 | June 30, 2026 | Glenn Byron | **Ansible STIG remediation on LAB-DC01 — 44.95% → 86.7% SCAP** via `Lab-Kit/08-Ansible-STIG/` (ansible-lockdown Windows-2022-STIG role driven from WSL2 control node). Three severity-tagged phases applied (CAT1 / CAT2 / CAT3) with snapshot + win_ping verification between each. **8 CAT I findings closed and verified by post-Ansible SCAP scan** (POA-001 SV-254352, POA-002 SV-254353, POA-003 SV-254354, POA-007 SV-254374, POA-009 SV-254378, POA-010 SV-254381, POA-013 SV-254467, POA-015 SV-254475 — all confirmed passing in `Compliance-Reports/After-Ansible/`). Bulk CAT II/III remediation reflected in dashboard (CAT II Fail 105 → 27; CAT III Fail 6 → 1 on LAB-DC01). POA-017 (AD data files permissions, manual review) remains open as expected; the four Server-2025 N/A controls (`wn22_00_000090`, `wn22_00_000340`, `wn22_00_000420`, `wn22_00_000430`) were disabled in `group_vars/dc/main.yml` per Server-2025-vs-2022-benchmark differences. Remaining 29 CAT-fails on LAB-DC01 are: controls left off by design (`win2022stig_disruption_high: false`, `win2022stig_complexity_high: false`), manual AUDIT items, and benchmark mismatches. Win11 + IIS POA entries unchanged (out of Server 2022 STIG scope). Closes the "Run Ansible STIG hardening pass" item from POA&M Still Needs Input section. |
+
+---
+
+*Related documents: `SSP-Template.md`, `SAR-Template.md`, `Compliance-Reports/README.md`. See [`TODO.md`](../../TODO.md) (Phase 5 — RMF Authorize) for the full ATO package checklist.*
+n. |
+| 1.4 | June 30, 2026 | Glenn Byron | **Ansible STIG remediation on LAB-DC01 — 44.95% → 86.7% SCAP** via `Lab-Kit/08-Ansible-STIG/` (ansible-lockdown Windows-2022-STIG role driven from WSL2 control node). Three severity-tagged phases applied (CAT1 / CAT2 / CAT3) with snapshot + win_ping verification between each. **8 CAT I findings closed and verified by post-Ansible SCAP scan** (POA-001 SV-254352, POA-002 SV-254353, POA-003 SV-254354, POA-007 SV-254374, POA-009 SV-254378, POA-010 SV-254381, POA-013 SV-254467, POA-015 SV-254475 — all confirmed passing in `Compliance-Reports/After-Ansible/`). Bulk CAT II/III remediation reflected in dashboard (CAT II Fail 105 → 27; CAT III Fail 6 → 1 on LAB-DC01). POA-017 (AD data files permissions, manual review) remains open as expected; the four Server-2025 N/A controls (`wn22_00_000090`, `wn22_00_000340`, `wn22_00_000420`, `wn22_00_000430`) were disabled in `group_vars/dc/main.yml` per Server-2025-vs-2022-benchmark differences. Remaining 29 CAT-fails on LAB-DC01 are: controls left off by design (`win2022stig_disruption_high: false`, `win2022stig_complexity_high: false`), manual AUDIT items, and benchmark mismatches. Win11 + IIS POA entries unchanged (out of Server 2022 STIG scope). Closes the "Run Ansible STIG hardening pass" item from POA&M Still Needs Input section. |
 
 ---
 

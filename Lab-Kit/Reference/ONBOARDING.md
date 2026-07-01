@@ -591,14 +591,14 @@ Run on the **Hyper-V host** in elevated PowerShell.
 
 ```powershell
 # Create checkpoint (replace label as appropriate)
-& "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\New-LabSnapshot.ps1" `
+& "C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\New-LabSnapshot.ps1" `
     -Mode Create -Label "06-Physical-Laptop-Joined"
 
 # List all checkpoints
-& "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\New-LabSnapshot.ps1" -Mode List
+& "C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\New-LabSnapshot.ps1" -Mode List
 
 # Restore to a checkpoint
-& "C:\CAC-Lab-Kit-20260526\Lab-Kit\01-HyperV-Host\New-LabSnapshot.ps1" `
+& "C:\path\to\CAC-program\Lab-Kit\01-HyperV-Host\New-LabSnapshot.ps1" `
     -Mode Restore -Label "05-After-Scan"
 ```
 

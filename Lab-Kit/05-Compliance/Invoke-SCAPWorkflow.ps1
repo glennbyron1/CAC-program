@@ -377,8 +377,11 @@ if ($Phase -eq 'Full' -and -not $SkipHardening) {
 
     Write-Step "PHASE 2 — Apply STIG hardening" "Magenta"
 
-    $ansiblePlaybook = Join-Path $RepoRoot 'Lab-Kit\Ansible\windows-stig-hardening.yml'
-    $ansibleInventory = Join-Path $RepoRoot 'Lab-Kit\Ansible\inventory.ini'
+    # v1.4: STIG remediation lives in Lab-Kit\08-Ansible-STIG\ (ansible-lockdown role).
+    # The legacy scaffold at Lab-Kit\Ansible\ was retired; preserved at
+    # 08-Ansible-STIG\utilities\windows-stig-hardening_SUPERSEDED.yml for reference.
+    $ansiblePlaybook = Join-Path $RepoRoot 'Lab-Kit\08-Ansible-STIG\remediate-stig.yml'
+    $ansibleInventory = Join-Path $RepoRoot 'Lab-Kit\08-Ansible-STIG\inventory.ini'
 
     if (Test-Path $ansiblePlaybook) {
         Write-Host "  Ansible playbook: $ansiblePlaybook" -ForegroundColor Gray

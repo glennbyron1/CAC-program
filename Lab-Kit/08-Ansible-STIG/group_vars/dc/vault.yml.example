@@ -1,0 +1,11 @@
+---
+# Phase 8 add-on - SECRET connection password for LAB-DC01.
+#
+# 1. Copy this file to  vault.yml  (same folder).
+# 2. Put the real domain-admin password below.
+# 3. Encrypt it:   ansible-vault encrypt vault.yml
+# 4. Run playbooks with  --ask-vault-pass  (or configure a vault password file).
+#
+# vault.yml is git-ignored / must never be committed in plaintext.
+
+ansible_password: "CHANGE-ME-domain-admin-password"
